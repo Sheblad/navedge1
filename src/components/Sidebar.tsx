@@ -75,12 +75,12 @@ const Sidebar: React.FC<SidebarProps> = ({
       
       {/* Sidebar */}
       <div className={`
-        fixed top-0 left-0 z-50 h-full w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out
+        fixed top-0 left-0 z-50 h-full w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out flex flex-col
         lg:translate-x-0 lg:static lg:z-auto
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
       `}>
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
+        <div className="flex items-center justify-between p-6 border-b border-gray-200 flex-shrink-0">
           <div className="flex items-center space-x-3">
             <div className="p-2 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg">
               <Navigation className="w-6 h-6 text-white" />
@@ -95,8 +95,8 @@ const Sidebar: React.FC<SidebarProps> = ({
           </button>
         </div>
 
-        {/* Navigation */}
-        <nav className="p-4 space-y-2">
+        {/* Navigation - with flex-1 to take available space */}
+        <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
           {menuItems.map((item) => {
             const Icon = item.icon;
             const isActive = activePage === item.id;
@@ -123,8 +123,8 @@ const Sidebar: React.FC<SidebarProps> = ({
           })}
         </nav>
 
-        {/* Footer */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200">
+        {/* Footer - fixed at bottom */}
+        <div className="flex-shrink-0 p-4 border-t border-gray-200 bg-gray-50">
           <div className="text-xs text-gray-500 text-center">
             NavEdge Fleet Management
             <br />
