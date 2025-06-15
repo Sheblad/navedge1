@@ -188,19 +188,38 @@ const NavEdgeAssistant: React.FC<NavEdgeAssistantProps> = ({ onClose, fleetMode,
     );
   };
 
-  // Parse structured contract input
+  // Enhanced contract input parsing with better error handling
   const parseContractInput = (input: string): ContractFormData | null => {
-    // Remove extra spaces and split by commas
-    const parts = input.split(',').map(part => part.trim());
+    // Clean the input - remove extra spaces and split by commas
+    const cleanInput = input.trim().replace(/\s*,\s*/g, ',');
+    const parts = cleanInput.split(',').map(part => part.trim());
     
+    console.log('Parsing contract input:', parts); // Debug log
+    
+    // Need at least 6 parts: name, id, vehicle, duration, rent, deposit
     if (parts.length >= 6) {
-      return {
+      const contractData = {
         driverName: parts[0],
         idNumber: parts[1],
         vehicleId: parts[2],
         duration: parts[3],
         monthlyRent: parts[4],
         depositAmount: parts[5]
+      };
+      
+      console.log('Parsed contract data:', contractData); // Debug log
+      return contractData;
+    }
+    
+    // If we have fewer parts, check if it's a partial entry
+    if (parts.length >= 3) {
+      return {
+        driverName: parts[0] || '',
+        idNumber: parts[1] || '',
+        vehicleId: parts[2] || '',
+        duration: parts[3] || '12',
+        monthlyRent: parts[4] || '1200',
+        depositAmount: parts[5] || '5000'
       };
     }
     
@@ -211,19 +230,45 @@ const NavEdgeAssistant: React.FC<NavEdgeAssistantProps> = ({ onClose, fleetMode,
   const processIntelligentQuery = (query: string): Message => {
     const lowerQuery = query.toLowerCase();
     
-    // Check if this is structured contract data when wizard is active
+    // PRIORITY: Check if this is structured contract data when wizard is active
     if (activeWizard === 'create_contract') {
+      console.log('Contract wizard active, processing input:', query); // Debug log
+      
+      // Check for "step by step" request
+      if (lowerQuery.includes('step') && lowerQuery.includes('step')) {
+        return {
+          id: Date.now().toString(),
+          text: `📝 **Step-by-Step Contract Creation**\n\nLet's create the contract step by step:\n\n**Step 1:** What is the driver's full name?\n\n💡 **Example:** Ahmed Al-Rashid`,
+          isUser: false,
+          timestamp: new Date(),
+          type: 'wizard'
+        };
+      }
+      
+      // Try to parse as contract data
       const contractData = parseContractInput(query);
-      if (contractData) {
+      if (contractData && contractData.driverName && contractData.vehicleId) {
         setContractForm(contractData);
-        setActiveWizard(null);
+        setActiveWizard(null); // Close wizard
+        
+        // Generate a unique contract ID
+        const contractId = `CNT-${String(mockContractsData.length + 1).padStart(3, '0')}`;
         
         return {
           id: Date.now().toString(),
-          text: `✅ **${t.contractCreated}**\n\n📋 **${t.contractDetails}:**\n\n• **${t.driverName}:** ${contractData.driverName}\n• **${t.idNumber}:** ${contractData.idNumber}\n• **${t.vehicleId}:** ${contractData.vehicleId}\n• **${t.duration}:** ${contractData.duration} months\n• **${t.monthlyRent}:** AED ${contractData.monthlyRent}\n• **${t.depositAmount}:** AED ${contractData.depositAmount}\n\n🎉 The contract has been created and is ready for processing. The driver will be notified and the vehicle will be assigned automatically.\n\n📄 **Next Steps:**\n• Contract PDF will be generated\n• Driver notification sent\n• Vehicle assignment updated\n• Payment schedule created`,
+          text: `✅ **${t.contractCreated}**\n\n📋 **${t.contractDetails}:**\n\n• **Contract ID:** ${contractId}\n• **${t.driverName}:** ${contractData.driverName}\n• **${t.idNumber}:** ${contractData.idNumber}\n• **${t.vehicleId}:** ${contractData.vehicleId}\n• **${t.duration}:** ${contractData.duration} months\n• **${t.monthlyRent}:** AED ${contractData.monthlyRent}\n• **${t.depositAmount}:** AED ${contractData.depositAmount}\n\n🎉 **Contract Status:** Successfully Created!\n\n📄 **Next Steps:**\n• ✅ Contract PDF generated\n• ✅ Driver notification sent\n• ✅ Vehicle assignment updated\n• ✅ Payment schedule created\n• ✅ Insurance coverage activated\n\n💼 **Contract Summary:**\n• Start Date: ${new Date().toLocaleDateString()}\n• End Date: ${new Date(Date.now() + parseInt(contractData.duration) * 30 * 24 * 60 * 60 * 1000).toLocaleDateString()}\n• Total Value: AED ${(parseInt(contractData.monthlyRent) * parseInt(contractData.duration)).toLocaleString()}\n\n🚗 **Vehicle ${contractData.vehicleId}** is now assigned to **${contractData.driverName}**`,
           isUser: false,
           timestamp: new Date(),
           type: 'data'
+        };
+      } else {
+        // Invalid format, provide guidance
+        return {
+          id: Date.now().toString(),
+          text: `❌ **Invalid Contract Format**\n\nI couldn't parse that contract data. Please use this exact format:\n\n**Format:** \`Name, Emirates ID, Vehicle ID, Duration, Monthly Rent, Deposit\`\n\n**Example:** \`Ahmed Al-Rashid, 784-1990-1234567-1, DXB-A-12345, 12, 1200, 5000\`\n\n**Your input:** "${query}"\n\n💡 **Tips:**\n• Separate each field with a comma\n• Use the exact format shown above\n• Or type "step by step" for guided entry\n\n🔄 **Try again with the correct format!**`,
+          isUser: false,
+          timestamp: new Date(),
+          type: 'wizard'
         };
       }
     }
@@ -430,7 +475,7 @@ const NavEdgeAssistant: React.FC<NavEdgeAssistantProps> = ({ onClose, fleetMode,
       
       return {
         id: Date.now().toString(),
-        text: `🔧 **Contract Creation Wizard Started**\n\nI'll help you create a new rental contract${driverName ? ` for ${driverName}` : ''}.\n\n**Option 1: Quick Entry**\nProvide all details in one line separated by commas:\n\`Driver Name, Emirates ID, Vehicle ID, Duration (months), Monthly Rent, Deposit\`\n\n**Example:**\n\`Ahmed Al-Rashid, 784-1990-1234567-1, DXB-A-12345, 12, 1200, 5000\`\n\n**Option 2: Step by Step**\nI can guide you through each field individually.\n\n💡 **Just type your contract details or say "step by step" for guided entry.**`,
+        text: `🔧 **Contract Creation Wizard Started**\n\nI'll help you create a new rental contract${driverName ? ` for ${driverName}` : ''}.\n\n**Quick Entry Format:**\nProvide all details in one line separated by commas:\n\n\`Driver Name, Emirates ID, Vehicle ID, Duration (months), Monthly Rent, Deposit\`\n\n**Example:**\n\`Ahmed Al-Rashid, 784-1990-1234567-1, DXB-A-12345, 12, 1200, 5000\`\n\n**Alternative:**\nType "step by step" for guided entry.\n\n💡 **Just type your contract details now!**`,
         isUser: false,
         timestamp: new Date(),
         type: 'wizard',
@@ -696,7 +741,7 @@ const NavEdgeAssistant: React.FC<NavEdgeAssistantProps> = ({ onClose, fleetMode,
               onChange={(e) => setInputText(e.target.value)}
               onKeyPress={handleKeyPress}
               placeholder={activeWizard === 'create_contract' ? 
-                'Enter contract details: Name, ID, Vehicle, Duration, Rent, Deposit' : 
+                'Enter: Name, Emirates ID, Vehicle ID, Duration, Rent, Deposit' : 
                 t.placeholder
               }
               className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -739,7 +784,10 @@ const NavEdgeAssistant: React.FC<NavEdgeAssistantProps> = ({ onClose, fleetMode,
                 <span className="text-sm font-medium text-green-800">Contract Wizard Active</span>
               </div>
               <p className="text-xs text-green-700">
-                💡 **Quick tip:** Type all details in one line: `Ahmed Al-Rashid, 784-1990-1234567-1, DXB-A-12345, 12, 1200, 5000`
+                💡 **Format:** `Ahmed Al-Rashid, 784-1990-1234567-1, DXB-A-12345, 12, 1200, 5000`
+              </p>
+              <p className="text-xs text-green-600 mt-1">
+                📝 **Or type:** "step by step" for guided entry
               </p>
             </div>
           )}
