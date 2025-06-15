@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Search, Filter, Plus, MoreVertical, Phone, Mail, Star } from 'lucide-react';
 import { mockDriversData } from '../data/mockData';
+import DriverProfile from './DriverProfile';
 
 type FleetMode = 'rental' | 'taxi';
 type Language = 'en' | 'ar';
@@ -13,6 +14,7 @@ interface DriversProps {
 const Drivers: React.FC<DriversProps> = ({ fleetMode, language }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'offline'>('all');
+  const [selectedDriverId, setSelectedDriverId] = useState<number | null>(null);
 
   const texts = {
     en: {
@@ -33,7 +35,8 @@ const Drivers: React.FC<DriversProps> = ({ fleetMode, language }) => {
       all: 'All',
       joined: 'Joined',
       noDrivers: 'No drivers found',
-      rating: 'Rating'
+      rating: 'Rating',
+      viewProfile: 'View Profile'
     },
     ar: {
       title: 'السائقون',
@@ -53,7 +56,8 @@ const Drivers: React.FC<DriversProps> = ({ fleetMode, language }) => {
       all: 'الكل',
       joined: 'انضم في',
       noDrivers: 'لا يوجد سائقون',
-      rating: 'التقييم'
+      rating: 'التقييم',
+      viewProfile: 'عرض الملف الشخصي'
     }
   };
 
@@ -69,6 +73,21 @@ const Drivers: React.FC<DriversProps> = ({ fleetMode, language }) => {
     
     return matchesSearch && matchesStatus;
   });
+
+  const handleDriverClick = (driverId: number) => {
+    setSelectedDriverId(driverId);
+  };
+
+  if (selectedDriverId) {
+    return (
+      <DriverProfile
+        driverId={selectedDriverId}
+        fleetMode={fleetMode}
+        language={language}
+        onClose={() => setSelectedDriverId(null)}
+      />
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -126,14 +145,18 @@ const Drivers: React.FC<DriversProps> = ({ fleetMode, language }) => {
             <tbody className="divide-y divide-gray-200">
               {filteredDrivers.length > 0 ? (
                 filteredDrivers.map((driver) => (
-                  <tr key={driver.id} className="hover:bg-gray-50">
+                  <tr 
+                    key={driver.id} 
+                    className="hover:bg-gray-50 cursor-pointer transition-colors"
+                    onClick={() => handleDriverClick(driver.id)}
+                  >
                     <td className="py-4 px-4">
                       <div className="flex items-center space-x-3">
                         <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full flex items-center justify-center">
                           <span className="text-white font-semibold text-sm">{driver.avatar}</span>
                         </div>
                         <div>
-                          <div className="font-medium text-gray-900">{driver.name}</div>
+                          <div className="font-medium text-gray-900 hover:text-blue-600 transition-colors">{driver.name}</div>
                           <div className="text-sm text-gray-500">{t.joined} {driver.joinDate}</div>
                         </div>
                       </div>
@@ -182,7 +205,13 @@ const Drivers: React.FC<DriversProps> = ({ fleetMode, language }) => {
                       </div>
                     </td>
                     <td className="py-4 px-4">
-                      <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                      <button 
+                        className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDriverClick(driver.id);
+                        }}
+                      >
                         <MoreVertical className="w-4 h-4 text-gray-500" />
                       </button>
                     </td>

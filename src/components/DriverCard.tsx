@@ -6,21 +6,24 @@ interface DriverCardProps {
   driver: Driver;
   fleetMode: 'rental' | 'taxi';
   language: 'en' | 'ar';
+  onDriverClick?: (driverId: number) => void;
 }
 
-const DriverCard: React.FC<DriverCardProps> = ({ driver, fleetMode, language }) => {
+const DriverCard: React.FC<DriverCardProps> = ({ driver, fleetMode, language, onDriverClick }) => {
   const texts = {
     en: {
       tripsToday: fleetMode === 'taxi' ? 'Trips Today' : 'Active Rentals',
       earnings: fleetMode === 'taxi' ? 'Today' : 'Monthly',
       performance: 'Performance',
-      contact: 'Contact'
+      contact: 'Contact',
+      viewProfile: 'View Full Profile'
     },
     ar: {
       tripsToday: fleetMode === 'taxi' ? 'رحلات اليوم' : 'التأجيرات النشطة',
       earnings: fleetMode === 'taxi' ? 'اليوم' : 'شهرياً',
       performance: 'الأداء',
-      contact: 'اتصال'
+      contact: 'اتصال',
+      viewProfile: 'عرض الملف الكامل'
     }
   };
 
@@ -28,8 +31,17 @@ const DriverCard: React.FC<DriverCardProps> = ({ driver, fleetMode, language }) 
 
   const hasAlert = driver.performanceScore < 80 || driver.earnings < 500;
 
+  const handleCardClick = () => {
+    if (onDriverClick) {
+      onDriverClick(driver.id);
+    }
+  };
+
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-all duration-300 hover:scale-105">
+    <div 
+      className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-all duration-300 hover:scale-105 cursor-pointer group"
+      onClick={handleCardClick}
+    >
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center space-x-3">
@@ -42,7 +54,7 @@ const DriverCard: React.FC<DriverCardProps> = ({ driver, fleetMode, language }) 
             }`}></div>
           </div>
           <div>
-            <h3 className="font-semibold text-gray-900">{driver.name}</h3>
+            <h3 className="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">{driver.name}</h3>
             <div className="flex items-center space-x-2">
               <span className="text-xs text-gray-500 capitalize">{driver.status}</span>
               {driver.vehicleId && (
@@ -67,7 +79,7 @@ const DriverCard: React.FC<DriverCardProps> = ({ driver, fleetMode, language }) 
         </div>
         <div className="w-full bg-gray-200 rounded-full h-2">
           <div 
-            className={`h-2 rounded-full ${
+            className={`h-2 rounded-full transition-all duration-300 ${
               driver.performanceScore >= 90 ? 'bg-green-500' :
               driver.performanceScore >= 80 ? 'bg-yellow-500' : 'bg-red-500'
             }`}
@@ -78,17 +90,17 @@ const DriverCard: React.FC<DriverCardProps> = ({ driver, fleetMode, language }) 
 
       {/* Stats */}
       <div className="grid grid-cols-2 gap-3 mb-4">
-        <div className="bg-gray-50 rounded-lg p-3">
+        <div className="bg-gray-50 rounded-lg p-3 group-hover:bg-blue-50 transition-colors">
           <div className="flex items-center space-x-2 mb-1">
-            <Clock className="w-4 h-4 text-gray-500" />
+            <Clock className="w-4 h-4 text-gray-500 group-hover:text-blue-500 transition-colors" />
             <span className="text-xs text-gray-500">{t.tripsToday}</span>
           </div>
           <span className="text-lg font-semibold text-gray-900">{driver.trips}</span>
         </div>
         
-        <div className="bg-gray-50 rounded-lg p-3">
+        <div className="bg-gray-50 rounded-lg p-3 group-hover:bg-blue-50 transition-colors">
           <div className="flex items-center space-x-2 mb-1">
-            <DollarSign className="w-4 h-4 text-gray-500" />
+            <DollarSign className="w-4 h-4 text-gray-500 group-hover:text-blue-500 transition-colors" />
             <span className="text-xs text-gray-500">{t.earnings}</span>
           </div>
           <span className="text-lg font-semibold text-gray-900">
@@ -108,10 +120,24 @@ const DriverCard: React.FC<DriverCardProps> = ({ driver, fleetMode, language }) 
             <Star className="w-4 h-4 text-yellow-400 fill-current" />
             <span className="text-sm text-gray-600">{(driver.performanceScore / 20).toFixed(1)}</span>
           </div>
-          <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+          <button 
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            onClick={(e) => {
+              e.stopPropagation();
+              // Handle phone call
+            }}
+          >
             <Phone className="w-4 h-4 text-gray-500" />
           </button>
         </div>
+      </div>
+
+      {/* Hover overlay */}
+      <div className="absolute inset-0 bg-blue-600 bg-opacity-0 group-hover:bg-opacity-5 rounded-lg transition-all duration-300 pointer-events-none" />
+      
+      {/* Click hint */}
+      <div className="mt-3 pt-3 border-t border-gray-100 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+        <p className="text-xs text-blue-600 text-center font-medium">{t.viewProfile}</p>
       </div>
     </div>
   );

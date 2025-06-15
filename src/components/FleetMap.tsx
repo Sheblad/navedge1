@@ -5,9 +5,10 @@ import { Driver } from '../data/mockData';
 interface FleetMapProps {
   drivers: Driver[];
   language: 'en' | 'ar';
+  onDriverClick?: (driverId: number) => void;
 }
 
-const FleetMap: React.FC<FleetMapProps> = ({ drivers, language }) => {
+const FleetMap: React.FC<FleetMapProps> = ({ drivers, language, onDriverClick }) => {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
 
@@ -24,7 +25,8 @@ const FleetMap: React.FC<FleetMapProps> = ({ drivers, language }) => {
       legend: 'Legend',
       active: 'Active',
       offline: 'Offline',
-      needsAttention: 'Needs Attention'
+      needsAttention: 'Needs Attention',
+      viewProfile: 'View Full Profile'
     },
     ar: {
       status: 'الحالة',
@@ -38,7 +40,8 @@ const FleetMap: React.FC<FleetMapProps> = ({ drivers, language }) => {
       legend: 'المفتاح',
       active: 'نشط',
       offline: 'غير متصل',
-      needsAttention: 'يحتاج انتباه'
+      needsAttention: 'يحتاج انتباه',
+      viewProfile: 'عرض الملف الكامل'
     }
   };
 
@@ -57,19 +60,6 @@ const FleetMap: React.FC<FleetMapProps> = ({ drivers, language }) => {
       subdomains: 'abcd',
       maxZoom: 19
     }).addTo(map);
-
-    // Alternative English tile options (you can switch between these):
-    
-    // Option 1: Stamen Toner (Clean English labels)
-    // L.tileLayer('https://stamen-tiles-{s}.a.ssl.fastly.net/toner-lite/{z}/{x}/{y}{r}.png', {
-    //   attribution: 'Map tiles by Stamen Design, CC BY 3.0 — Map data © OpenStreetMap contributors',
-    //   subdomains: 'abcd'
-    // }).addTo(map);
-
-    // Option 2: Esri World Street Map (English)
-    // L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
-    //   attribution: 'Tiles © Esri'
-    // }).addTo(map);
 
     // Custom icon for drivers
     const createDriverIcon = (driver: Driver) => {
@@ -92,6 +82,7 @@ const FleetMap: React.FC<FleetMapProps> = ({ drivers, language }) => {
             font-weight: bold;
             color: white;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            cursor: pointer;
           ">${driver.avatar}</div>
         `,
         className: 'custom-driver-icon',
@@ -111,7 +102,7 @@ const FleetMap: React.FC<FleetMapProps> = ({ drivers, language }) => {
       marker.bindPopup(`
         <div style="
           padding: 16px;
-          min-width: 250px;
+          min-width: 280px;
           font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         ">
           <div style="display: flex; align-items: center; margin-bottom: 12px;">
@@ -132,7 +123,7 @@ const FleetMap: React.FC<FleetMapProps> = ({ drivers, language }) => {
               <p style="margin: 0; font-size: 12px; color: #6b7280;">${driver.vehicleId || 'No vehicle assigned'}</p>
             </div>
           </div>
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 13px;">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 13px; margin-bottom: 12px;">
             <div style="display: flex; justify-content: space-between;">
               <span style="color: #6b7280;">${t.status}:</span>
               <span style="font-weight: 500; color: ${driver.status === 'active' ? '#059669' : '#6b7280'};">${driver.status === 'active' ? t.active : t.offline}</span>
@@ -150,18 +141,44 @@ const FleetMap: React.FC<FleetMapProps> = ({ drivers, language }) => {
               <span style="font-weight: 500; color: #111827;">${driver.performanceScore}%</span>
             </div>
           </div>
-          ${hasAlert ? `<div style="margin-top: 12px; padding: 8px; background-color: #fef2f2; border: 1px solid #fecaca; border-radius: 6px;">
+          ${hasAlert ? `<div style="margin-bottom: 12px; padding: 8px; background-color: #fef2f2; border: 1px solid #fecaca; border-radius: 6px;">
             <p style="margin: 0; font-size: 12px; color: #dc2626; font-weight: 500;">${t.requiresAttention}</p>
           </div>` : ''}
+          <button 
+            onclick="window.openDriverProfile(${driver.id})"
+            style="
+              width: 100%;
+              padding: 8px 16px;
+              background: linear-gradient(135deg, #3b82f6, #6366f1);
+              color: white;
+              border: none;
+              border-radius: 6px;
+              font-size: 12px;
+              font-weight: 500;
+              cursor: pointer;
+              transition: all 0.2s;
+            "
+            onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 4px 12px rgba(59, 130, 246, 0.4)'"
+            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'"
+          >
+            ${t.viewProfile}
+          </button>
           <div style="margin-top: 12px; padding-top: 8px; border-top: 1px solid #e5e7eb;">
             <p style="margin: 0; font-size: 11px; color: #9ca3af;">Last updated: ${new Date().toLocaleTimeString()}</p>
           </div>
         </div>
       `, {
-        maxWidth: 300,
+        maxWidth: 320,
         className: 'custom-popup'
       });
     });
+
+    // Add global function for driver profile opening
+    (window as any).openDriverProfile = (driverId: number) => {
+      if (onDriverClick) {
+        onDriverClick(driverId);
+      }
+    };
 
     // Add fleet status control
     const FleetStatusControl = L.Control.extend({
@@ -228,6 +245,12 @@ const FleetMap: React.FC<FleetMapProps> = ({ drivers, language }) => {
       .fleet-status-control {
         pointer-events: auto;
       }
+      .custom-driver-icon {
+        transition: transform 0.2s ease;
+      }
+      .custom-driver-icon:hover {
+        transform: scale(1.1);
+      }
     `;
     document.head.appendChild(style);
 
@@ -238,8 +261,10 @@ const FleetMap: React.FC<FleetMapProps> = ({ drivers, language }) => {
         mapInstanceRef.current = null;
       }
       document.head.removeChild(style);
+      // Clean up global function
+      delete (window as any).openDriverProfile;
     };
-  }, [drivers, language]);
+  }, [drivers, language, onDriverClick]);
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">

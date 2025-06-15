@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import DriverCard from './DriverCard';
+import DriverProfile from './DriverProfile';
 import FleetMap from './FleetMap';
 import StatsCards from './StatsCards';
 import { mockDriversData, mockFinesData } from '../data/mockData';
@@ -17,6 +18,7 @@ const Dashboard: React.FC<DashboardProps> = ({ fleetMode, language }) => {
   const [drivers, setDrivers] = useState(mockDriversData);
   const [fines, setFines] = useState(mockFinesData);
   const [realTimeUpdates, setRealTimeUpdates] = useState(true);
+  const [selectedDriverId, setSelectedDriverId] = useState<number | null>(null);
 
   const texts = {
     en: {
@@ -91,6 +93,25 @@ const Dashboard: React.FC<DashboardProps> = ({ fleetMode, language }) => {
       icon: Users
     }
   ];
+
+  const handleDriverClick = (driverId: number) => {
+    setSelectedDriverId(driverId);
+  };
+
+  const handleMapDriverClick = (driverId: number) => {
+    setSelectedDriverId(driverId);
+  };
+
+  if (selectedDriverId) {
+    return (
+      <DriverProfile
+        driverId={selectedDriverId}
+        fleetMode={fleetMode}
+        language={language}
+        onClose={() => setSelectedDriverId(null)}
+      />
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -178,7 +199,13 @@ const Dashboard: React.FC<DashboardProps> = ({ fleetMode, language }) => {
         {activeDrivers.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {activeDrivers.map((driver) => (
-              <DriverCard key={driver.id} driver={driver} fleetMode={fleetMode} language={language} />
+              <DriverCard 
+                key={driver.id} 
+                driver={driver} 
+                fleetMode={fleetMode} 
+                language={language}
+                onDriverClick={handleDriverClick}
+              />
             ))}
           </div>
         ) : (
@@ -192,7 +219,11 @@ const Dashboard: React.FC<DashboardProps> = ({ fleetMode, language }) => {
       {/* Fleet Map */}
       <div>
         <h2 className="text-lg font-semibold text-gray-900 mb-4">{t.liveTracking}</h2>
-        <FleetMap drivers={drivers} language={language} />
+        <FleetMap 
+          drivers={drivers} 
+          language={language}
+          onDriverClick={handleMapDriverClick}
+        />
       </div>
     </div>
   );
