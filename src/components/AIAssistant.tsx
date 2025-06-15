@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { X, Send, Zap, BarChart3, AlertTriangle, FileText, Settings, Plus, Edit, Trash2, MapPin, Phone, DollarSign, Navigation, Brain, Sparkles } from 'lucide-react';
+import { X, Send, Zap, BarChart3, AlertTriangle, FileText, Settings, Plus, Edit, Trash2, MapPin, Phone, DollarSign, Navigation, Brain, Sparkles, CheckCircle } from 'lucide-react';
 import { mockDriversData, mockFinesData, mockContractsData } from '../data/mockData';
 
 type FleetMode = 'rental' | 'taxi';
@@ -10,9 +10,18 @@ interface Message {
   text: string;
   isUser: boolean;
   timestamp: Date;
-  type?: 'text' | 'action' | 'wizard' | 'confirmation' | 'data';
+  type?: 'text' | 'action' | 'wizard' | 'confirmation' | 'data' | 'contract_form';
   data?: any;
   actionType?: string;
+}
+
+interface ContractFormData {
+  driverName: string;
+  idNumber: string;
+  vehicleId: string;
+  duration: string;
+  monthlyRent: string;
+  depositAmount: string;
 }
 
 interface NavEdgeAssistantProps {
@@ -27,7 +36,14 @@ const NavEdgeAssistant: React.FC<NavEdgeAssistantProps> = ({ onClose, fleetMode,
   const [inputText, setInputText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [activeWizard, setActiveWizard] = useState<string | null>(null);
-  const [wizardData, setWizardData] = useState<any>({});
+  const [contractForm, setContractForm] = useState<ContractFormData>({
+    driverName: '',
+    idNumber: '',
+    vehicleId: '',
+    duration: '',
+    monthlyRent: '',
+    depositAmount: ''
+  });
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const texts = {
@@ -52,7 +68,19 @@ const NavEdgeAssistant: React.FC<NavEdgeAssistantProps> = ({ onClose, fleetMode,
       confirm: 'Confirm',
       cancel: 'Cancel',
       yes: 'Yes',
-      no: 'No'
+      no: 'No',
+      // Contract form
+      contractWizard: 'Contract Creation Wizard',
+      fillDetails: 'Please fill in the contract details:',
+      driverName: 'Driver Name',
+      idNumber: 'Emirates ID Number',
+      vehicleId: 'Vehicle ID',
+      duration: 'Duration (months)',
+      monthlyRent: 'Monthly Rent (AED)',
+      depositAmount: 'Deposit Amount (AED)',
+      createContract: 'Create Contract',
+      contractCreated: 'Contract Created Successfully!',
+      contractDetails: 'Contract Details'
     },
     ar: {
       title: 'مركز التحكم نافيدج',
@@ -75,7 +103,19 @@ const NavEdgeAssistant: React.FC<NavEdgeAssistantProps> = ({ onClose, fleetMode,
       confirm: 'تأكيد',
       cancel: 'إلغاء',
       yes: 'نعم',
-      no: 'لا'
+      no: 'لا',
+      // Contract form
+      contractWizard: 'معالج إنشاء العقد',
+      fillDetails: 'يرجى ملء تفاصيل العقد:',
+      driverName: 'اسم السائق',
+      idNumber: 'رقم الهوية الإماراتية',
+      vehicleId: 'رقم المركبة',
+      duration: 'المدة (أشهر)',
+      monthlyRent: 'الإيجار الشهري (درهم)',
+      depositAmount: 'مبلغ التأمين (درهم)',
+      createContract: 'إنشاء العقد',
+      contractCreated: 'تم إنشاء العقد بنجاح!',
+      contractDetails: 'تفاصيل العقد'
     }
   };
 
@@ -148,9 +188,45 @@ const NavEdgeAssistant: React.FC<NavEdgeAssistantProps> = ({ onClose, fleetMode,
     );
   };
 
+  // Parse structured contract input
+  const parseContractInput = (input: string): ContractFormData | null => {
+    // Remove extra spaces and split by commas
+    const parts = input.split(',').map(part => part.trim());
+    
+    if (parts.length >= 6) {
+      return {
+        driverName: parts[0],
+        idNumber: parts[1],
+        vehicleId: parts[2],
+        duration: parts[3],
+        monthlyRent: parts[4],
+        depositAmount: parts[5]
+      };
+    }
+    
+    return null;
+  };
+
   // Enhanced query processing with natural language understanding
   const processIntelligentQuery = (query: string): Message => {
     const lowerQuery = query.toLowerCase();
+    
+    // Check if this is structured contract data when wizard is active
+    if (activeWizard === 'create_contract') {
+      const contractData = parseContractInput(query);
+      if (contractData) {
+        setContractForm(contractData);
+        setActiveWizard(null);
+        
+        return {
+          id: Date.now().toString(),
+          text: `✅ **${t.contractCreated}**\n\n📋 **${t.contractDetails}:**\n\n• **${t.driverName}:** ${contractData.driverName}\n• **${t.idNumber}:** ${contractData.idNumber}\n• **${t.vehicleId}:** ${contractData.vehicleId}\n• **${t.duration}:** ${contractData.duration} months\n• **${t.monthlyRent}:** AED ${contractData.monthlyRent}\n• **${t.depositAmount}:** AED ${contractData.depositAmount}\n\n🎉 The contract has been created and is ready for processing. The driver will be notified and the vehicle will be assigned automatically.\n\n📄 **Next Steps:**\n• Contract PDF will be generated\n• Driver notification sent\n• Vehicle assignment updated\n• Payment schedule created`,
+          isUser: false,
+          timestamp: new Date(),
+          type: 'data'
+        };
+      }
+    }
     
     // EARNINGS QUERIES - Check this FIRST and be more specific
     if (lowerQuery.includes('earn') || lowerQuery.includes('made') || lowerQuery.includes('money') || 
@@ -350,12 +426,14 @@ const NavEdgeAssistant: React.FC<NavEdgeAssistantProps> = ({ onClose, fleetMode,
     // ACTION: Create new contract
     if (lowerQuery.includes('create') && lowerQuery.includes('contract')) {
       const driverName = extractDriverName(query);
+      setActiveWizard('create_contract');
+      
       return {
         id: Date.now().toString(),
-        text: `🔧 **Contract Creation Wizard Started**\n\nI'll help you create a new rental contract${driverName ? ` for ${driverName}` : ''}.\n\nPlease provide:\n1. Driver's full name\n2. Emirates ID number\n3. Vehicle ID to assign\n4. Rental duration (months)\n5. Monthly rent amount\n6. Deposit amount\n\nYou can also upload the driver's Emirates ID for automatic data extraction.`,
+        text: `🔧 **Contract Creation Wizard Started**\n\nI'll help you create a new rental contract${driverName ? ` for ${driverName}` : ''}.\n\n**Option 1: Quick Entry**\nProvide all details in one line separated by commas:\n\`Driver Name, Emirates ID, Vehicle ID, Duration (months), Monthly Rent, Deposit\`\n\n**Example:**\n\`Ahmed Al-Rashid, 784-1990-1234567-1, DXB-A-12345, 12, 1200, 5000\`\n\n**Option 2: Step by Step**\nI can guide you through each field individually.\n\n💡 **Just type your contract details or say "step by step" for guided entry.**`,
         isUser: false,
         timestamp: new Date(),
-        type: 'action',
+        type: 'wizard',
         actionType: 'create_contract'
       };
     }
@@ -508,6 +586,11 @@ const NavEdgeAssistant: React.FC<NavEdgeAssistantProps> = ({ onClose, fleetMode,
             <div className="px-3 py-1 bg-white/20 rounded-full text-white text-xs font-medium">
               {fleetMode.toUpperCase()} MODE
             </div>
+            {activeWizard && (
+              <div className="px-3 py-1 bg-green-500/80 rounded-full text-white text-xs font-medium animate-pulse">
+                CONTRACT WIZARD
+              </div>
+            )}
             <button
               onClick={onClose}
               className="p-2 hover:bg-white/20 rounded-lg transition-colors"
@@ -528,7 +611,7 @@ const NavEdgeAssistant: React.FC<NavEdgeAssistantProps> = ({ onClose, fleetMode,
                 <div className={`p-2 rounded-full ${
                   message.isUser 
                     ? 'bg-blue-600' 
-                    : message.type === 'action' 
+                    : message.type === 'action' || message.type === 'wizard'
                       ? 'bg-gradient-to-r from-green-500 to-emerald-600'
                       : message.type === 'confirmation'
                         ? 'bg-gradient-to-r from-orange-500 to-red-600'
@@ -538,7 +621,7 @@ const NavEdgeAssistant: React.FC<NavEdgeAssistantProps> = ({ onClose, fleetMode,
                 }`}>
                   {message.isUser ? (
                     <Sparkles className="w-4 h-4 text-white" />
-                  ) : message.type === 'action' ? (
+                  ) : message.type === 'action' || message.type === 'wizard' ? (
                     <Settings className="w-4 h-4 text-white" />
                   ) : message.type === 'confirmation' ? (
                     <AlertTriangle className="w-4 h-4 text-white" />
@@ -552,7 +635,7 @@ const NavEdgeAssistant: React.FC<NavEdgeAssistantProps> = ({ onClose, fleetMode,
                   className={`px-4 py-3 rounded-2xl ${
                     message.isUser
                       ? 'bg-blue-600 text-white'
-                      : message.type === 'action'
+                      : message.type === 'action' || message.type === 'wizard'
                         ? 'bg-green-50 text-green-900 border border-green-200'
                         : message.type === 'confirmation'
                           ? 'bg-orange-50 text-orange-900 border border-orange-200'
@@ -565,7 +648,7 @@ const NavEdgeAssistant: React.FC<NavEdgeAssistantProps> = ({ onClose, fleetMode,
                   <p className={`text-xs mt-2 ${
                     message.isUser 
                       ? 'text-blue-100' 
-                      : message.type === 'action'
+                      : message.type === 'action' || message.type === 'wizard'
                         ? 'text-green-600'
                         : message.type === 'confirmation'
                           ? 'text-orange-600'
@@ -612,7 +695,10 @@ const NavEdgeAssistant: React.FC<NavEdgeAssistantProps> = ({ onClose, fleetMode,
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
               onKeyPress={handleKeyPress}
-              placeholder={t.placeholder}
+              placeholder={activeWizard === 'create_contract' ? 
+                'Enter contract details: Name, ID, Vehicle, Duration, Rent, Deposit' : 
+                t.placeholder
+              }
               className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
             <button
@@ -642,6 +728,19 @@ const NavEdgeAssistant: React.FC<NavEdgeAssistantProps> = ({ onClose, fleetMode,
                   </button>
                 ))}
               </div>
+            </div>
+          )}
+
+          {/* Contract Wizard Helper */}
+          {activeWizard === 'create_contract' && (
+            <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+              <div className="flex items-center space-x-2 mb-2">
+                <CheckCircle className="w-4 h-4 text-green-600" />
+                <span className="text-sm font-medium text-green-800">Contract Wizard Active</span>
+              </div>
+              <p className="text-xs text-green-700">
+                💡 **Quick tip:** Type all details in one line: `Ahmed Al-Rashid, 784-1990-1234567-1, DXB-A-12345, 12, 1200, 5000`
+              </p>
             </div>
           )}
         </div>
