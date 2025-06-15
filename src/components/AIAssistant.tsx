@@ -40,12 +40,12 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ onClose, fleetMode, language,
       welcome: `Hello! I'm your AI-powered fleet control hub. I can help you analyze data, manage operations, and perform administrative tasks for your ${fleetMode} fleet. Try asking me about specific drivers, locations, earnings, or any fleet operations!`,
       quickActions: 'Quick Actions',
       examples: [
-        'Where is Ahmed located?',
+        'How much did Ahmed make today?',
+        'Where is Omar located?',
         'Who earned the most today?',
         'Show me drivers with fines',
-        'Create a contract for Omar',
+        'Create a contract for Ahmed',
         'Switch to Taxi Mode',
-        'Export earnings report',
         'Which drivers are offline?',
         'Show me performance rankings'
       ],
@@ -63,12 +63,12 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ onClose, fleetMode, language,
       welcome: `مرحباً! أنا مركز التحكم الذكي المدعوم بالذكاء الاصطناعي. يمكنني مساعدتك في تحليل البيانات وإدارة العمليات وتنفيذ المهام الإدارية لأسطول ${fleetMode === 'rental' ? 'الإيجار' : 'التاكسي'} الخاص بك. جرب أن تسألني عن سائقين محددين أو المواقع أو الأرباح أو أي عمليات للأسطول!`,
       quickActions: 'الإجراءات السريعة',
       examples: [
-        'أين يقع أحمد؟',
+        'كم ربح أحمد اليوم؟',
+        'أين يقع عمر؟',
         'من حقق أعلى أرباح اليوم؟',
         'أظهر لي السائقين الذين لديهم مخالفات',
-        'إنشاء عقد لعمر',
+        'إنشاء عقد لأحمد',
         'التبديل إلى وضع التاكسي',
-        'تصدير تقرير الأرباح',
         'أي السائقين غير متصلين؟',
         'أظهر لي ترتيب الأداء'
       ],
@@ -95,19 +95,97 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ onClose, fleetMode, language,
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  // Helper functions for name extraction and driver finding
+  const extractDriverName = (query: string): string | null => {
+    const lowerQuery = query.toLowerCase();
+    
+    // More comprehensive patterns for driver name extraction
+    const patterns = [
+      // "how much did Ahmed make" or "Ahmed's earnings"
+      /(?:how much did|earnings of|earnings for|made by|income of|revenue of|money did)\s+(\w+)/i,
+      // "Ahmed made" or "Ahmed earned"
+      /(\w+)\s+(?:made|earned|income|revenue|money)/i,
+      // "Ahmed's" possessive
+      /(\w+)(?:'s|s')/i,
+      // "show me Ahmed" or "tell me about Ahmed"
+      /(?:show me|tell me about|about|for)\s+(\w+)/i,
+      // "where is Ahmed"
+      /(?:where is|location of|find)\s+(\w+)/i,
+      // Just the name followed by context words
+      /(\w+)\s+(?:today|earnings|location|performance|fines|trips)/i,
+      // Name at the beginning
+      /^(\w+)\s/i
+    ];
+    
+    for (const pattern of patterns) {
+      const match = lowerQuery.match(pattern);
+      if (match && match[1]) {
+        const name = match[1].toLowerCase();
+        // Check if this matches any driver name (partial match)
+        const driver = mockDriversData.find(d => 
+          d.name.toLowerCase().includes(name) || 
+          d.name.toLowerCase().split(' ').some(part => part.toLowerCase().startsWith(name))
+        );
+        if (driver) return driver.name;
+      }
+    }
+    
+    // Fallback: check if any driver name appears anywhere in the query
+    for (const driver of mockDriversData) {
+      const firstName = driver.name.split(' ')[0].toLowerCase();
+      if (lowerQuery.includes(firstName)) {
+        return driver.name;
+      }
+    }
+    
+    return null;
+  };
+
+  const findDriverByName = (name: string) => {
+    return mockDriversData.find(d => 
+      d.name.toLowerCase().includes(name.toLowerCase()) ||
+      d.name.toLowerCase().split(' ').some(part => part.toLowerCase().startsWith(name.toLowerCase()))
+    );
+  };
+
   // Enhanced query processing with natural language understanding
   const processIntelligentQuery = (query: string): Message => {
     const lowerQuery = query.toLowerCase();
     
-    // LOCATION QUERIES
-    if (lowerQuery.includes('location') || lowerQuery.includes('where') || lowerQuery.includes('located')) {
+    // EARNINGS QUERIES - Check this FIRST and be more specific
+    if (lowerQuery.includes('earn') || lowerQuery.includes('made') || lowerQuery.includes('money') || 
+        lowerQuery.includes('revenue') || lowerQuery.includes('income') || lowerQuery.includes('much') ||
+        lowerQuery.includes('pay') || lowerQuery.includes('profit')) {
+      
+      // Check for "most" or "top" earners first
+      if (lowerQuery.includes('most') || lowerQuery.includes('top') || lowerQuery.includes('highest') || lowerQuery.includes('best')) {
+        const topEarner = mockDriversData.reduce((prev, current) => 
+          prev.earnings > current.earnings ? prev : current
+        );
+        const sortedDrivers = [...mockDriversData].sort((a, b) => b.earnings - a.earnings);
+        
+        return {
+          id: Date.now().toString(),
+          text: `💰 **Top Earners ${fleetMode === 'taxi' ? 'Today' : 'This Month'}**\n\n🏆 **#1 ${topEarner.name}**\n• Earnings: $${topEarner.earnings.toLocaleString()}\n• ${fleetMode === 'taxi' ? 'Trips' : 'Rentals'}: ${topEarner.trips}\n• Performance: ${topEarner.performanceScore}%\n• Status: ${topEarner.status === 'active' ? '🟢 Active' : '🔴 Offline'}\n\n**Top 5 Rankings:**\n${sortedDrivers.slice(0, 5).map((driver, index) => 
+            `${index + 1}. ${driver.name} - $${driver.earnings.toLocaleString()}`
+          ).join('\n')}\n\n**Fleet Total:** $${mockDriversData.reduce((sum, d) => sum + d.earnings, 0).toLocaleString()}`,
+          isUser: false,
+          timestamp: new Date(),
+          type: 'data'
+        };
+      }
+      
+      // Check for specific driver earnings
       const driverName = extractDriverName(query);
       if (driverName) {
         const driver = findDriverByName(driverName);
         if (driver) {
+          const ranking = mockDriversData.sort((a, b) => b.earnings - a.earnings).findIndex(d => d.id === driver.id) + 1;
+          const avgPerTrip = driver.trips > 0 ? Math.round(driver.earnings / driver.trips) : 0;
+          
           return {
             id: Date.now().toString(),
-            text: `📍 **${driver.name}'s Current Location**\n\n**Status:** ${driver.status === 'active' ? '🟢 Online' : '🔴 Offline'}\n**Vehicle:** ${driver.vehicleId || 'No vehicle assigned'}\n**Location:** Dubai Marina, UAE\n**Coordinates:** ${driver.location.lat.toFixed(4)}, ${driver.location.lng.toFixed(4)}\n**Last Update:** ${new Date().toLocaleTimeString()}\n\n${driver.status === 'active' ? '✅ Driver is currently active and trackable' : '⚠️ Driver is offline - showing last known location'}`,
+            text: `💵 **${driver.name}'s Earnings**\n\n**${fleetMode === 'taxi' ? 'Today' : 'This Month'}:** $${driver.earnings.toLocaleString()}\n**${fleetMode === 'taxi' ? 'Trips' : 'Rentals'} Completed:** ${driver.trips}\n**Average per ${fleetMode === 'taxi' ? 'Trip' : 'Rental'}:** $${avgPerTrip}\n**Performance Score:** ${driver.performanceScore}%\n\n**Fleet Ranking:** ${ranking} out of ${mockDriversData.length} drivers\n\n${driver.earnings > 1500 ? '🎉 Excellent performance!' : driver.earnings > 1000 ? '👍 Good performance' : driver.earnings > 500 ? '📈 Average performance' : '⚠️ Below average - may need support'}\n\n**Status:** ${driver.status === 'active' ? '🟢 Currently Online' : '🔴 Offline'}`,
             isUser: false,
             timestamp: new Date(),
             type: 'data'
@@ -115,7 +193,47 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ onClose, fleetMode, language,
         } else {
           return {
             id: Date.now().toString(),
-            text: `❌ **Driver Not Found**\n\nI couldn't find a driver named "${driverName}". Here are the available drivers:\n\n${mockDriversData.map(d => `• ${d.name}`).join('\n')}\n\nTry asking: "Where is Ahmed located?" or "Show me Omar's location"`,
+            text: `❌ **Driver Not Found**\n\nI couldn't find a driver named "${driverName}". Here are the available drivers:\n\n${mockDriversData.map(d => `• ${d.name} - $${d.earnings.toLocaleString()}`).join('\n')}\n\n💡 **Try asking:** "How much did Ahmed make today?" or "Show me Omar's earnings"`,
+            isUser: false,
+            timestamp: new Date(),
+            type: 'text'
+          };
+        }
+      }
+      
+      // General earnings overview if no specific driver mentioned
+      const totalEarnings = mockDriversData.reduce((sum, d) => sum + d.earnings, 0);
+      const avgEarnings = Math.round(totalEarnings / mockDriversData.length);
+      const topEarner = mockDriversData.reduce((prev, current) => prev.earnings > current.earnings ? prev : current);
+      
+      return {
+        id: Date.now().toString(),
+        text: `💰 **Fleet Earnings Overview**\n\n**Total Fleet Earnings:** $${totalEarnings.toLocaleString()}\n**Average per Driver:** $${avgEarnings.toLocaleString()}\n**Top Performer:** ${topEarner.name} ($${topEarner.earnings.toLocaleString()})\n\n**Earnings Breakdown:**\n${mockDriversData.sort((a, b) => b.earnings - a.earnings).map((driver, index) => 
+          `${index + 1}. ${driver.name}: $${driver.earnings.toLocaleString()}`
+        ).join('\n')}\n\n💡 **Ask me:** "How much did [driver name] make today?" for specific details!`,
+        isUser: false,
+        timestamp: new Date(),
+        type: 'data'
+      };
+    }
+
+    // LOCATION QUERIES
+    if (lowerQuery.includes('location') || lowerQuery.includes('where') || lowerQuery.includes('located') || lowerQuery.includes('find')) {
+      const driverName = extractDriverName(query);
+      if (driverName) {
+        const driver = findDriverByName(driverName);
+        if (driver) {
+          return {
+            id: Date.now().toString(),
+            text: `📍 **${driver.name}'s Current Location**\n\n**Status:** ${driver.status === 'active' ? '🟢 Online & Trackable' : '🔴 Offline'}\n**Vehicle:** ${driver.vehicleId || 'No vehicle assigned'}\n**Location:** Dubai Marina, UAE\n**Coordinates:** ${driver.location.lat.toFixed(4)}, ${driver.location.lng.toFixed(4)}\n**Last Update:** ${new Date().toLocaleTimeString()}\n\n${driver.status === 'active' ? '✅ Driver is currently active and trackable' : '⚠️ Driver is offline - showing last known location'}\n\n📱 **Contact:** ${driver.phone}`,
+            isUser: false,
+            timestamp: new Date(),
+            type: 'data'
+          };
+        } else {
+          return {
+            id: Date.now().toString(),
+            text: `❌ **Driver Not Found**\n\nI couldn't find a driver named "${driverName}". Here are the available drivers:\n\n${mockDriversData.map(d => `• ${d.name} - ${d.status === 'active' ? '🟢 Online' : '🔴 Offline'}`).join('\n')}\n\n💡 **Try asking:** "Where is Ahmed?" or "Show me Omar's location"`,
             isUser: false,
             timestamp: new Date(),
             type: 'text'
@@ -131,40 +249,6 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ onClose, fleetMode, language,
           timestamp: new Date(),
           type: 'data'
         };
-      }
-    }
-
-    // EARNINGS QUERIES
-    if (lowerQuery.includes('earn') || lowerQuery.includes('money') || lowerQuery.includes('revenue') || lowerQuery.includes('income')) {
-      if (lowerQuery.includes('most') || lowerQuery.includes('top') || lowerQuery.includes('highest')) {
-        const topEarner = mockDriversData.reduce((prev, current) => 
-          prev.earnings > current.earnings ? prev : current
-        );
-        const sortedDrivers = [...mockDriversData].sort((a, b) => b.earnings - a.earnings);
-        
-        return {
-          id: Date.now().toString(),
-          text: `💰 **Top Earners Today**\n\n🏆 **#1 ${topEarner.name}**\n• Earnings: $${topEarner.earnings.toLocaleString()}\n• Trips: ${topEarner.trips}\n• Performance: ${topEarner.performanceScore}%\n• Status: ${topEarner.status === 'active' ? '🟢 Active' : '🔴 Offline'}\n\n**Top 5 Rankings:**\n${sortedDrivers.slice(0, 5).map((driver, index) => 
-            `${index + 1}. ${driver.name} - $${driver.earnings.toLocaleString()}`
-          ).join('\n')}\n\n**Fleet Total:** $${mockDriversData.reduce((sum, d) => sum + d.earnings, 0).toLocaleString()}`,
-          isUser: false,
-          timestamp: new Date(),
-          type: 'data'
-        };
-      } else {
-        const driverName = extractDriverName(query);
-        if (driverName) {
-          const driver = findDriverByName(driverName);
-          if (driver) {
-            return {
-              id: Date.now().toString(),
-              text: `💵 **${driver.name}'s Earnings**\n\n**Today:** $${driver.earnings.toLocaleString()}\n**Trips Completed:** ${driver.trips}\n**Average per Trip:** $${Math.round(driver.earnings / driver.trips)}\n**Performance Score:** ${driver.performanceScore}%\n\n**Ranking:** ${mockDriversData.sort((a, b) => b.earnings - a.earnings).findIndex(d => d.id === driver.id) + 1} out of ${mockDriversData.length} drivers\n\n${driver.earnings > 1000 ? '🎉 Excellent performance today!' : driver.earnings > 500 ? '👍 Good performance' : '⚠️ Below average - may need support'}`,
-              isUser: false,
-              timestamp: new Date(),
-              type: 'data'
-            };
-          }
-        }
       }
     }
 
@@ -190,7 +274,7 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ onClose, fleetMode, language,
         return {
           id: Date.now().toString(),
           text: `🟢 **Active Drivers**\n\n${activeDrivers.map(driver => 
-            `**${driver.name}**\n• Vehicle: ${driver.vehicleId || 'Unassigned'}\n• Earnings: $${driver.earnings.toLocaleString()}\n• Trips: ${driver.trips}\n• Performance: ${driver.performanceScore}%`
+            `**${driver.name}**\n• Vehicle: ${driver.vehicleId || 'Unassigned'}\n• Earnings: $${driver.earnings.toLocaleString()}\n• ${fleetMode === 'taxi' ? 'Trips' : 'Rentals'}: ${driver.trips}\n• Performance: ${driver.performanceScore}%`
           ).join('\n\n')}\n\n**Fleet Status:** ${activeDrivers.length}/${mockDriversData.length} drivers active (${Math.round((activeDrivers.length / mockDriversData.length) * 100)}%)`,
           isUser: false,
           timestamp: new Date(),
@@ -237,7 +321,7 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ onClose, fleetMode, language,
       return {
         id: Date.now().toString(),
         text: `📊 **Performance Rankings**\n\n${sortedByPerformance.map((driver, index) => 
-          `${index + 1}. **${driver.name}**\n   Score: ${driver.performanceScore}% | Earnings: $${driver.earnings.toLocaleString()} | Trips: ${driver.trips}\n   ${driver.performanceScore >= 90 ? '🌟 Excellent' : driver.performanceScore >= 80 ? '👍 Good' : '⚠️ Needs Improvement'}`
+          `${index + 1}. **${driver.name}**\n   Score: ${driver.performanceScore}% | Earnings: $${driver.earnings.toLocaleString()} | ${fleetMode === 'taxi' ? 'Trips' : 'Rentals'}: ${driver.trips}\n   ${driver.performanceScore >= 90 ? '🌟 Excellent' : driver.performanceScore >= 80 ? '👍 Good' : '⚠️ Needs Improvement'}`
         ).join('\n\n')}\n\n**Fleet Average:** ${Math.round(mockDriversData.reduce((sum, d) => sum + d.performanceScore, 0) / mockDriversData.length)}%\n\n💡 **Tip:** Drivers below 80% may need additional training or support.`,
         isUser: false,
         timestamp: new Date(),
@@ -255,7 +339,7 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ onClose, fleetMode, language,
         
         return {
           id: Date.now().toString(),
-          text: `👤 **${driver.name} - Complete Profile**\n\n**📊 Performance:**\n• Score: ${driver.performanceScore}%\n• Status: ${driver.status === 'active' ? '🟢 Online' : '🔴 Offline'}\n• Earnings Today: $${driver.earnings.toLocaleString()}\n• Trips: ${driver.trips}\n\n**🚗 Vehicle:**\n• Assigned: ${driver.vehicleId || 'None'}\n• Location: Dubai, UAE\n\n**📱 Contact:**\n• Phone: ${driver.phone}\n• Email: ${driver.email}\n\n**⚠️ Fines:**\n• Total: ${driverFines.length}\n• Amount: AED ${driverFines.reduce((sum, f) => sum + f.amount, 0)}\n\n**📄 Contracts:**\n• Active: ${driverContracts.filter(c => c.status === 'active').length}\n• Total: ${driverContracts.length}\n\n${driver.performanceScore >= 90 ? '🌟 Top performer!' : driver.performanceScore >= 80 ? '👍 Good driver' : '⚠️ May need attention'}`,
+          text: `👤 **${driver.name} - Complete Profile**\n\n**📊 Performance:**\n• Score: ${driver.performanceScore}%\n• Status: ${driver.status === 'active' ? '🟢 Online' : '🔴 Offline'}\n• Earnings ${fleetMode === 'taxi' ? 'Today' : 'Monthly'}: $${driver.earnings.toLocaleString()}\n• ${fleetMode === 'taxi' ? 'Trips' : 'Rentals'}: ${driver.trips}\n\n**🚗 Vehicle:**\n• Assigned: ${driver.vehicleId || 'None'}\n• Location: Dubai, UAE\n\n**📱 Contact:**\n• Phone: ${driver.phone}\n• Email: ${driver.email}\n\n**⚠️ Fines:**\n• Total: ${driverFines.length}\n• Amount: AED ${driverFines.reduce((sum, f) => sum + f.amount, 0)}\n\n**📄 ${fleetMode === 'rental' ? 'Contracts' : 'Shifts'}:**\n• Active: ${driverContracts.filter(c => c.status === 'active').length}\n• Total: ${driverContracts.length}\n\n${driver.performanceScore >= 90 ? '🌟 Top performer!' : driver.performanceScore >= 80 ? '👍 Good driver' : '⚠️ May need attention'}`,
           isUser: false,
           timestamp: new Date(),
           type: 'data'
@@ -306,42 +390,11 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ onClose, fleetMode, language,
     // Default intelligent response with suggestions
     return {
       id: Date.now().toString(),
-      text: `🤖 **I'm here to help!** I didn't quite understand that query, but I can help you with:\n\n**📍 Location Queries:**\n• "Where is Ahmed located?"\n• "Show me all driver locations"\n\n**💰 Earnings & Performance:**\n• "Who earned the most today?"\n• "Show me Ahmed's earnings"\n• "Performance rankings"\n\n**👥 Driver Management:**\n• "Which drivers are offline?"\n• "Show me drivers with fines"\n• "Tell me about Omar"\n\n**⚙️ Fleet Operations:**\n• "Create a contract for Ahmed"\n• "Switch to taxi mode"\n• "Export earnings report"\n\n**💡 Tip:** Try being specific with driver names and what information you need!`,
+      text: `🤖 **I'm here to help!** I can answer questions about:\n\n**💰 Earnings & Money:**\n• "How much did Ahmed make today?"\n• "Who earned the most?"\n• "Show me earnings overview"\n\n**📍 Driver Locations:**\n• "Where is Omar located?"\n• "Show me all driver locations"\n\n**👥 Driver Management:**\n• "Which drivers are offline?"\n• "Show me drivers with fines"\n• "Tell me about Mohammed"\n\n**📊 Performance & Stats:**\n• "Performance rankings"\n• "Show me fleet overview"\n\n**⚙️ Fleet Operations:**\n• "Create a contract for Ahmed"\n• "Switch to taxi mode"\n\n**💡 Tip:** Try asking "How much did [driver name] make today?" or "Where is [driver name]?"`,
       isUser: false,
       timestamp: new Date(),
       type: 'text'
     };
-  };
-
-  // Helper functions for name extraction and driver finding
-  const extractDriverName = (query: string): string | null => {
-    const patterns = [
-      /(?:for|about|is|where|show|tell)\s+(\w+)/i,
-      /(\w+)(?:'s|s')/i,
-      /driver\s+(\w+)/i,
-      /(\w+)\s+(?:located|location|earnings|performance)/i
-    ];
-    
-    for (const pattern of patterns) {
-      const match = query.match(pattern);
-      if (match) {
-        const name = match[1].toLowerCase();
-        // Check if this matches any driver name (partial match)
-        const driver = mockDriversData.find(d => 
-          d.name.toLowerCase().includes(name) || 
-          d.name.toLowerCase().split(' ').some(part => part.startsWith(name))
-        );
-        if (driver) return driver.name;
-      }
-    }
-    return null;
-  };
-
-  const findDriverByName = (name: string) => {
-    return mockDriversData.find(d => 
-      d.name.toLowerCase().includes(name.toLowerCase()) ||
-      d.name.toLowerCase().split(' ').some(part => part.toLowerCase().startsWith(name.toLowerCase()))
-    );
   };
 
   const handleConfirmation = (messageId: string, confirmed: boolean) => {
@@ -389,11 +442,12 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ onClose, fleetMode, language,
     };
 
     setMessages(prev => [...prev, userMessage]);
+    const currentInput = inputText;
     setInputText('');
     setIsTyping(true);
 
     setTimeout(() => {
-      const aiResponse = processIntelligentQuery(inputText);
+      const aiResponse = processIntelligentQuery(currentInput);
       setMessages(prev => [...prev, aiResponse]);
       setIsTyping(false);
     }, 1500);
