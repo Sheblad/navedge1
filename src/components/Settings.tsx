@@ -8,10 +8,22 @@ import {
   Smartphone,
   Save,
   Eye,
-  EyeOff
+  EyeOff,
+  Car,
+  CarTaxiFront as Taxi
 } from 'lucide-react';
 
-const Settings: React.FC = () => {
+type FleetMode = 'rental' | 'taxi';
+type Language = 'en' | 'ar';
+
+interface SettingsProps {
+  fleetMode: FleetMode;
+  setFleetMode: (mode: FleetMode) => void;
+  language: Language;
+  setLanguage: (lang: Language) => void;
+}
+
+const Settings: React.FC<SettingsProps> = ({ fleetMode, setFleetMode, language, setLanguage }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [notifications, setNotifications] = useState({
     email: true,
@@ -19,36 +31,143 @@ const Settings: React.FC = () => {
     sms: false
   });
 
+  const texts = {
+    en: {
+      title: 'Settings',
+      subtitle: 'Manage your account settings and preferences',
+      profile: 'Profile Settings',
+      profileDesc: 'Manage your account information',
+      notifications: 'Notifications',
+      notificationsDesc: 'Configure your notification preferences',
+      security: 'Security',
+      securityDesc: 'Password and security settings',
+      billing: 'Billing',
+      billingDesc: 'Subscription and payment methods',
+      preferences: 'Preferences',
+      preferencesDesc: 'Language and regional settings',
+      fleetSettings: 'Fleet Settings',
+      fleetSettingsDesc: 'Fleet mode and operational preferences',
+      firstName: 'First Name',
+      lastName: 'Last Name',
+      email: 'Email Address',
+      phone: 'Phone Number',
+      company: 'Company',
+      currentPassword: 'Current Password',
+      newPassword: 'New Password',
+      confirmPassword: 'Confirm New Password',
+      twoFactor: 'Two-Factor Authentication',
+      twoFactorDesc: 'Add an extra layer of security to your account',
+      enable2FA: 'Enable 2FA',
+      emailNotifications: 'Email Notifications',
+      emailNotificationsDesc: 'Receive notifications via email',
+      pushNotifications: 'Push Notifications',
+      pushNotificationsDesc: 'Receive push notifications in browser',
+      smsNotifications: 'SMS Notifications',
+      smsNotificationsDesc: 'Receive notifications via SMS',
+      fleetMode: 'Fleet Mode',
+      fleetModeDesc: 'Choose your primary fleet operation mode',
+      rental: 'Rental Mode',
+      taxi: 'Taxi Mode',
+      rentalDesc: 'Focus on vehicle rentals and contracts',
+      taxiDesc: 'Focus on taxi trips and shifts',
+      languageSettings: 'Language',
+      languageDesc: 'Choose your preferred language',
+      english: 'English',
+      arabic: 'العربية',
+      saveChanges: 'Save Changes',
+      billingTitle: 'Billing Settings',
+      billingContent: 'Manage your subscription and payment methods',
+      preferencesTitle: 'Additional Preferences',
+      preferencesContent: 'Customize your experience'
+    },
+    ar: {
+      title: 'الإعدادات',
+      subtitle: 'إدارة إعدادات حسابك وتفضيلاتك',
+      profile: 'إعدادات الملف الشخصي',
+      profileDesc: 'إدارة معلومات حسابك',
+      notifications: 'الإشعارات',
+      notificationsDesc: 'تكوين تفضيلات الإشعارات',
+      security: 'الأمان',
+      securityDesc: 'إعدادات كلمة المرور والأمان',
+      billing: 'الفواتير',
+      billingDesc: 'الاشتراك وطرق الدفع',
+      preferences: 'التفضيلات',
+      preferencesDesc: 'إعدادات اللغة والمنطقة',
+      fleetSettings: 'إعدادات الأسطول',
+      fleetSettingsDesc: 'وضع الأسطول والتفضيلات التشغيلية',
+      firstName: 'الاسم الأول',
+      lastName: 'اسم العائلة',
+      email: 'عنوان البريد الإلكتروني',
+      phone: 'رقم الهاتف',
+      company: 'الشركة',
+      currentPassword: 'كلمة المرور الحالية',
+      newPassword: 'كلمة المرور الجديدة',
+      confirmPassword: 'تأكيد كلمة المرور الجديدة',
+      twoFactor: 'المصادقة الثنائية',
+      twoFactorDesc: 'إضافة طبقة أمان إضافية لحسابك',
+      enable2FA: 'تفعيل المصادقة الثنائية',
+      emailNotifications: 'إشعارات البريد الإلكتروني',
+      emailNotificationsDesc: 'تلقي الإشعارات عبر البريد الإلكتروني',
+      pushNotifications: 'الإشعارات المنبثقة',
+      pushNotificationsDesc: 'تلقي الإشعارات المنبثقة في المتصفح',
+      smsNotifications: 'إشعارات الرسائل النصية',
+      smsNotificationsDesc: 'تلقي الإشعارات عبر الرسائل النصية',
+      fleetMode: 'وضع الأسطول',
+      fleetModeDesc: 'اختر وضع تشغيل الأسطول الأساسي',
+      rental: 'وضع الإيجار',
+      taxi: 'وضع التاكسي',
+      rentalDesc: 'التركيز على تأجير المركبات والعقود',
+      taxiDesc: 'التركيز على رحلات التاكسي والمناوبات',
+      languageSettings: 'اللغة',
+      languageDesc: 'اختر لغتك المفضلة',
+      english: 'English',
+      arabic: 'العربية',
+      saveChanges: 'حفظ التغييرات',
+      billingTitle: 'إعدادات الفواتير',
+      billingContent: 'إدارة اشتراكك وطرق الدفع',
+      preferencesTitle: 'التفضيلات الإضافية',
+      preferencesContent: 'تخصيص تجربتك'
+    }
+  };
+
+  const t = texts[language];
+
   const settingSections = [
     {
       id: 'profile',
-      title: 'Profile Settings',
+      title: t.profile,
       icon: User,
-      description: 'Manage your account information'
+      description: t.profileDesc
+    },
+    {
+      id: 'fleet',
+      title: t.fleetSettings,
+      icon: fleetMode === 'rental' ? Car : Taxi,
+      description: t.fleetSettingsDesc
     },
     {
       id: 'notifications',
-      title: 'Notifications',
+      title: t.notifications,
       icon: Bell,
-      description: 'Configure your notification preferences'
+      description: t.notificationsDesc
     },
     {
       id: 'security',
-      title: 'Security',
+      title: t.security,
       icon: Shield,
-      description: 'Password and security settings'
+      description: t.securityDesc
     },
     {
       id: 'billing',
-      title: 'Billing',
+      title: t.billing,
       icon: CreditCard,
-      description: 'Subscription and payment methods'
+      description: t.billingDesc
     },
     {
       id: 'preferences',
-      title: 'Preferences',
+      title: t.preferences,
       icon: Globe,
-      description: 'Language and regional settings'
+      description: t.preferencesDesc
     }
   ];
 
@@ -59,7 +178,7 @@ const Settings: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            First Name
+            {t.firstName}
           </label>
           <input
             type="text"
@@ -69,7 +188,7 @@ const Settings: React.FC = () => {
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Last Name
+            {t.lastName}
           </label>
           <input
             type="text"
@@ -81,7 +200,7 @@ const Settings: React.FC = () => {
       
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          Email Address
+          {t.email}
         </label>
         <input
           type="email"
@@ -92,7 +211,7 @@ const Settings: React.FC = () => {
       
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          Phone Number
+          {t.phone}
         </label>
         <input
           type="tel"
@@ -103,7 +222,7 @@ const Settings: React.FC = () => {
       
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          Company
+          {t.company}
         </label>
         <input
           type="text"
@@ -114,13 +233,101 @@ const Settings: React.FC = () => {
     </div>
   );
 
+  const renderFleetSettings = () => (
+    <div className="space-y-6">
+      <div>
+        <h4 className="text-lg font-medium text-gray-900 mb-4">{t.fleetMode}</h4>
+        <p className="text-sm text-gray-600 mb-6">{t.fleetModeDesc}</p>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div 
+            className={`p-6 border-2 rounded-lg cursor-pointer transition-all ${
+              fleetMode === 'rental' 
+                ? 'border-blue-500 bg-blue-50' 
+                : 'border-gray-200 hover:border-gray-300'
+            }`}
+            onClick={() => setFleetMode('rental')}
+          >
+            <div className="flex items-center space-x-3 mb-3">
+              <Car className={`w-6 h-6 ${fleetMode === 'rental' ? 'text-blue-600' : 'text-gray-500'}`} />
+              <h5 className={`font-medium ${fleetMode === 'rental' ? 'text-blue-900' : 'text-gray-900'}`}>
+                {t.rental}
+              </h5>
+            </div>
+            <p className={`text-sm ${fleetMode === 'rental' ? 'text-blue-700' : 'text-gray-600'}`}>
+              {t.rentalDesc}
+            </p>
+          </div>
+          
+          <div 
+            className={`p-6 border-2 rounded-lg cursor-pointer transition-all ${
+              fleetMode === 'taxi' 
+                ? 'border-blue-500 bg-blue-50' 
+                : 'border-gray-200 hover:border-gray-300'
+            }`}
+            onClick={() => setFleetMode('taxi')}
+          >
+            <div className="flex items-center space-x-3 mb-3">
+              <Taxi className={`w-6 h-6 ${fleetMode === 'taxi' ? 'text-blue-600' : 'text-gray-500'}`} />
+              <h5 className={`font-medium ${fleetMode === 'taxi' ? 'text-blue-900' : 'text-gray-900'}`}>
+                {t.taxi}
+              </h5>
+            </div>
+            <p className={`text-sm ${fleetMode === 'taxi' ? 'text-blue-700' : 'text-gray-600'}`}>
+              {t.taxiDesc}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <h4 className="text-lg font-medium text-gray-900 mb-4">{t.languageSettings}</h4>
+        <p className="text-sm text-gray-600 mb-6">{t.languageDesc}</p>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div 
+            className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
+              language === 'en' 
+                ? 'border-blue-500 bg-blue-50' 
+                : 'border-gray-200 hover:border-gray-300'
+            }`}
+            onClick={() => setLanguage('en')}
+          >
+            <div className="flex items-center space-x-3">
+              <Globe className={`w-5 h-5 ${language === 'en' ? 'text-blue-600' : 'text-gray-500'}`} />
+              <span className={`font-medium ${language === 'en' ? 'text-blue-900' : 'text-gray-900'}`}>
+                {t.english}
+              </span>
+            </div>
+          </div>
+          
+          <div 
+            className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
+              language === 'ar' 
+                ? 'border-blue-500 bg-blue-50' 
+                : 'border-gray-200 hover:border-gray-300'
+            }`}
+            onClick={() => setLanguage('ar')}
+          >
+            <div className="flex items-center space-x-3">
+              <Globe className={`w-5 h-5 ${language === 'ar' ? 'text-blue-600' : 'text-gray-500'}`} />
+              <span className={`font-medium ${language === 'ar' ? 'text-blue-900' : 'text-gray-900'}`}>
+                {t.arabic}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   const renderNotificationSettings = () => (
     <div className="space-y-6">
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <div>
-            <h4 className="font-medium text-gray-900">Email Notifications</h4>
-            <p className="text-sm text-gray-500">Receive notifications via email</p>
+            <h4 className="font-medium text-gray-900">{t.emailNotifications}</h4>
+            <p className="text-sm text-gray-500">{t.emailNotificationsDesc}</p>
           </div>
           <label className="relative inline-flex items-center cursor-pointer">
             <input
@@ -135,8 +342,8 @@ const Settings: React.FC = () => {
         
         <div className="flex items-center justify-between">
           <div>
-            <h4 className="font-medium text-gray-900">Push Notifications</h4>
-            <p className="text-sm text-gray-500">Receive push notifications in browser</p>
+            <h4 className="font-medium text-gray-900">{t.pushNotifications}</h4>
+            <p className="text-sm text-gray-500">{t.pushNotificationsDesc}</p>
           </div>
           <label className="relative inline-flex items-center cursor-pointer">
             <input
@@ -151,8 +358,8 @@ const Settings: React.FC = () => {
         
         <div className="flex items-center justify-between">
           <div>
-            <h4 className="font-medium text-gray-900">SMS Notifications</h4>
-            <p className="text-sm text-gray-500">Receive notifications via SMS</p>
+            <h4 className="font-medium text-gray-900">{t.smsNotifications}</h4>
+            <p className="text-sm text-gray-500">{t.smsNotificationsDesc}</p>
           </div>
           <label className="relative inline-flex items-center cursor-pointer">
             <input
@@ -172,7 +379,7 @@ const Settings: React.FC = () => {
     <div className="space-y-6">
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          Current Password
+          {t.currentPassword}
         </label>
         <div className="relative">
           <input
@@ -195,7 +402,7 @@ const Settings: React.FC = () => {
       
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          New Password
+          {t.newPassword}
         </label>
         <input
           type="password"
@@ -205,7 +412,7 @@ const Settings: React.FC = () => {
       
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          Confirm New Password
+          {t.confirmPassword}
         </label>
         <input
           type="password"
@@ -214,12 +421,12 @@ const Settings: React.FC = () => {
       </div>
       
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <h4 className="font-medium text-blue-900 mb-2">Two-Factor Authentication</h4>
+        <h4 className="font-medium text-blue-900 mb-2">{t.twoFactor}</h4>
         <p className="text-sm text-blue-700 mb-3">
-          Add an extra layer of security to your account
+          {t.twoFactorDesc}
         </p>
         <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-          Enable 2FA
+          {t.enable2FA}
         </button>
       </div>
     </div>
@@ -229,6 +436,8 @@ const Settings: React.FC = () => {
     switch (activeSection) {
       case 'profile':
         return renderProfileSettings();
+      case 'fleet':
+        return renderFleetSettings();
       case 'notifications':
         return renderNotificationSettings();
       case 'security':
@@ -237,16 +446,16 @@ const Settings: React.FC = () => {
         return (
           <div className="text-center py-12">
             <CreditCard className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Billing Settings</h3>
-            <p className="text-gray-500">Manage your subscription and payment methods</p>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">{t.billingTitle}</h3>
+            <p className="text-gray-500">{t.billingContent}</p>
           </div>
         );
       case 'preferences':
         return (
           <div className="text-center py-12">
             <Globe className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Preferences</h3>
-            <p className="text-gray-500">Language and regional settings</p>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">{t.preferencesTitle}</h3>
+            <p className="text-gray-500">{t.preferencesContent}</p>
           </div>
         );
       default:
@@ -258,8 +467,8 @@ const Settings: React.FC = () => {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
-        <p className="text-gray-600">Manage your account settings and preferences</p>
+        <h1 className="text-2xl font-bold text-gray-900">{t.title}</h1>
+        <p className="text-gray-600">{t.subtitle}</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
@@ -311,7 +520,7 @@ const Settings: React.FC = () => {
             <div className="mt-8 pt-6 border-t border-gray-200">
               <button className="flex items-center space-x-2 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
                 <Save className="w-4 h-4" />
-                <span>Save Changes</span>
+                <span>{t.saveChanges}</span>
               </button>
             </div>
           </div>
