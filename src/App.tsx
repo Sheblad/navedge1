@@ -5,12 +5,13 @@ import Dashboard from './components/Dashboard';
 import Drivers from './components/Drivers';
 import Contracts from './components/Contracts';
 import Fines from './components/Fines';
+import Incidents from './components/Incidents';
 import AIAssistant from './components/AIAssistant';
 import Settings from './components/Settings';
 import Reports from './components/Reports';
 import Login from './components/Login';
 
-type ActivePage = 'dashboard' | 'drivers' | 'contracts' | 'fines' | 'reports' | 'settings';
+type ActivePage = 'dashboard' | 'drivers' | 'contracts' | 'fines' | 'incidents' | 'reports' | 'settings';
 type FleetMode = 'rental' | 'taxi';
 type Language = 'en' | 'ar';
 
@@ -57,6 +58,8 @@ function App() {
         return <Contracts fleetMode={fleetMode} language={language} />;
       case 'fines':
         return <Fines fleetMode={fleetMode} language={language} />;
+      case 'incidents':
+        return <Incidents fleetMode={fleetMode} language={language} />;
       case 'reports':
         return <Reports fleetMode={fleetMode} language={language} />;
       case 'settings':

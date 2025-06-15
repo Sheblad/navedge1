@@ -7,10 +7,11 @@ import {
   BarChart3,
   Settings, 
   Navigation,
-  X
+  X,
+  ShieldAlert
 } from 'lucide-react';
 
-type ActivePage = 'dashboard' | 'drivers' | 'contracts' | 'fines' | 'reports' | 'settings';
+type ActivePage = 'dashboard' | 'drivers' | 'contracts' | 'fines' | 'incidents' | 'reports' | 'settings';
 type FleetMode = 'rental' | 'taxi';
 type Language = 'en' | 'ar';
 
@@ -37,6 +38,7 @@ const Sidebar: React.FC<SidebarProps> = ({
       drivers: 'Drivers',
       contracts: fleetMode === 'rental' ? 'Contracts' : 'Shifts',
       fines: 'Fines',
+      incidents: 'Incidents',
       reports: 'Reports',
       settings: 'Settings',
       version: 'Version 2.1.0'
@@ -46,6 +48,7 @@ const Sidebar: React.FC<SidebarProps> = ({
       drivers: 'السائقون',
       contracts: fleetMode === 'rental' ? 'العقود' : 'المناوبات',
       fines: 'المخالفات',
+      incidents: 'الحوادث',
       reports: 'التقارير',
       settings: 'الإعدادات',
       version: 'الإصدار 2.1.0'
@@ -59,6 +62,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     { id: 'drivers' as ActivePage, label: t.drivers, icon: Users },
     { id: 'contracts' as ActivePage, label: t.contracts, icon: FileText },
     { id: 'fines' as ActivePage, label: t.fines, icon: AlertTriangle },
+    { id: 'incidents' as ActivePage, label: t.incidents, icon: ShieldAlert },
     { id: 'reports' as ActivePage, label: t.reports, icon: BarChart3 },
     { id: 'settings' as ActivePage, label: t.settings, icon: Settings },
   ];
