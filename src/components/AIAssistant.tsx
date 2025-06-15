@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { X, Send, Bot, User, Zap, BarChart3, AlertTriangle, FileText, Settings, Plus, Edit, Trash2, MapPin, Phone, DollarSign, Navigation } from 'lucide-react';
+import { X, Send, Zap, BarChart3, AlertTriangle, FileText, Settings, Plus, Edit, Trash2, MapPin, Phone, DollarSign, Navigation, Brain, Sparkles } from 'lucide-react';
 import { mockDriversData, mockFinesData, mockContractsData } from '../data/mockData';
 
 type FleetMode = 'rental' | 'taxi';
@@ -15,14 +15,14 @@ interface Message {
   actionType?: string;
 }
 
-interface AIAssistantProps {
+interface NavEdgeAssistantProps {
   onClose: () => void;
   fleetMode: FleetMode;
   language: Language;
   onFleetModeChange?: (mode: FleetMode) => void;
 }
 
-const AIAssistant: React.FC<AIAssistantProps> = ({ onClose, fleetMode, language, onFleetModeChange }) => {
+const NavEdgeAssistant: React.FC<NavEdgeAssistantProps> = ({ onClose, fleetMode, language, onFleetModeChange }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
@@ -32,12 +32,12 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ onClose, fleetMode, language,
 
   const texts = {
     en: {
-      title: 'NavEdge AI Control Hub',
-      subtitle: 'Your Personal Fleet Management Assistant',
+      title: 'NavEdge Control Hub',
+      subtitle: 'Your Intelligent Fleet Management Assistant',
       placeholder: 'Ask me anything about your drivers, locations, earnings...',
       send: 'Send',
-      typing: 'AI is analyzing...',
-      welcome: `Hello! I'm your AI-powered fleet control hub. I can help you analyze data, manage operations, and perform administrative tasks for your ${fleetMode} fleet. Try asking me about specific drivers, locations, earnings, or any fleet operations!`,
+      typing: 'NavEdge is analyzing...',
+      welcome: `Hello! I'm your NavEdge intelligent fleet control hub. I can help you analyze data, manage operations, and perform administrative tasks for your ${fleetMode} fleet. Try asking me about specific drivers, locations, earnings, or any fleet operations!`,
       quickActions: 'Quick Actions',
       examples: [
         'How much did Ahmed make today?',
@@ -55,12 +55,12 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ onClose, fleetMode, language,
       no: 'No'
     },
     ar: {
-      title: 'مركز التحكم الذكي نافيدج',
-      subtitle: 'مساعدك الشخصي لإدارة الأسطول',
+      title: 'مركز التحكم نافيدج',
+      subtitle: 'مساعدك الذكي لإدارة الأسطول',
       placeholder: 'اسألني أي شيء عن السائقين والمواقع والأرباح...',
       send: 'إرسال',
-      typing: 'الذكي الاصطناعي يحلل...',
-      welcome: `مرحباً! أنا مركز التحكم الذكي المدعوم بالذكاء الاصطناعي. يمكنني مساعدتك في تحليل البيانات وإدارة العمليات وتنفيذ المهام الإدارية لأسطول ${fleetMode === 'rental' ? 'الإيجار' : 'التاكسي'} الخاص بك. جرب أن تسألني عن سائقين محددين أو المواقع أو الأرباح أو أي عمليات للأسطول!`,
+      typing: 'نافيدج يحلل...',
+      welcome: `مرحباً! أنا مركز التحكم الذكي نافيدج. يمكنني مساعدتك في تحليل البيانات وإدارة العمليات وتنفيذ المهام الإدارية لأسطول ${fleetMode === 'rental' ? 'الإيجار' : 'التاكسي'} الخاص بك. جرب أن تسألني عن سائقين محددين أو المواقع أو الأرباح أو أي عمليات للأسطول!`,
       quickActions: 'الإجراءات السريعة',
       examples: [
         'كم ربح أحمد اليوم؟',
@@ -390,7 +390,7 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ onClose, fleetMode, language,
     // Default intelligent response with suggestions
     return {
       id: Date.now().toString(),
-      text: `🤖 **I'm here to help!** I can answer questions about:\n\n**💰 Earnings & Money:**\n• "How much did Ahmed make today?"\n• "Who earned the most?"\n• "Show me earnings overview"\n\n**📍 Driver Locations:**\n• "Where is Omar located?"\n• "Show me all driver locations"\n\n**👥 Driver Management:**\n• "Which drivers are offline?"\n• "Show me drivers with fines"\n• "Tell me about Mohammed"\n\n**📊 Performance & Stats:**\n• "Performance rankings"\n• "Show me fleet overview"\n\n**⚙️ Fleet Operations:**\n• "Create a contract for Ahmed"\n• "Switch to taxi mode"\n\n**💡 Tip:** Try asking "How much did [driver name] make today?" or "Where is [driver name]?"`,
+      text: `🧠 **NavEdge Intelligence Ready**\n\nI can help you with:\n\n**💰 Earnings & Money:**\n• "How much did Ahmed make today?"\n• "Who earned the most?"\n• "Show me earnings overview"\n\n**📍 Driver Locations:**\n• "Where is Omar located?"\n• "Show me all driver locations"\n\n**👥 Driver Management:**\n• "Which drivers are offline?"\n• "Show me drivers with fines"\n• "Tell me about Mohammed"\n\n**📊 Performance & Stats:**\n• "Performance rankings"\n• "Show me fleet overview"\n\n**⚙️ Fleet Operations:**\n• "Create a contract for Ahmed"\n• "Switch to taxi mode"\n\n**💡 Tip:** Try asking "How much did [driver name] make today?" or "Where is [driver name]?"`,
       isUser: false,
       timestamp: new Date(),
       type: 'text'
@@ -447,8 +447,8 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ onClose, fleetMode, language,
     setIsTyping(true);
 
     setTimeout(() => {
-      const aiResponse = processIntelligentQuery(currentInput);
-      setMessages(prev => [...prev, aiResponse]);
+      const response = processIntelligentQuery(currentInput);
+      setMessages(prev => [...prev, response]);
       setIsTyping(false);
     }, 1500);
   };
@@ -497,7 +497,7 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ onClose, fleetMode, language,
         <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 rounded-t-2xl">
           <div className="flex items-center space-x-3">
             <div className="p-2 bg-white/20 backdrop-blur-sm rounded-lg">
-              <Bot className="w-6 h-6 text-white" />
+              <Brain className="w-6 h-6 text-white" />
             </div>
             <div>
               <h2 className="text-xl font-semibold text-white">{t.title}</h2>
@@ -537,7 +537,7 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ onClose, fleetMode, language,
                           : 'bg-gradient-to-r from-indigo-500 to-purple-600'
                 }`}>
                   {message.isUser ? (
-                    <User className="w-4 h-4 text-white" />
+                    <Sparkles className="w-4 h-4 text-white" />
                   ) : message.type === 'action' ? (
                     <Settings className="w-4 h-4 text-white" />
                   ) : message.type === 'confirmation' ? (
@@ -545,7 +545,7 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ onClose, fleetMode, language,
                   ) : message.type === 'data' ? (
                     <BarChart3 className="w-4 h-4 text-white" />
                   ) : (
-                    <Bot className="w-4 h-4 text-white" />
+                    <Brain className="w-4 h-4 text-white" />
                   )}
                 </div>
                 <div
@@ -584,7 +584,7 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ onClose, fleetMode, language,
             <div className="flex justify-start">
               <div className="flex items-start space-x-3">
                 <div className="p-2 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full">
-                  <Bot className="w-4 h-4 text-white" />
+                  <Brain className="w-4 h-4 text-white" />
                 </div>
                 <div className="bg-gray-100 px-4 py-3 rounded-2xl">
                   <div className="flex items-center space-x-2">
@@ -650,4 +650,4 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ onClose, fleetMode, language,
   );
 };
 
-export default AIAssistant;
+export default NavEdgeAssistant;

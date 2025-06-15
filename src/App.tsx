@@ -6,7 +6,7 @@ import Drivers from './components/Drivers';
 import Contracts from './components/Contracts';
 import Fines from './components/Fines';
 import Incidents from './components/Incidents';
-import AIAssistant from './components/AIAssistant';
+import NavEdgeAssistant from './components/AIAssistant';
 import Settings from './components/Settings';
 import Reports from './components/Reports';
 import Login from './components/Login';
@@ -21,7 +21,7 @@ function App() {
   const [fleetMode, setFleetMode] = useState<FleetMode>('rental');
   const [language, setLanguage] = useState<Language>('en');
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [showAIAssistant, setShowAIAssistant] = useState(false);
+  const [showNavEdgeAssistant, setShowNavEdgeAssistant] = useState(false);
 
   // Check authentication on mount
   useEffect(() => {
@@ -43,7 +43,7 @@ function App() {
     setIsAuthenticated(false);
   };
 
-  // Handle fleet mode change from AI Assistant
+  // Handle fleet mode change from NavEdge Assistant
   const handleFleetModeChange = (mode: FleetMode) => {
     setFleetMode(mode);
   };
@@ -99,7 +99,7 @@ function App() {
           setLanguage={setLanguage}
           setSidebarOpen={setSidebarOpen}
           onLogout={handleLogout}
-          setShowAIAssistant={setShowAIAssistant}
+          setShowNavEdgeAssistant={setShowNavEdgeAssistant}
         />
         
         <main className="flex-1 p-4 lg:p-6">
@@ -107,10 +107,10 @@ function App() {
         </main>
       </div>
 
-      {/* AI Assistant */}
-      {showAIAssistant && (
-        <AIAssistant 
-          onClose={() => setShowAIAssistant(false)}
+      {/* NavEdge Assistant */}
+      {showNavEdgeAssistant && (
+        <NavEdgeAssistant 
+          onClose={() => setShowNavEdgeAssistant(false)}
           fleetMode={fleetMode}
           language={language}
           onFleetModeChange={handleFleetModeChange}

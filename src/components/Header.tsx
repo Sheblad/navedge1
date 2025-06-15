@@ -1,5 +1,5 @@
 import React from 'react';
-import { Menu, Bell, User, Car, CarTaxiFront as Taxi, Bot, LogOut, Globe } from 'lucide-react';
+import { Menu, Bell, User, Car, CarTaxiFront as Taxi, Brain, LogOut, Globe } from 'lucide-react';
 
 type FleetMode = 'rental' | 'taxi';
 type Language = 'en' | 'ar';
@@ -11,7 +11,7 @@ interface HeaderProps {
   setLanguage: (lang: Language) => void;
   setSidebarOpen: (open: boolean) => void;
   onLogout: () => void;
-  setShowAIAssistant: (show: boolean) => void;
+  setShowNavEdgeAssistant: (show: boolean) => void;
 }
 
 const Header: React.FC<HeaderProps> = ({ 
@@ -21,7 +21,7 @@ const Header: React.FC<HeaderProps> = ({
   setLanguage, 
   setSidebarOpen, 
   onLogout,
-  setShowAIAssistant 
+  setShowNavEdgeAssistant 
 }) => {
   const texts = {
     en: {
@@ -30,7 +30,7 @@ const Header: React.FC<HeaderProps> = ({
       rental: 'Rental',
       taxi: 'Taxi',
       admin: 'Admin',
-      aiAssistant: 'AI Assistant',
+      navEdgeAssistant: 'NavEdge Assistant',
       logout: 'Logout'
     },
     ar: {
@@ -39,7 +39,7 @@ const Header: React.FC<HeaderProps> = ({
       rental: 'تأجير',
       taxi: 'تاكسي',
       admin: 'المدير',
-      aiAssistant: 'المساعد الذكي',
+      navEdgeAssistant: 'مساعد نافيدج',
       logout: 'تسجيل الخروج'
     }
   };
@@ -105,13 +105,13 @@ const Header: React.FC<HeaderProps> = ({
             <Globe className="w-5 h-5 text-gray-600" />
           </button>
 
-          {/* AI Assistant */}
+          {/* NavEdge Assistant */}
           <button 
-            onClick={() => setShowAIAssistant(true)}
+            onClick={() => setShowNavEdgeAssistant(true)}
             className="p-2 rounded-lg hover:bg-gray-100"
-            title={t.aiAssistant}
+            title={t.navEdgeAssistant}
           >
-            <Bot className="w-5 h-5 text-gray-600" />
+            <Brain className="w-5 h-5 text-gray-600" />
           </button>
 
           {/* Notifications */}
