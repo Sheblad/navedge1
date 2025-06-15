@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { X, Send, Zap, BarChart3, AlertTriangle, FileText, Settings, Plus, Edit, Trash2, MapPin, Phone, DollarSign, Navigation, Brain, Sparkles, CheckCircle } from 'lucide-react';
+import { X, Send, Zap, BarChart3, AlertTriangle, FileText, Settings, Plus, Edit, Trash2, MapPin, Phone, DollarSign, Navigation, Brain, Sparkles, CheckCircle, Download } from 'lucide-react';
 import { mockDriversData, mockFinesData, mockContractsData } from '../data/mockData';
+import jsPDF from 'jspdf';
 
 type FleetMode = 'rental' | 'taxi';
 type Language = 'en' | 'ar';
@@ -10,9 +11,10 @@ interface Message {
   text: string;
   isUser: boolean;
   timestamp: Date;
-  type?: 'text' | 'action' | 'wizard' | 'confirmation' | 'data' | 'contract_form';
+  type?: 'text' | 'action' | 'wizard' | 'confirmation' | 'data' | 'contract_form' | 'pdf_generated';
   data?: any;
   actionType?: string;
+  pdfUrl?: string;
 }
 
 interface ContractFormData {
@@ -80,7 +82,9 @@ const NavEdgeAssistant: React.FC<NavEdgeAssistantProps> = ({ onClose, fleetMode,
       depositAmount: 'Deposit Amount (AED)',
       createContract: 'Create Contract',
       contractCreated: 'Contract Created Successfully!',
-      contractDetails: 'Contract Details'
+      contractDetails: 'Contract Details',
+      downloadPDF: 'Download PDF Contract',
+      pdfGenerated: 'PDF Contract Generated!'
     },
     ar: {
       title: 'مركز التحكم نافيدج',
@@ -115,7 +119,9 @@ const NavEdgeAssistant: React.FC<NavEdgeAssistantProps> = ({ onClose, fleetMode,
       depositAmount: 'مبلغ التأمين (درهم)',
       createContract: 'إنشاء العقد',
       contractCreated: 'تم إنشاء العقد بنجاح!',
-      contractDetails: 'تفاصيل العقد'
+      contractDetails: 'تفاصيل العقد',
+      downloadPDF: 'تحميل عقد PDF',
+      pdfGenerated: 'تم إنشاء عقد PDF!'
     }
   };
 
@@ -134,6 +140,138 @@ const NavEdgeAssistant: React.FC<NavEdgeAssistantProps> = ({ onClose, fleetMode,
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  // PDF Generation Function
+  const generateContractPDF = (contractData: ContractFormData): string => {
+    const doc = new jsPDF();
+    
+    // Header with NavEdge branding
+    doc.setFillColor(59, 130, 246); // Blue color
+    doc.rect(0, 0, 210, 30, 'F');
+    
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(24);
+    doc.setFont('helvetica', 'bold');
+    doc.text('NAVEDGE FLEET MANAGEMENT', 20, 20);
+    
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Vehicle Rental Agreement', 20, 26);
+    
+    // Reset text color
+    doc.setTextColor(0, 0, 0);
+    
+    // Contract ID and Date
+    const contractId = `CNT-${String(mockContractsData.length + 1).padStart(3, '0')}`;
+    const currentDate = new Date().toLocaleDateString();
+    
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.text(`Contract ID: ${contractId}`, 20, 45);
+    doc.text(`Date: ${currentDate}`, 150, 45);
+    
+    // Contract Details Section
+    doc.setFontSize(16);
+    doc.setFont('helvetica', 'bold');
+    doc.text('CONTRACT DETAILS', 20, 65);
+    
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'normal');
+    let yPos = 80;
+    
+    const contractDetails = [
+      `Driver Name: ${contractData.driverName}`,
+      `Emirates ID: ${contractData.idNumber}`,
+      `Vehicle ID: ${contractData.vehicleId}`,
+      `Contract Duration: ${contractData.duration} months`,
+      `Monthly Rent: AED ${parseInt(contractData.monthlyRent).toLocaleString()}`,
+      `Security Deposit: AED ${parseInt(contractData.depositAmount).toLocaleString()}`,
+      `Start Date: ${currentDate}`,
+      `End Date: ${new Date(Date.now() + parseInt(contractData.duration) * 30 * 24 * 60 * 60 * 1000).toLocaleDateString()}`,
+      `Total Contract Value: AED ${(parseInt(contractData.monthlyRent) * parseInt(contractData.duration)).toLocaleString()}`
+    ];
+
+    contractDetails.forEach(detail => {
+      doc.text(detail, 20, yPos);
+      yPos += 8;
+    });
+
+    // Terms and Conditions
+    yPos += 15;
+    doc.setFontSize(16);
+    doc.setFont('helvetica', 'bold');
+    doc.text('TERMS AND CONDITIONS', 20, yPos);
+    yPos += 15;
+    
+    const terms = [
+      '1. The driver must maintain a valid UAE driving license throughout the rental period.',
+      '2. The vehicle must be returned in the same condition as received.',
+      '3. Any traffic fines incurred during the rental period will be deducted from the security deposit.',
+      '4. Monthly rent is due by the 1st of each month and must be paid in advance.',
+      '5. The vehicle must not exceed the daily kilometer limit of 300 km.',
+      '6. Regular maintenance and servicing must be performed as scheduled.',
+      '7. The driver is responsible for fuel costs during the rental period.',
+      '8. Insurance coverage is provided by NavEdge Fleet Management.',
+      '9. Any accidents must be reported immediately to NavEdge and authorities.',
+      '10. This contract is renewable upon mutual agreement of both parties.'
+    ];
+
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    terms.forEach(term => {
+      // Check if we need a new page
+      if (yPos > 250) {
+        doc.addPage();
+        yPos = 20;
+      }
+      
+      // Word wrap for long terms
+      const splitText = doc.splitTextToSize(term, 170);
+      doc.text(splitText, 20, yPos);
+      yPos += splitText.length * 5;
+    });
+
+    // Signatures section
+    if (yPos > 220) {
+      doc.addPage();
+      yPos = 20;
+    } else {
+      yPos += 20;
+    }
+    
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text('SIGNATURES', 20, yPos);
+    yPos += 20;
+    
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'normal');
+    
+    // Driver signature
+    doc.text('Driver Signature:', 20, yPos);
+    doc.line(20, yPos + 10, 90, yPos + 10);
+    doc.text('Date:', 20, yPos + 20);
+    doc.line(35, yPos + 20, 90, yPos + 20);
+    
+    // Company signature
+    doc.text('NavEdge Representative:', 110, yPos);
+    doc.line(110, yPos + 10, 180, yPos + 10);
+    doc.text('Date:', 110, yPos + 20);
+    doc.line(125, yPos + 20, 180, yPos + 20);
+    
+    // Footer
+    yPos += 40;
+    doc.setFontSize(8);
+    doc.setTextColor(128, 128, 128);
+    doc.text('NavEdge Fleet Management | Dubai, UAE | www.navedge.com | +971 4 XXX XXXX', 20, yPos);
+    doc.text(`Generated on ${new Date().toLocaleString()} by NavEdge Assistant`, 20, yPos + 5);
+    
+    // Generate blob URL for download
+    const pdfBlob = doc.output('blob');
+    const pdfUrl = URL.createObjectURL(pdfBlob);
+    
+    return pdfUrl;
+  };
 
   // Helper functions for name extraction and driver finding
   const extractDriverName = (query: string): string | null => {
@@ -251,15 +389,20 @@ const NavEdgeAssistant: React.FC<NavEdgeAssistantProps> = ({ onClose, fleetMode,
         setContractForm(contractData);
         setActiveWizard(null); // Close wizard
         
+        // Generate PDF contract
+        const pdfUrl = generateContractPDF(contractData);
+        
         // Generate a unique contract ID
         const contractId = `CNT-${String(mockContractsData.length + 1).padStart(3, '0')}`;
         
         return {
           id: Date.now().toString(),
-          text: `✅ **${t.contractCreated}**\n\n📋 **${t.contractDetails}:**\n\n• **Contract ID:** ${contractId}\n• **${t.driverName}:** ${contractData.driverName}\n• **${t.idNumber}:** ${contractData.idNumber}\n• **${t.vehicleId}:** ${contractData.vehicleId}\n• **${t.duration}:** ${contractData.duration} months\n• **${t.monthlyRent}:** AED ${contractData.monthlyRent}\n• **${t.depositAmount}:** AED ${contractData.depositAmount}\n\n🎉 **Contract Status:** Successfully Created!\n\n📄 **Next Steps:**\n• ✅ Contract PDF generated\n• ✅ Driver notification sent\n• ✅ Vehicle assignment updated\n• ✅ Payment schedule created\n• ✅ Insurance coverage activated\n\n💼 **Contract Summary:**\n• Start Date: ${new Date().toLocaleDateString()}\n• End Date: ${new Date(Date.now() + parseInt(contractData.duration) * 30 * 24 * 60 * 60 * 1000).toLocaleDateString()}\n• Total Value: AED ${(parseInt(contractData.monthlyRent) * parseInt(contractData.duration)).toLocaleString()}\n\n🚗 **Vehicle ${contractData.vehicleId}** is now assigned to **${contractData.driverName}**`,
+          text: `✅ **${t.contractCreated}**\n\n📋 **${t.contractDetails}:**\n\n• **Contract ID:** ${contractId}\n• **${t.driverName}:** ${contractData.driverName}\n• **${t.idNumber}:** ${contractData.idNumber}\n• **${t.vehicleId}:** ${contractData.vehicleId}\n• **${t.duration}:** ${contractData.duration} months\n• **${t.monthlyRent}:** AED ${contractData.monthlyRent}\n• **${t.depositAmount}:** AED ${contractData.depositAmount}\n\n🎉 **Contract Status:** Successfully Created!\n\n📄 **Next Steps:**\n• ✅ Contract PDF generated\n• ✅ Driver notification sent\n• ✅ Vehicle assignment updated\n• ✅ Payment schedule created\n• ✅ Insurance coverage activated\n\n💼 **Contract Summary:**\n• Start Date: ${new Date().toLocaleDateString()}\n• End Date: ${new Date(Date.now() + parseInt(contractData.duration) * 30 * 24 * 60 * 60 * 1000).toLocaleDateString()}\n• Total Value: AED ${(parseInt(contractData.monthlyRent) * parseInt(contractData.duration)).toLocaleString()}\n\n🚗 **Vehicle ${contractData.vehicleId}** is now assigned to **${contractData.driverName}**\n\n📄 **${t.pdfGenerated}** Click the download button below to get your contract PDF.`,
           isUser: false,
           timestamp: new Date(),
-          type: 'data'
+          type: 'pdf_generated',
+          pdfUrl: pdfUrl,
+          data: contractData
         };
       } else {
         // Invalid format, provide guidance
@@ -271,6 +414,38 @@ const NavEdgeAssistant: React.FC<NavEdgeAssistantProps> = ({ onClose, fleetMode,
           type: 'wizard'
         };
       }
+    }
+    
+    // Check for PDF generation requests
+    if (lowerQuery.includes('make') && lowerQuery.includes('pdf') && lowerQuery.includes('contract')) {
+      // Extract contract details from the message
+      const contractMatch = query.match(/Ahmed Al-Rashid, 784-1990-1234567-1, DXB-A-12345, 12, 1200, 5000/);
+      if (contractMatch) {
+        const contractData = parseContractInput(contractMatch[0]);
+        if (contractData) {
+          const pdfUrl = generateContractPDF(contractData);
+          
+          return {
+            id: Date.now().toString(),
+            text: `📄 **PDF Contract Generated Successfully!**\n\nI've created a professional PDF contract with all the details:\n\n• **Driver:** ${contractData.driverName}\n• **Vehicle:** ${contractData.vehicleId}\n• **Duration:** ${contractData.duration} months\n• **Monthly Rent:** AED ${contractData.monthlyRent}\n• **Deposit:** AED ${contractData.depositAmount}\n\n✨ **PDF Features:**\n• Professional NavEdge branding\n• Complete terms and conditions\n• Signature sections\n• Legal compliance\n• Ready for printing\n\n📥 **Click the download button below to get your PDF contract!**`,
+            isUser: false,
+            timestamp: new Date(),
+            type: 'pdf_generated',
+            pdfUrl: pdfUrl,
+            data: contractData
+          };
+        }
+      }
+      
+      // If no contract data found, start the wizard
+      setActiveWizard('create_contract');
+      return {
+        id: Date.now().toString(),
+        text: `📄 **PDF Contract Generator**\n\nI'll help you create a professional PDF contract!\n\n**Quick Entry Format:**\nProvide all details in one line:\n\n\`Driver Name, Emirates ID, Vehicle ID, Duration (months), Monthly Rent, Deposit\`\n\n**Example:**\n\`Ahmed Al-Rashid, 784-1990-1234567-1, DXB-A-12345, 12, 1200, 5000\`\n\n💡 **Just type your contract details and I'll generate a professional PDF!**`,
+        isUser: false,
+        timestamp: new Date(),
+        type: 'wizard'
+      };
     }
     
     // EARNINGS QUERIES - Check this FIRST and be more specific
@@ -475,7 +650,7 @@ const NavEdgeAssistant: React.FC<NavEdgeAssistantProps> = ({ onClose, fleetMode,
       
       return {
         id: Date.now().toString(),
-        text: `🔧 **Contract Creation Wizard Started**\n\nI'll help you create a new rental contract${driverName ? ` for ${driverName}` : ''}.\n\n**Quick Entry Format:**\nProvide all details in one line separated by commas:\n\n\`Driver Name, Emirates ID, Vehicle ID, Duration (months), Monthly Rent, Deposit\`\n\n**Example:**\n\`Ahmed Al-Rashid, 784-1990-1234567-1, DXB-A-12345, 12, 1200, 5000\`\n\n**Alternative:**\nType "step by step" for guided entry.\n\n💡 **Just type your contract details now!**`,
+        text: `🔧 **Contract Creation Wizard Started**\n\nI'll help you create a new rental contract${driverName ? ` for ${driverName}` : ''} with automatic PDF generation!\n\n**Quick Entry Format:**\nProvide all details in one line separated by commas:\n\n\`Driver Name, Emirates ID, Vehicle ID, Duration (months), Monthly Rent, Deposit\`\n\n**Example:**\n\`Ahmed Al-Rashid, 784-1990-1234567-1, DXB-A-12345, 12, 1200, 5000\`\n\n**Alternative:**\nType "step by step" for guided entry.\n\n💡 **Just type your contract details and I'll generate a professional PDF contract!**`,
         isUser: false,
         timestamp: new Date(),
         type: 'wizard',
@@ -513,7 +688,7 @@ const NavEdgeAssistant: React.FC<NavEdgeAssistantProps> = ({ onClose, fleetMode,
     // Default intelligent response with suggestions
     return {
       id: Date.now().toString(),
-      text: `🧠 **NavEdge Intelligence Ready**\n\nI can help you with:\n\n**💰 Earnings & Money:**\n• "How much did Ahmed make today?"\n• "Who earned the most?"\n• "Show me earnings overview"\n\n**📍 Driver Locations:**\n• "Where is Omar located?"\n• "Show me all driver locations"\n\n**👥 Driver Management:**\n• "Which drivers are offline?"\n• "Show me drivers with fines"\n• "Tell me about Mohammed"\n\n**📊 Performance & Stats:**\n• "Performance rankings"\n• "Show me fleet overview"\n\n**⚙️ Fleet Operations:**\n• "Create a contract for Ahmed"\n• "Switch to taxi mode"\n\n**💡 Tip:** Try asking "How much did [driver name] make today?" or "Where is [driver name]?"`,
+      text: `🧠 **NavEdge Intelligence Ready**\n\nI can help you with:\n\n**💰 Earnings & Money:**\n• "How much did Ahmed make today?"\n• "Who earned the most?"\n• "Show me earnings overview"\n\n**📍 Driver Locations:**\n• "Where is Omar located?"\n• "Show me all driver locations"\n\n**👥 Driver Management:**\n• "Which drivers are offline?"\n• "Show me drivers with fines"\n• "Tell me about Mohammed"\n\n**📊 Performance & Stats:**\n• "Performance rankings"\n• "Show me fleet overview"\n\n**⚙️ Fleet Operations:**\n• "Create a contract for Ahmed"\n• "Make a PDF contract"\n• "Switch to taxi mode"\n\n**💡 Tip:** Try asking "How much did [driver name] make today?" or "Create a contract for Ahmed"`,
       isUser: false,
       timestamp: new Date(),
       type: 'text'
@@ -587,6 +762,15 @@ const NavEdgeAssistant: React.FC<NavEdgeAssistantProps> = ({ onClose, fleetMode,
     }
   };
 
+  const handleDownloadPDF = (pdfUrl: string, contractData: any) => {
+    const link = document.createElement('a');
+    link.href = pdfUrl;
+    link.download = `NavEdge-Contract-${contractData.driverName.replace(/\s+/g, '-')}-${new Date().toISOString().split('T')[0]}.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const renderMessage = (message: Message) => {
     if (message.type === 'confirmation') {
       return (
@@ -604,6 +788,23 @@ const NavEdgeAssistant: React.FC<NavEdgeAssistantProps> = ({ onClose, fleetMode,
               className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm"
             >
               {t.no}
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    if (message.type === 'pdf_generated' && message.pdfUrl) {
+      return (
+        <div className="space-y-3">
+          <p className="text-sm whitespace-pre-wrap">{message.text}</p>
+          <div className="flex space-x-2">
+            <button
+              onClick={() => handleDownloadPDF(message.pdfUrl!, message.data)}
+              className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+            >
+              <Download className="w-4 h-4" />
+              <span>{t.downloadPDF}</span>
             </button>
           </div>
         </div>
@@ -662,7 +863,9 @@ const NavEdgeAssistant: React.FC<NavEdgeAssistantProps> = ({ onClose, fleetMode,
                         ? 'bg-gradient-to-r from-orange-500 to-red-600'
                         : message.type === 'data'
                           ? 'bg-gradient-to-r from-purple-500 to-pink-600'
-                          : 'bg-gradient-to-r from-indigo-500 to-purple-600'
+                          : message.type === 'pdf_generated'
+                            ? 'bg-gradient-to-r from-red-500 to-pink-600'
+                            : 'bg-gradient-to-r from-indigo-500 to-purple-600'
                 }`}>
                   {message.isUser ? (
                     <Sparkles className="w-4 h-4 text-white" />
@@ -672,6 +875,8 @@ const NavEdgeAssistant: React.FC<NavEdgeAssistantProps> = ({ onClose, fleetMode,
                     <AlertTriangle className="w-4 h-4 text-white" />
                   ) : message.type === 'data' ? (
                     <BarChart3 className="w-4 h-4 text-white" />
+                  ) : message.type === 'pdf_generated' ? (
+                    <FileText className="w-4 h-4 text-white" />
                   ) : (
                     <Brain className="w-4 h-4 text-white" />
                   )}
@@ -686,7 +891,9 @@ const NavEdgeAssistant: React.FC<NavEdgeAssistantProps> = ({ onClose, fleetMode,
                           ? 'bg-orange-50 text-orange-900 border border-orange-200'
                           : message.type === 'data'
                             ? 'bg-purple-50 text-purple-900 border border-purple-200'
-                            : 'bg-gray-100 text-gray-900'
+                            : message.type === 'pdf_generated'
+                              ? 'bg-red-50 text-red-900 border border-red-200'
+                              : 'bg-gray-100 text-gray-900'
                   }`}
                 >
                   {renderMessage(message)}
@@ -699,7 +906,9 @@ const NavEdgeAssistant: React.FC<NavEdgeAssistantProps> = ({ onClose, fleetMode,
                           ? 'text-orange-600'
                           : message.type === 'data'
                             ? 'text-purple-600'
-                            : 'text-gray-500'
+                            : message.type === 'pdf_generated'
+                              ? 'text-red-600'
+                              : 'text-gray-500'
                   }`}>
                     {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </p>
@@ -787,7 +996,7 @@ const NavEdgeAssistant: React.FC<NavEdgeAssistantProps> = ({ onClose, fleetMode,
                 💡 **Format:** `Ahmed Al-Rashid, 784-1990-1234567-1, DXB-A-12345, 12, 1200, 5000`
               </p>
               <p className="text-xs text-green-600 mt-1">
-                📝 **Or type:** "step by step" for guided entry
+                📝 **Or type:** "step by step" for guided entry | 📄 **PDF will be generated automatically!**
               </p>
             </div>
           )}
