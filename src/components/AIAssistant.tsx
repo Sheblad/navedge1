@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { X, Send, Bot, User, Zap, BarChart3, AlertTriangle, FileText } from 'lucide-react';
+import { X, Send, Bot, User, Zap, BarChart3, AlertTriangle, FileText, Settings, Plus, Edit, Trash2 } from 'lucide-react';
 import { mockDriversData, mockFinesData, mockContractsData } from '../data/mockData';
 
 type FleetMode = 'rental' | 'taxi';
@@ -10,67 +10,78 @@ interface Message {
   text: string;
   isUser: boolean;
   timestamp: Date;
-  type?: 'text' | 'chart' | 'list';
+  type?: 'text' | 'action' | 'wizard' | 'confirmation';
   data?: any;
+  actionType?: string;
 }
 
 interface AIAssistantProps {
   onClose: () => void;
   fleetMode: FleetMode;
   language: Language;
+  onFleetModeChange?: (mode: FleetMode) => void;
 }
 
-const AIAssistant: React.FC<AIAssistantProps> = ({ onClose, fleetMode, language }) => {
+const AIAssistant: React.FC<AIAssistantProps> = ({ onClose, fleetMode, language, onFleetModeChange }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [activeWizard, setActiveWizard] = useState<string | null>(null);
+  const [wizardData, setWizardData] = useState<any>({});
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const texts = {
     en: {
-      title: 'NavEdge AI Fleet Assistant',
-      subtitle: 'Powered by Advanced Analytics',
-      placeholder: 'Ask me about your fleet operations...',
+      title: 'NavEdge AI Control Hub',
+      subtitle: 'Your Personal Fleet Management Assistant',
+      placeholder: 'Ask me anything or tell me what to do...',
       send: 'Send',
-      typing: 'AI is analyzing...',
-      welcome: `Hello! I'm your AI-powered fleet assistant. I can help you analyze driver performance, track earnings, manage fines, and generate insights. What would you like to know about your ${fleetMode} fleet?`,
+      typing: 'AI is working...',
+      welcome: `Hello! I'm your AI-powered fleet control hub. I can help you analyze data, manage operations, and perform administrative tasks for your ${fleetMode} fleet. Just tell me what you need!`,
       quickActions: 'Quick Actions',
       examples: [
-        'Which driver earned the most this week?',
-        'Show drivers with more than 2 fines',
-        'List inactive drivers',
-        'Generate performance report',
-        'Export contract for Ahmed',
-        'What\'s the total fleet earnings today?',
-        'Show me drivers with low performance scores',
-        'Which vehicles need maintenance?'
-      ]
+        'Create a new rental contract for Ahmed',
+        'Switch to Taxi Mode',
+        'Show me top performers this week',
+        'Add a fine for speeding',
+        'Export earnings report',
+        'Assign car DXB-123 to driver Omar',
+        'Send warning to low performers',
+        'Generate maintenance schedule'
+      ],
+      confirm: 'Confirm',
+      cancel: 'Cancel',
+      yes: 'Yes',
+      no: 'No'
     },
     ar: {
-      title: 'مساعد الأسطول الذكي نافيدج',
-      subtitle: 'مدعوم بالتحليلات المتقدمة',
-      placeholder: 'اسألني عن عمليات أسطولك...',
+      title: 'مركز التحكم الذكي نافيدج',
+      subtitle: 'مساعدك الشخصي لإدارة الأسطول',
+      placeholder: 'اسألني أي شيء أو أخبرني ماذا تريد أن أفعل...',
       send: 'إرسال',
-      typing: 'الذكي الاصطناعي يحلل...',
-      welcome: `مرحباً! أنا مساعدك الذكي المدعوم بالذكاء الاصطناعي للأسطول. يمكنني مساعدتك في تحليل أداء السائقين وتتبع الأرباح وإدارة المخالفات وإنشاء الرؤى. ماذا تريد أن تعرف عن أسطول ${fleetMode === 'rental' ? 'الإيجار' : 'التاكسي'} الخاص بك؟`,
+      typing: 'الذكي الاصطناعي يعمل...',
+      welcome: `مرحباً! أنا مركز التحكم الذكي المدعوم بالذكاء الاصطناعي. يمكنني مساعدتك في تحليل البيانات وإدارة العمليات وتنفيذ المهام الإدارية لأسطول ${fleetMode === 'rental' ? 'الإيجار' : 'التاكسي'} الخاص بك. فقط أخبرني ما تحتاجه!`,
       quickActions: 'الإجراءات السريعة',
       examples: [
-        'أي سائق حقق أعلى أرباح هذا الأسبوع؟',
-        'أظهر السائقين الذين لديهم أكثر من مخالفتين',
-        'اعرض السائقين غير النشطين',
-        'إنشاء تقرير الأداء',
-        'تصدير عقد أحمد',
-        'ما هو إجمالي أرباح الأسطول اليوم؟',
-        'أظهر السائقين ذوي درجات الأداء المنخفضة',
-        'أي مركبات تحتاج صيانة؟'
-      ]
+        'إنشاء عقد إيجار جديد لأحمد',
+        'التبديل إلى وضع التاكسي',
+        'أظهر لي أفضل الأداءات هذا الأسبوع',
+        'إضافة مخالفة للسرعة الزائدة',
+        'تصدير تقرير الأرباح',
+        'تعيين السيارة DXB-123 للسائق عمر',
+        'إرسال تحذير للأداءات المنخفضة',
+        'إنشاء جدول الصيانة'
+      ],
+      confirm: 'تأكيد',
+      cancel: 'إلغاء',
+      yes: 'نعم',
+      no: 'لا'
     }
   };
 
   const t = texts[language];
 
   useEffect(() => {
-    // Add welcome message
     setMessages([{
       id: '1',
       text: t.welcome,
@@ -87,172 +98,151 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ onClose, fleetMode, language 
   const processAdvancedQuery = (query: string): Message => {
     const lowerQuery = query.toLowerCase();
     
-    // Performance analysis
-    if (lowerQuery.includes('performance') && (lowerQuery.includes('report') || lowerQuery.includes('analysis'))) {
-      const performanceData = mockDriversData.map(driver => ({
-        name: driver.name,
-        score: driver.performanceScore,
-        earnings: driver.earnings,
-        trips: driver.trips,
-        status: driver.status
-      })).sort((a, b) => b.score - a.score);
-
+    // ACTION: Create new contract
+    if (lowerQuery.includes('create') && lowerQuery.includes('contract')) {
+      const driverName = extractDriverName(query);
       return {
         id: Date.now().toString(),
-        text: 'Here\'s your fleet performance analysis:',
+        text: `🔧 **Contract Creation Wizard Started**\n\nI'll help you create a new rental contract${driverName ? ` for ${driverName}` : ''}.\n\nPlease provide:\n1. Driver's full name\n2. Emirates ID number\n3. Vehicle ID to assign\n4. Rental duration (months)\n5. Monthly rent amount\n6. Deposit amount\n\nYou can also upload the driver's Emirates ID for automatic data extraction.`,
         isUser: false,
         timestamp: new Date(),
-        type: 'list',
-        data: performanceData
+        type: 'action',
+        actionType: 'create_contract'
       };
     }
 
-    // Top earners
-    if (lowerQuery.includes('earned') || lowerQuery.includes('earning') || lowerQuery.includes('most')) {
+    // ACTION: Switch fleet mode
+    if (lowerQuery.includes('switch') && (lowerQuery.includes('taxi') || lowerQuery.includes('rental'))) {
+      const targetMode = lowerQuery.includes('taxi') ? 'taxi' : 'rental';
+      if (targetMode === fleetMode) {
+        return {
+          id: Date.now().toString(),
+          text: `ℹ️ You're already in ${fleetMode} mode. No changes needed.`,
+          isUser: false,
+          timestamp: new Date(),
+          type: 'text'
+        };
+      }
+      
+      return {
+        id: Date.now().toString(),
+        text: `🔄 **Fleet Mode Switch**\n\nSwitching from ${fleetMode} mode to ${targetMode} mode will:\n\n${targetMode === 'taxi' ? 
+          '• Hide contract management\n• Focus on trips and shifts\n• Change earnings calculations\n• Update driver metrics' :
+          '• Enable contract management\n• Focus on rentals and deposits\n• Change to monthly earnings\n• Update performance metrics'
+        }\n\nConfirm the switch?`,
+        isUser: false,
+        timestamp: new Date(),
+        type: 'confirmation',
+        actionType: 'switch_mode',
+        data: { targetMode }
+      };
+    }
+
+    // ACTION: Add fine
+    if (lowerQuery.includes('add') && lowerQuery.includes('fine')) {
+      const driverName = extractDriverName(query);
+      return {
+        id: Date.now().toString(),
+        text: `🚨 **Fine Registration Wizard**\n\nI'll help you add a new fine${driverName ? ` for ${driverName}` : ''}.\n\nPlease provide:\n1. Driver name\n2. Vehicle plate number\n3. Violation type (speeding, parking, etc.)\n4. Fine amount (AED)\n5. Location of violation\n6. Date of violation\n\nThe fine will be automatically processed according to your fleet mode.`,
+        isUser: false,
+        timestamp: new Date(),
+        type: 'action',
+        actionType: 'add_fine'
+      };
+    }
+
+    // ACTION: Assign vehicle
+    if (lowerQuery.includes('assign') && (lowerQuery.includes('car') || lowerQuery.includes('vehicle'))) {
+      const vehicleId = extractVehicleId(query);
+      const driverName = extractDriverName(query);
+      
+      return {
+        id: Date.now().toString(),
+        text: `🚗 **Vehicle Assignment**\n\n${vehicleId && driverName ? 
+          `Assigning vehicle ${vehicleId} to ${driverName}` :
+          'I need both vehicle ID and driver name to complete the assignment'
+        }\n\nThis will:\n• Update driver's assigned vehicle\n• Log the assignment in the system\n• Send notification to the driver\n• Update vehicle status\n\nProceed with assignment?`,
+        isUser: false,
+        timestamp: new Date(),
+        type: 'confirmation',
+        actionType: 'assign_vehicle',
+        data: { vehicleId, driverName }
+      };
+    }
+
+    // ACTION: Export report
+    if (lowerQuery.includes('export') && lowerQuery.includes('report')) {
+      return {
+        id: Date.now().toString(),
+        text: `📊 **Report Export Center**\n\nAvailable reports:\n\n1. **Weekly Performance Report**\n   - Driver rankings and metrics\n   - Earnings breakdown\n   - Performance trends\n\n2. **Financial Summary**\n   - Total earnings\n   - Outstanding fines\n   - Revenue analysis\n\n3. **Fleet Utilization Report**\n   - Vehicle usage statistics\n   - Driver activity logs\n   - Efficiency metrics\n\n4. **Compliance Report**\n   - Fine history\n   - Contract status\n   - Maintenance records\n\nWhich report would you like to generate?`,
+        isUser: false,
+        timestamp: new Date(),
+        type: 'action',
+        actionType: 'export_report'
+      };
+    }
+
+    // ACTION: Send warning
+    if (lowerQuery.includes('send') && lowerQuery.includes('warning')) {
+      const lowPerformers = mockDriversData.filter(d => d.performanceScore < 80);
+      
+      return {
+        id: Date.now().toString(),
+        text: `⚠️ **Driver Warning System**\n\n${lowPerformers.length > 0 ? 
+          `Found ${lowPerformers.length} driver(s) with performance below 80%:\n\n${lowPerformers.map(d => `• ${d.name}: ${d.performanceScore}%`).join('\n')}\n\nWarning message will include:\n• Performance improvement requirements\n• Training recommendations\n• Timeline for improvement\n• Consequences of continued poor performance\n\nSend warnings to these drivers?` :
+          'All drivers are performing above 80%. No warnings needed at this time.'
+        }`,
+        isUser: false,
+        timestamp: new Date(),
+        type: lowPerformers.length > 0 ? 'confirmation' : 'text',
+        actionType: 'send_warning',
+        data: { drivers: lowPerformers }
+      };
+    }
+
+    // ANALYSIS: Performance queries
+    if (lowerQuery.includes('performance') || lowerQuery.includes('top') || lowerQuery.includes('best')) {
       const topDrivers = mockDriversData
-        .sort((a, b) => b.earnings - a.earnings)
-        .slice(0, 3);
+        .sort((a, b) => b.performanceScore - a.performanceScore)
+        .slice(0, 5);
       
-      const response = `Top earning drivers ${fleetMode === 'taxi' ? 'today' : 'this month'}:\n\n` +
-        topDrivers.map((driver, index) => 
-          `${index + 1}. ${driver.name}: $${driver.earnings.toLocaleString()} (${driver.trips} ${fleetMode === 'taxi' ? 'trips' : 'rentals'})`
-        ).join('\n') +
-        `\n\nTotal fleet earnings: $${topDrivers.reduce((sum, d) => sum + d.earnings, 0).toLocaleString()}`;
-
       return {
         id: Date.now().toString(),
-        text: response,
+        text: `🏆 **Top Performers This Week**\n\n${topDrivers.map((driver, index) => 
+          `${index + 1}. **${driver.name}**\n   Performance: ${driver.performanceScore}%\n   Earnings: $${driver.earnings.toLocaleString()}\n   Trips: ${driver.trips}\n   Status: ${driver.status === 'active' ? '🟢 Active' : '🔴 Offline'}`
+        ).join('\n\n')}\n\n**Fleet Average:** ${Math.round(mockDriversData.reduce((sum, d) => sum + d.performanceScore, 0) / mockDriversData.length)}%`,
         isUser: false,
         timestamp: new Date(),
         type: 'text'
       };
     }
 
-    // Fines analysis
-    if (lowerQuery.includes('fine') || lowerQuery.includes('violation')) {
-      const driversWithFines = mockDriversData.filter(driver => 
-        mockFinesData.some(fine => fine.driverId === driver.id)
-      );
-      
-      if (driversWithFines.length === 0) {
-        return {
-          id: Date.now().toString(),
-          text: '🎉 Excellent news! No drivers currently have outstanding fines. Your fleet maintains high compliance standards.',
-          isUser: false,
-          timestamp: new Date(),
-          type: 'text'
-        };
-      }
-      
-      const finesSummary = driversWithFines.map(driver => {
-        const driverFines = mockFinesData.filter(fine => fine.driverId === driver.id);
-        const totalAmount = driverFines.reduce((sum, fine) => sum + fine.amount, 0);
-        return `${driver.name}: ${driverFines.length} fine(s) - AED ${totalAmount}`;
-      }).join('\n');
-
-      return {
-        id: Date.now().toString(),
-        text: `Drivers with fines:\n\n${finesSummary}\n\nRecommendation: Consider driver training for repeat offenders.`,
-        isUser: false,
-        timestamp: new Date(),
-        type: 'text'
-      };
-    }
-
-    // Low performance drivers
-    if (lowerQuery.includes('low') && lowerQuery.includes('performance')) {
-      const lowPerformanceDrivers = mockDriversData.filter(d => d.performanceScore < 80);
-      
-      if (lowPerformanceDrivers.length === 0) {
-        return {
-          id: Date.now().toString(),
-          text: '👏 Great job! All drivers are performing above 80%. Your fleet management is excellent.',
-          isUser: false,
-          timestamp: new Date(),
-          type: 'text'
-        };
-      }
-
-      const lowPerformanceList = lowPerformanceDrivers.map(driver => 
-        `${driver.name}: ${driver.performanceScore}% (${driver.status})`
-      ).join('\n');
-
-      return {
-        id: Date.now().toString(),
-        text: `Drivers with performance below 80%:\n\n${lowPerformanceList}\n\nSuggestion: Schedule performance review meetings and provide additional training.`,
-        isUser: false,
-        timestamp: new Date(),
-        type: 'text'
-      };
-    }
-
-    // Inactive drivers
-    if (lowerQuery.includes('inactive') || lowerQuery.includes('offline')) {
-      const inactiveDrivers = mockDriversData.filter(d => d.status === 'offline');
-      if (inactiveDrivers.length === 0) {
-        return {
-          id: Date.now().toString(),
-          text: '🚗 All drivers are currently active and on the road! Your fleet utilization is at 100%.',
-          isUser: false,
-          timestamp: new Date(),
-          type: 'text'
-        };
-      }
-      
-      const inactiveList = inactiveDrivers.map(driver => 
-        `${driver.name} - Last active: ${driver.joinDate} (${driver.trips} total trips)`
-      ).join('\n');
-
-      return {
-        id: Date.now().toString(),
-        text: `Inactive drivers (${inactiveDrivers.length}):\n\n${inactiveList}\n\nAction needed: Contact these drivers to check availability.`,
-        isUser: false,
-        timestamp: new Date(),
-        type: 'text'
-      };
-    }
-
-    // Total earnings
-    if (lowerQuery.includes('total') && (lowerQuery.includes('earning') || lowerQuery.includes('revenue'))) {
-      const totalEarnings = mockDriversData.reduce((sum, driver) => sum + driver.earnings, 0);
+    // ANALYSIS: Earnings queries
+    if (lowerQuery.includes('earning') || lowerQuery.includes('revenue') || lowerQuery.includes('money')) {
+      const totalEarnings = mockDriversData.reduce((sum, d) => sum + d.earnings, 0);
       const activeDrivers = mockDriversData.filter(d => d.status === 'active').length;
-      const avgEarnings = totalEarnings / activeDrivers;
-
+      const topEarner = mockDriversData.reduce((prev, current) => prev.earnings > current.earnings ? prev : current);
+      
       return {
         id: Date.now().toString(),
-        text: `📊 Fleet Financial Summary:\n\n` +
-              `Total Earnings: $${totalEarnings.toLocaleString()} ${fleetMode === 'taxi' ? 'today' : 'this month'}\n` +
-              `Active Drivers: ${activeDrivers}\n` +
-              `Average per Driver: $${Math.round(avgEarnings).toLocaleString()}\n` +
-              `Fleet Utilization: ${Math.round((activeDrivers / mockDriversData.length) * 100)}%`,
+        text: `💰 **Financial Dashboard**\n\n**Total Fleet Earnings:** $${totalEarnings.toLocaleString()}\n**Active Drivers:** ${activeDrivers}/${mockDriversData.length}\n**Average per Driver:** $${Math.round(totalEarnings / activeDrivers).toLocaleString()}\n\n**Top Earner:** ${topEarner.name}\n• Earnings: $${topEarner.earnings.toLocaleString()}\n• Trips: ${topEarner.trips}\n• Performance: ${topEarner.performanceScore}%\n\n**Fleet Utilization:** ${Math.round((activeDrivers / mockDriversData.length) * 100)}%`,
         isUser: false,
         timestamp: new Date(),
         type: 'text'
       };
     }
 
-    // Contract export
-    if (lowerQuery.includes('export') && lowerQuery.includes('contract')) {
-      const driverName = lowerQuery.match(/contract for (\w+)/i)?.[1] || 'driver';
+    // ANALYSIS: Fines and compliance
+    if (lowerQuery.includes('fine') || lowerQuery.includes('violation') || lowerQuery.includes('compliance')) {
+      const pendingFines = mockFinesData.filter(f => f.status === 'pending');
+      const totalFineAmount = mockFinesData.reduce((sum, f) => sum + f.amount, 0);
+      
       return {
         id: Date.now().toString(),
-        text: `📄 Contract export initiated for ${driverName}.\n\nThe contract PDF will be generated with:\n• Driver details\n• Vehicle assignment\n• Terms and conditions\n• Digital signatures\n\nDownload will start automatically once ready.`,
-        isUser: false,
-        timestamp: new Date(),
-        type: 'text'
-      };
-    }
-
-    // Maintenance alerts
-    if (lowerQuery.includes('maintenance') || lowerQuery.includes('vehicle')) {
-      return {
-        id: Date.now().toString(),
-        text: `🔧 Vehicle Maintenance Status:\n\n` +
-              `• DXB-A-12345: Service due in 500km\n` +
-              `• DXB-B-67890: Oil change overdue\n` +
-              `• DXB-C-11111: All systems normal\n` +
-              `• DXB-D-22222: Tire rotation needed\n\n` +
-              `Recommendation: Schedule maintenance for 2 vehicles this week.`,
+        text: `🚨 **Compliance Overview**\n\n**Total Fines:** ${mockFinesData.length}\n**Pending:** ${pendingFines.length}\n**Total Amount:** AED ${totalFineAmount.toLocaleString()}\n\n**Recent Violations:**\n${mockFinesData.slice(0, 3).map(fine => {
+          const driver = mockDriversData.find(d => d.id === fine.driverId);
+          return `• ${driver?.name || 'Unknown'}: ${fine.violation} - AED ${fine.amount}`;
+        }).join('\n')}\n\n${pendingFines.length > 0 ? '⚠️ **Action Required:** Process pending fines' : '✅ **All fines processed**'}`,
         isUser: false,
         timestamp: new Date(),
         type: 'text'
@@ -262,18 +252,71 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ onClose, fleetMode, language 
     // Default intelligent response
     return {
       id: Date.now().toString(),
-      text: `I understand you're asking about "${query}". I can help you with:\n\n` +
-            `📊 Driver performance analysis\n` +
-            `💰 Earnings and revenue tracking\n` +
-            `🚨 Fine management and alerts\n` +
-            `📋 Contract generation and export\n` +
-            `🚗 Vehicle maintenance tracking\n` +
-            `📈 Fleet utilization reports\n\n` +
-            `Try asking something like "Show me top performers" or "Generate weekly report".`,
+      text: `🤖 **AI Assistant Ready**\n\nI can help you with:\n\n**📊 Data Analysis:**\n• Performance reports\n• Earnings analysis\n• Fleet utilization\n\n**⚙️ Administrative Actions:**\n• Create contracts\n• Add fines\n• Assign vehicles\n• Switch fleet modes\n\n**📋 Management Tasks:**\n• Export reports\n• Send warnings\n• Generate schedules\n• Process payments\n\nTry saying: "Create a contract for Ahmed" or "Show me top performers"`,
       isUser: false,
       timestamp: new Date(),
       type: 'text'
     };
+  };
+
+  const extractDriverName = (query: string): string | null => {
+    const patterns = [
+      /for (\w+)/i,
+      /driver (\w+)/i,
+      /(\w+)'s/i
+    ];
+    
+    for (const pattern of patterns) {
+      const match = query.match(pattern);
+      if (match) return match[1];
+    }
+    return null;
+  };
+
+  const extractVehicleId = (query: string): string | null => {
+    const match = query.match(/([A-Z]{3}-[A-Z]-?\d+)/i);
+    return match ? match[1] : null;
+  };
+
+  const handleConfirmation = (messageId: string, confirmed: boolean) => {
+    const message = messages.find(m => m.id === messageId);
+    if (!message || !message.actionType) return;
+
+    let responseText = '';
+    
+    if (confirmed) {
+      switch (message.actionType) {
+        case 'switch_mode':
+          if (onFleetModeChange && message.data?.targetMode) {
+            onFleetModeChange(message.data.targetMode);
+            responseText = `✅ **Fleet mode switched successfully!**\n\nYou're now in ${message.data.targetMode} mode. The interface has been updated with relevant features and metrics.`;
+          }
+          break;
+          
+        case 'assign_vehicle':
+          responseText = `✅ **Vehicle assignment completed!**\n\n${message.data?.vehicleId} has been assigned to ${message.data?.driverName}.\n\n• Driver notified\n• System updated\n• Assignment logged`;
+          break;
+          
+        case 'send_warning':
+          responseText = `✅ **Warning messages sent!**\n\nPerformance improvement notices have been sent to ${message.data?.drivers?.length || 0} driver(s).\n\n• Email notifications sent\n• SMS alerts delivered\n• Follow-up scheduled`;
+          break;
+          
+        default:
+          responseText = '✅ **Action completed successfully!**';
+      }
+    } else {
+      responseText = '❌ **Action cancelled.** No changes have been made.';
+    }
+
+    const responseMessage: Message = {
+      id: (Date.now() + 1).toString(),
+      text: responseText,
+      isUser: false,
+      timestamp: new Date(),
+      type: 'text'
+    };
+
+    setMessages(prev => [...prev, responseMessage]);
   };
 
   const handleSendMessage = async () => {
@@ -291,7 +334,6 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ onClose, fleetMode, language 
     setInputText('');
     setIsTyping(true);
 
-    // Simulate AI processing time
     setTimeout(() => {
       const aiResponse = processAdvancedQuery(inputText);
       setMessages(prev => [...prev, aiResponse]);
@@ -311,25 +353,23 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ onClose, fleetMode, language 
   };
 
   const renderMessage = (message: Message) => {
-    if (message.type === 'list' && message.data) {
+    if (message.type === 'confirmation') {
       return (
         <div className="space-y-3">
-          <p className="text-sm">{message.text}</p>
-          <div className="bg-gray-50 rounded-lg p-3 space-y-2">
-            {message.data.slice(0, 5).map((item: any, index: number) => (
-              <div key={index} className="flex items-center justify-between text-sm">
-                <span className="font-medium">{item.name}</span>
-                <div className="flex items-center space-x-2">
-                  <span className={`px-2 py-1 rounded text-xs ${
-                    item.score >= 90 ? 'bg-green-100 text-green-800' :
-                    item.score >= 80 ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'
-                  }`}>
-                    {item.score}%
-                  </span>
-                  <span className="text-gray-600">${item.earnings}</span>
-                </div>
-              </div>
-            ))}
+          <p className="text-sm whitespace-pre-wrap">{message.text}</p>
+          <div className="flex space-x-2">
+            <button
+              onClick={() => handleConfirmation(message.id, true)}
+              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
+            >
+              {t.yes}
+            </button>
+            <button
+              onClick={() => handleConfirmation(message.id, false)}
+              className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm"
+            >
+              {t.no}
+            </button>
           </div>
         </div>
       );
@@ -340,9 +380,9 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ onClose, fleetMode, language 
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl h-[700px] flex flex-col">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl h-[800px] flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-t-2xl">
+        <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 rounded-t-2xl">
           <div className="flex items-center space-x-3">
             <div className="p-2 bg-white/20 backdrop-blur-sm rounded-lg">
               <Bot className="w-6 h-6 text-white" />
@@ -352,12 +392,17 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ onClose, fleetMode, language 
               <p className="text-blue-100 text-sm">{t.subtitle}</p>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-white/20 rounded-lg transition-colors"
-          >
-            <X className="w-6 h-6 text-white" />
-          </button>
+          <div className="flex items-center space-x-2">
+            <div className="px-3 py-1 bg-white/20 rounded-full text-white text-xs font-medium">
+              {fleetMode.toUpperCase()} MODE
+            </div>
+            <button
+              onClick={onClose}
+              className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+            >
+              <X className="w-6 h-6 text-white" />
+            </button>
+          </div>
         </div>
 
         {/* Messages */}
@@ -368,9 +413,21 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ onClose, fleetMode, language 
               className={`flex ${message.isUser ? 'justify-end' : 'justify-start'}`}
             >
               <div className={`flex items-start space-x-3 max-w-[85%] ${message.isUser ? 'flex-row-reverse space-x-reverse' : ''}`}>
-                <div className={`p-2 rounded-full ${message.isUser ? 'bg-blue-600' : 'bg-gradient-to-r from-indigo-500 to-purple-600'}`}>
+                <div className={`p-2 rounded-full ${
+                  message.isUser 
+                    ? 'bg-blue-600' 
+                    : message.type === 'action' 
+                      ? 'bg-gradient-to-r from-green-500 to-emerald-600'
+                      : message.type === 'confirmation'
+                        ? 'bg-gradient-to-r from-orange-500 to-red-600'
+                        : 'bg-gradient-to-r from-indigo-500 to-purple-600'
+                }`}>
                   {message.isUser ? (
                     <User className="w-4 h-4 text-white" />
+                  ) : message.type === 'action' ? (
+                    <Settings className="w-4 h-4 text-white" />
+                  ) : message.type === 'confirmation' ? (
+                    <AlertTriangle className="w-4 h-4 text-white" />
                   ) : (
                     <Bot className="w-4 h-4 text-white" />
                   )}
@@ -379,11 +436,23 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ onClose, fleetMode, language 
                   className={`px-4 py-3 rounded-2xl ${
                     message.isUser
                       ? 'bg-blue-600 text-white'
-                      : 'bg-gray-100 text-gray-900'
+                      : message.type === 'action'
+                        ? 'bg-green-50 text-green-900 border border-green-200'
+                        : message.type === 'confirmation'
+                          ? 'bg-orange-50 text-orange-900 border border-orange-200'
+                          : 'bg-gray-100 text-gray-900'
                   }`}
                 >
                   {renderMessage(message)}
-                  <p className={`text-xs mt-2 ${message.isUser ? 'text-blue-100' : 'text-gray-500'}`}>
+                  <p className={`text-xs mt-2 ${
+                    message.isUser 
+                      ? 'text-blue-100' 
+                      : message.type === 'action'
+                        ? 'text-green-600'
+                        : message.type === 'confirmation'
+                          ? 'text-orange-600'
+                          : 'text-gray-500'
+                  }`}>
                     {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </p>
                 </div>
@@ -416,7 +485,7 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ onClose, fleetMode, language 
         </div>
 
         {/* Input */}
-        <div className="p-6 border-t border-gray-200">
+        <div className="p-6 border-t border-gray-200 bg-gray-50">
           <div className="flex items-center space-x-3">
             <input
               type="text"
@@ -443,7 +512,7 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ onClose, fleetMode, language 
                 {t.quickActions}
               </p>
               <div className="grid grid-cols-2 gap-2">
-                {t.examples.slice(0, 6).map((example, index) => (
+                {t.examples.map((example, index) => (
                   <button
                     key={index}
                     onClick={() => handleQuickAction(example)}

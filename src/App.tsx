@@ -42,6 +42,11 @@ function App() {
     setIsAuthenticated(false);
   };
 
+  // Handle fleet mode change from AI Assistant
+  const handleFleetModeChange = (mode: FleetMode) => {
+    setFleetMode(mode);
+  };
+
   const renderActivePage = () => {
     switch (activePage) {
       case 'dashboard':
@@ -105,6 +110,7 @@ function App() {
           onClose={() => setShowAIAssistant(false)}
           fleetMode={fleetMode}
           language={language}
+          onFleetModeChange={handleFleetModeChange}
         />
       )}
     </div>
