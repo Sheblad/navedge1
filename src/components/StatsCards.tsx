@@ -1,5 +1,5 @@
 import React from 'react';
-import { Users, Car, DollarSign, AlertTriangle, TrendingUp, Clock } from 'lucide-react';
+import { Users, Car, DollarSign, AlertTriangle, TrendingUp, Clock, Navigation, FileText, Calendar, MapPin } from 'lucide-react';
 import { Driver, Fine } from '../data/mockData';
 
 interface StatsCardsProps {
@@ -12,20 +12,42 @@ interface StatsCardsProps {
 const StatsCards: React.FC<StatsCardsProps> = ({ drivers, fines, fleetMode, language }) => {
   const texts = {
     en: {
-      activeDrivers: 'Active Drivers',
-      totalTrips: fleetMode === 'taxi' ? 'Total Trips Today' : 'Active Rentals',
-      totalRevenue: fleetMode === 'taxi' ? 'Today\'s Revenue' : 'Monthly Revenue',
+      // Rental mode
+      activeRentals: 'Active Rentals',
+      monthlyRevenue: 'Monthly Revenue',
+      contractsExpiring: 'Contracts Expiring',
+      fleetUtilization: 'Fleet Utilization',
+      avgRentalDuration: 'Avg Rental Duration',
+      maintenanceDue: 'Maintenance Due',
+      // Taxi mode
+      driversOnDuty: 'Drivers on Duty',
+      tripsToday: 'Trips Today',
+      dailyRevenue: 'Daily Revenue',
+      avgTripTime: 'Avg Trip Time',
+      peakHoursActive: 'Peak Hours Active',
+      customerRating: 'Customer Rating',
+      // Common
       pendingFines: 'Pending Fines',
-      avgPerformance: 'Avg Performance',
-      fleetUtilization: 'Fleet Utilization'
+      avgPerformance: 'Avg Performance'
     },
     ar: {
-      activeDrivers: 'السائقون النشطون',
-      totalTrips: fleetMode === 'taxi' ? 'إجمالي الرحلات اليوم' : 'التأجيرات النشطة',
-      totalRevenue: fleetMode === 'taxi' ? 'إيرادات اليوم' : 'الإيرادات الشهرية',
+      // Rental mode
+      activeRentals: 'الإيجارات النشطة',
+      monthlyRevenue: 'الإيرادات الشهرية',
+      contractsExpiring: 'العقود المنتهية',
+      fleetUtilization: 'استخدام الأسطول',
+      avgRentalDuration: 'متوسط مدة الإيجار',
+      maintenanceDue: 'الصيانة المستحقة',
+      // Taxi mode
+      driversOnDuty: 'السائقون في الخدمة',
+      tripsToday: 'رحلات اليوم',
+      dailyRevenue: 'الإيرادات اليومية',
+      avgTripTime: 'متوسط وقت الرحلة',
+      peakHoursActive: 'ساعات الذروة النشطة',
+      customerRating: 'تقييم العملاء',
+      // Common
       pendingFines: 'المخالفات المعلقة',
-      avgPerformance: 'متوسط الأداء',
-      fleetUtilization: 'استخدام الأسطول'
+      avgPerformance: 'متوسط الأداء'
     }
   };
 
@@ -38,63 +60,132 @@ const StatsCards: React.FC<StatsCardsProps> = ({ drivers, fines, fleetMode, lang
   const avgPerformance = drivers.reduce((sum, d) => sum + d.performanceScore, 0) / drivers.length;
   const utilizationRate = (activeDrivers / drivers.length) * 100;
 
-  const stats = [
+  // Mode-specific calculations
+  const modeSpecificData = fleetMode === 'rental' ? {
+    contractsExpiring: 3,
+    avgRentalDuration: '11.2 months',
+    maintenanceDue: 2,
+    fleetUtilization: utilizationRate
+  } : {
+    avgTripTime: '24 min',
+    peakHoursActive: 12,
+    customerRating: 4.7,
+    tripsCompleted: totalTrips
+  };
+
+  const stats = fleetMode === 'rental' ? [
     {
-      title: t.activeDrivers,
+      title: t.activeRentals,
       value: activeDrivers,
       total: drivers.length,
-      icon: Users,
-      color: 'blue',
-      change: '+12%'
-    },
-    {
-      title: t.totalTrips,
-      value: totalTrips,
       icon: Car,
-      color: 'green',
-      change: '+8%'
+      color: 'emerald',
+      change: '+2 this month',
+      bgColor: 'bg-emerald-50',
+      textColor: 'text-emerald-700'
     },
     {
-      title: t.totalRevenue,
+      title: t.monthlyRevenue,
       value: `$${totalEarnings.toLocaleString()}`,
       icon: DollarSign,
-      color: 'purple',
-      change: '+15%'
+      color: 'emerald',
+      change: '+18% vs last month',
+      bgColor: 'bg-emerald-50',
+      textColor: 'text-emerald-700'
+    },
+    {
+      title: t.contractsExpiring,
+      value: modeSpecificData.contractsExpiring,
+      icon: Calendar,
+      color: 'yellow',
+      change: 'Next 30 days',
+      bgColor: 'bg-yellow-50',
+      textColor: 'text-yellow-700'
+    },
+    {
+      title: t.fleetUtilization,
+      value: `${modeSpecificData.fleetUtilization.toFixed(1)}%`,
+      icon: TrendingUp,
+      color: 'emerald',
+      change: 'Excellent rate',
+      bgColor: 'bg-emerald-50',
+      textColor: 'text-emerald-700'
+    },
+    {
+      title: t.avgRentalDuration,
+      value: modeSpecificData.avgRentalDuration,
+      icon: Clock,
+      color: 'blue',
+      change: 'Stable trend',
+      bgColor: 'bg-blue-50',
+      textColor: 'text-blue-700'
     },
     {
       title: t.pendingFines,
       value: pendingFines,
       icon: AlertTriangle,
-      color: pendingFines > 0 ? 'red' : 'green',
-      change: pendingFines > 0 ? 'Attention needed' : 'All clear'
+      color: pendingFines > 0 ? 'red' : 'emerald',
+      change: pendingFines > 0 ? 'Attention needed' : 'All clear',
+      bgColor: pendingFines > 0 ? 'bg-red-50' : 'bg-emerald-50',
+      textColor: pendingFines > 0 ? 'text-red-700' : 'text-emerald-700'
+    }
+  ] : [
+    {
+      title: t.driversOnDuty,
+      value: activeDrivers,
+      total: drivers.length,
+      icon: Users,
+      color: 'orange',
+      change: 'Peak hours',
+      bgColor: 'bg-orange-50',
+      textColor: 'text-orange-700'
     },
     {
-      title: t.avgPerformance,
-      value: `${avgPerformance.toFixed(1)}%`,
-      icon: TrendingUp,
-      color: 'indigo',
-      change: '+3%'
+      title: t.tripsToday,
+      value: modeSpecificData.tripsCompleted,
+      icon: Navigation,
+      color: 'orange',
+      change: '+12% vs yesterday',
+      bgColor: 'bg-orange-50',
+      textColor: 'text-orange-700'
     },
     {
-      title: t.fleetUtilization,
-      value: `${utilizationRate.toFixed(1)}%`,
+      title: t.dailyRevenue,
+      value: `$${totalEarnings.toLocaleString()}`,
+      icon: DollarSign,
+      color: 'orange',
+      change: '+8% vs yesterday',
+      bgColor: 'bg-orange-50',
+      textColor: 'text-orange-700'
+    },
+    {
+      title: t.avgTripTime,
+      value: modeSpecificData.avgTripTime,
       icon: Clock,
-      color: 'cyan',
-      change: '+5%'
+      color: 'blue',
+      change: 'Optimal efficiency',
+      bgColor: 'bg-blue-50',
+      textColor: 'text-blue-700'
+    },
+    {
+      title: t.peakHoursActive,
+      value: modeSpecificData.peakHoursActive,
+      icon: MapPin,
+      color: 'purple',
+      change: 'High demand zones',
+      bgColor: 'bg-purple-50',
+      textColor: 'text-purple-700'
+    },
+    {
+      title: t.pendingFines,
+      value: pendingFines,
+      icon: AlertTriangle,
+      color: pendingFines > 0 ? 'red' : 'orange',
+      change: pendingFines > 0 ? 'Attention needed' : 'All clear',
+      bgColor: pendingFines > 0 ? 'bg-red-50' : 'bg-orange-50',
+      textColor: pendingFines > 0 ? 'text-red-700' : 'text-orange-700'
     }
   ];
-
-  const getColorClasses = (color: string) => {
-    const colors = {
-      blue: 'bg-blue-50 text-blue-700',
-      green: 'bg-green-50 text-green-700',
-      purple: 'bg-purple-50 text-purple-700',
-      red: 'bg-red-50 text-red-700',
-      indigo: 'bg-indigo-50 text-indigo-700',
-      cyan: 'bg-cyan-50 text-cyan-700'
-    };
-    return colors[color as keyof typeof colors] || colors.blue;
-  };
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -112,14 +203,15 @@ const StatsCards: React.FC<StatsCardsProps> = ({ drivers, fines, fleetMode, lang
                   </p>
                 </div>
                 <p className={`text-xs mt-1 ${
-                  stat.change.includes('+') ? 'text-green-600' : 
+                  stat.change.includes('+') || stat.change.includes('Excellent') || stat.change.includes('Optimal') || stat.change.includes('All clear') ? 
+                    fleetMode === 'rental' ? 'text-emerald-600' : 'text-orange-600' : 
                   stat.change.includes('Attention') || stat.change.includes('needed') ? 'text-red-600' : 'text-gray-500'
                 }`}>
                   {stat.change}
                 </p>
               </div>
-              <div className={`p-3 rounded-lg ${getColorClasses(stat.color)}`}>
-                <Icon className="w-6 h-6" />
+              <div className={`p-3 rounded-lg ${stat.bgColor}`}>
+                <Icon className={`w-6 h-6 ${stat.textColor}`} />
               </div>
             </div>
           </div>

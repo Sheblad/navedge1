@@ -1,5 +1,5 @@
 import React from 'react';
-import { AlertTriangle, MapPin, DollarSign, Clock, Star, Phone } from 'lucide-react';
+import { AlertTriangle, MapPin, DollarSign, Clock, Star, Phone, Calendar, FileText, Navigation, Car } from 'lucide-react';
 import { Driver } from '../data/mockData';
 
 interface DriverCardProps {
@@ -12,24 +12,50 @@ interface DriverCardProps {
 const DriverCard: React.FC<DriverCardProps> = ({ driver, fleetMode, language, onDriverClick }) => {
   const texts = {
     en: {
-      tripsToday: fleetMode === 'taxi' ? 'Trips Today' : 'Active Rentals',
-      earnings: fleetMode === 'taxi' ? 'Today' : 'Monthly',
+      // Rental mode
+      rentalActive: 'Active Rental',
+      monthlyEarnings: 'Monthly Revenue',
+      contractStatus: 'Contract Status',
+      vehicleAssigned: 'Vehicle Assigned',
+      daysRemaining: 'Days Remaining',
+      // Taxi mode
+      tripsToday: 'Trips Today',
+      todayEarnings: 'Today\'s Earnings',
+      shiftStatus: 'Shift Status',
+      onDuty: 'On Duty',
       performance: 'Performance',
       contact: 'Contact',
-      viewProfile: 'View Full Profile'
+      viewProfile: 'View Full Profile',
+      // Status
+      active: 'Active',
+      onShift: 'On Shift',
+      offline: 'Offline'
     },
     ar: {
-      tripsToday: fleetMode === 'taxi' ? 'رحلات اليوم' : 'التأجيرات النشطة',
-      earnings: fleetMode === 'taxi' ? 'اليوم' : 'شهرياً',
+      // Rental mode
+      rentalActive: 'إيجار نشط',
+      monthlyEarnings: 'الإيرادات الشهرية',
+      contractStatus: 'حالة العقد',
+      vehicleAssigned: 'المركبة المخصصة',
+      daysRemaining: 'الأيام المتبقية',
+      // Taxi mode
+      tripsToday: 'رحلات اليوم',
+      todayEarnings: 'أرباح اليوم',
+      shiftStatus: 'حالة المناوبة',
+      onDuty: 'في الخدمة',
       performance: 'الأداء',
       contact: 'اتصال',
-      viewProfile: 'عرض الملف الكامل'
+      viewProfile: 'عرض الملف الكامل',
+      // Status
+      active: 'نشط',
+      onShift: 'في المناوبة',
+      offline: 'غير متصل'
     }
   };
 
   const t = texts[language];
 
-  const hasAlert = driver.performanceScore < 80 || driver.earnings < 500;
+  const hasAlert = driver.performanceScore < 80 || driver.earnings < (fleetMode === 'rental' ? 1000 : 500);
 
   const handleCardClick = () => {
     if (onDriverClick) {
@@ -37,28 +63,45 @@ const DriverCard: React.FC<DriverCardProps> = ({ driver, fleetMode, language, on
     }
   };
 
+  // Mode-specific styling and content
+  const cardStyle = fleetMode === 'rental' 
+    ? 'hover:shadow-emerald-100 group-hover:bg-emerald-50' 
+    : 'hover:shadow-orange-100 group-hover:bg-orange-50';
+
+  const accentColor = fleetMode === 'rental' ? 'emerald' : 'orange';
+
   return (
     <div 
-      className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-all duration-300 hover:scale-105 cursor-pointer group"
+      className={`bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-all duration-300 hover:scale-105 cursor-pointer group ${cardStyle}`}
       onClick={handleCardClick}
     >
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center space-x-3">
           <div className="relative">
-            <div className="w-12 h-12 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full flex items-center justify-center">
+            <div className={`w-12 h-12 bg-gradient-to-r ${
+              fleetMode === 'rental' 
+                ? 'from-emerald-600 to-teal-600' 
+                : 'from-orange-500 to-yellow-500'
+            } rounded-full flex items-center justify-center`}>
               <span className="text-white font-semibold">{driver.avatar}</span>
             </div>
             <div className={`absolute -bottom-1 -right-1 w-4 h-4 border-2 border-white rounded-full ${
-              driver.status === 'active' ? 'bg-green-500' : 'bg-gray-400'
+              driver.status === 'active' 
+                ? fleetMode === 'rental' ? 'bg-emerald-500' : 'bg-orange-500'
+                : 'bg-gray-400'
             }`}></div>
           </div>
           <div>
-            <h3 className="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">{driver.name}</h3>
+            <h3 className={`font-semibold text-gray-900 group-hover:text-${accentColor}-600 transition-colors`}>
+              {driver.name}
+            </h3>
             <div className="flex items-center space-x-2">
-              <span className="text-xs text-gray-500 capitalize">{driver.status}</span>
+              <span className="text-xs text-gray-500 capitalize">
+                {fleetMode === 'rental' ? (driver.status === 'active' ? t.active : t.offline) : (driver.status === 'active' ? t.onShift : t.offline)}
+              </span>
               {driver.vehicleId && (
-                <span className="text-xs text-blue-600">{driver.vehicleId}</span>
+                <span className={`text-xs text-${accentColor}-600`}>{driver.vehicleId}</span>
               )}
             </div>
           </div>
@@ -80,34 +123,75 @@ const DriverCard: React.FC<DriverCardProps> = ({ driver, fleetMode, language, on
         <div className="w-full bg-gray-200 rounded-full h-2">
           <div 
             className={`h-2 rounded-full transition-all duration-300 ${
-              driver.performanceScore >= 90 ? 'bg-green-500' :
-              driver.performanceScore >= 80 ? 'bg-yellow-500' : 'bg-red-500'
+              driver.performanceScore >= 90 
+                ? fleetMode === 'rental' ? 'bg-emerald-500' : 'bg-orange-500'
+                : driver.performanceScore >= 80 
+                  ? 'bg-yellow-500' 
+                  : 'bg-red-500'
             }`}
             style={{ width: `${driver.performanceScore}%` }}
           ></div>
         </div>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 gap-3 mb-4">
-        <div className="bg-gray-50 rounded-lg p-3 group-hover:bg-blue-50 transition-colors">
-          <div className="flex items-center space-x-2 mb-1">
-            <Clock className="w-4 h-4 text-gray-500 group-hover:text-blue-500 transition-colors" />
-            <span className="text-xs text-gray-500">{t.tripsToday}</span>
+      {/* Mode-Specific Stats */}
+      {fleetMode === 'rental' ? (
+        <div className="grid grid-cols-2 gap-3 mb-4">
+          <div className="bg-gray-50 rounded-lg p-3 group-hover:bg-emerald-50 transition-colors">
+            <div className="flex items-center space-x-2 mb-1">
+              <FileText className="w-4 h-4 text-gray-500 group-hover:text-emerald-500 transition-colors" />
+              <span className="text-xs text-gray-500">{t.contractStatus}</span>
+            </div>
+            <span className="text-lg font-semibold text-gray-900">Active</span>
           </div>
-          <span className="text-lg font-semibold text-gray-900">{driver.trips}</span>
-        </div>
-        
-        <div className="bg-gray-50 rounded-lg p-3 group-hover:bg-blue-50 transition-colors">
-          <div className="flex items-center space-x-2 mb-1">
-            <DollarSign className="w-4 h-4 text-gray-500 group-hover:text-blue-500 transition-colors" />
-            <span className="text-xs text-gray-500">{t.earnings}</span>
+          
+          <div className="bg-gray-50 rounded-lg p-3 group-hover:bg-emerald-50 transition-colors">
+            <div className="flex items-center space-x-2 mb-1">
+              <DollarSign className="w-4 h-4 text-gray-500 group-hover:text-emerald-500 transition-colors" />
+              <span className="text-xs text-gray-500">{t.monthlyEarnings}</span>
+            </div>
+            <span className="text-lg font-semibold text-gray-900">
+              ${driver.earnings.toLocaleString()}
+            </span>
           </div>
-          <span className="text-lg font-semibold text-gray-900">
-            ${driver.earnings.toLocaleString()}
-          </span>
+          
+          <div className="bg-gray-50 rounded-lg p-3 group-hover:bg-emerald-50 transition-colors col-span-2">
+            <div className="flex items-center space-x-2 mb-1">
+              <Calendar className="w-4 h-4 text-gray-500 group-hover:text-emerald-500 transition-colors" />
+              <span className="text-xs text-gray-500">{t.daysRemaining}</span>
+            </div>
+            <span className="text-lg font-semibold text-gray-900">247 days</span>
+          </div>
         </div>
-      </div>
+      ) : (
+        <div className="grid grid-cols-2 gap-3 mb-4">
+          <div className="bg-gray-50 rounded-lg p-3 group-hover:bg-orange-50 transition-colors">
+            <div className="flex items-center space-x-2 mb-1">
+              <Navigation className="w-4 h-4 text-gray-500 group-hover:text-orange-500 transition-colors" />
+              <span className="text-xs text-gray-500">{t.tripsToday}</span>
+            </div>
+            <span className="text-lg font-semibold text-gray-900">{driver.trips}</span>
+          </div>
+          
+          <div className="bg-gray-50 rounded-lg p-3 group-hover:bg-orange-50 transition-colors">
+            <div className="flex items-center space-x-2 mb-1">
+              <DollarSign className="w-4 h-4 text-gray-500 group-hover:text-orange-500 transition-colors" />
+              <span className="text-xs text-gray-500">{t.todayEarnings}</span>
+            </div>
+            <span className="text-lg font-semibold text-gray-900">
+              ${driver.earnings.toLocaleString()}
+            </span>
+          </div>
+          
+          <div className="bg-gray-50 rounded-lg p-3 group-hover:bg-orange-50 transition-colors col-span-2">
+            <div className="flex items-center space-x-2 mb-1">
+              <Clock className="w-4 h-4 text-gray-500 group-hover:text-orange-500 transition-colors" />
+              <span className="text-xs text-gray-500">Shift Duration</span>
+            </div>
+            <span className="text-lg font-semibold text-gray-900">8h 24m</span>
+          </div>
+        </div>
+      )}
 
       {/* Location & Contact */}
       <div className="space-y-2">
@@ -133,11 +217,11 @@ const DriverCard: React.FC<DriverCardProps> = ({ driver, fleetMode, language, on
       </div>
 
       {/* Hover overlay */}
-      <div className="absolute inset-0 bg-blue-600 bg-opacity-0 group-hover:bg-opacity-5 rounded-lg transition-all duration-300 pointer-events-none" />
+      <div className={`absolute inset-0 bg-${accentColor}-600 bg-opacity-0 group-hover:bg-opacity-5 rounded-lg transition-all duration-300 pointer-events-none`} />
       
       {/* Click hint */}
       <div className="mt-3 pt-3 border-t border-gray-100 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-        <p className="text-xs text-blue-600 text-center font-medium">{t.viewProfile}</p>
+        <p className={`text-xs text-${accentColor}-600 text-center font-medium`}>{t.viewProfile}</p>
       </div>
     </div>
   );
