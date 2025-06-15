@@ -1,31 +1,46 @@
 import React from 'react';
-import { Users, Car, DollarSign, AlertTriangle } from 'lucide-react';
-
-interface Driver {
-  id: number;
-  name: string;
-  avatar: string;
-  trips: number;
-  earnings: number;
-  status: 'active' | 'offline';
-  redFlag: boolean;
-  location: { lat: number; lng: number };
-}
+import { Users, Car, DollarSign, AlertTriangle, TrendingUp, Clock } from 'lucide-react';
+import { Driver, Fine } from '../data/mockData';
 
 interface StatsCardsProps {
   drivers: Driver[];
+  fines: Fine[];
   fleetMode: 'rental' | 'taxi';
+  language: 'en' | 'ar';
 }
 
-const StatsCards: React.FC<StatsCardsProps> = ({ drivers, fleetMode }) => {
+const StatsCards: React.FC<StatsCardsProps> = ({ drivers, fines, fleetMode, language }) => {
+  const texts = {
+    en: {
+      activeDrivers: 'Active Drivers',
+      totalTrips: fleetMode === 'taxi' ? 'Total Trips Today' : 'Active Rentals',
+      totalRevenue: fleetMode === 'taxi' ? 'Today\'s Revenue' : 'Monthly Revenue',
+      pendingFines: 'Pending Fines',
+      avgPerformance: 'Avg Performance',
+      fleetUtilization: 'Fleet Utilization'
+    },
+    ar: {
+      activeDrivers: 'السائقون النشطون',
+      totalTrips: fleetMode === 'taxi' ? 'إجمالي الرحلات اليوم' : 'التأجيرات النشطة',
+      totalRevenue: fleetMode === 'taxi' ? 'إيرادات اليوم' : 'الإيرادات الشهرية',
+      pendingFines: 'المخالفات المعلقة',
+      avgPerformance: 'متوسط الأداء',
+      fleetUtilization: 'استخدام الأسطول'
+    }
+  };
+
+  const t = texts[language];
+
   const activeDrivers = drivers.filter(d => d.status === 'active').length;
   const totalEarnings = drivers.reduce((sum, d) => sum + d.earnings, 0);
   const totalTrips = drivers.reduce((sum, d) => sum + d.trips, 0);
-  const redFlags = drivers.filter(d => d.redFlag).length;
+  const pendingFines = fines.filter(f => f.status === 'pending').length;
+  const avgPerformance = drivers.reduce((sum, d) => sum + d.performanceScore, 0) / drivers.length;
+  const utilizationRate = (activeDrivers / drivers.length) * 100;
 
   const stats = [
     {
-      title: 'Active Drivers',
+      title: t.activeDrivers,
       value: activeDrivers,
       total: drivers.length,
       icon: Users,
@@ -33,25 +48,39 @@ const StatsCards: React.FC<StatsCardsProps> = ({ drivers, fleetMode }) => {
       change: '+12%'
     },
     {
-      title: fleetMode === 'taxi' ? 'Total Trips Today' : 'Active Rentals',
+      title: t.totalTrips,
       value: totalTrips,
       icon: Car,
       color: 'green',
       change: '+8%'
     },
     {
-      title: fleetMode === 'taxi' ? 'Today\'s Revenue' : 'Monthly Revenue',
+      title: t.totalRevenue,
       value: `$${totalEarnings.toLocaleString()}`,
       icon: DollarSign,
       color: 'purple',
       change: '+15%'
     },
     {
-      title: 'Alerts',
-      value: redFlags,
+      title: t.pendingFines,
+      value: pendingFines,
       icon: AlertTriangle,
-      color: 'red',
-      change: redFlags > 0 ? 'Attention needed' : 'All clear'
+      color: pendingFines > 0 ? 'red' : 'green',
+      change: pendingFines > 0 ? 'Attention needed' : 'All clear'
+    },
+    {
+      title: t.avgPerformance,
+      value: `${avgPerformance.toFixed(1)}%`,
+      icon: TrendingUp,
+      color: 'indigo',
+      change: '+3%'
+    },
+    {
+      title: t.fleetUtilization,
+      value: `${utilizationRate.toFixed(1)}%`,
+      icon: Clock,
+      color: 'cyan',
+      change: '+5%'
     }
   ];
 
@@ -60,17 +89,19 @@ const StatsCards: React.FC<StatsCardsProps> = ({ drivers, fleetMode }) => {
       blue: 'bg-blue-50 text-blue-700',
       green: 'bg-green-50 text-green-700',
       purple: 'bg-purple-50 text-purple-700',
-      red: 'bg-red-50 text-red-700'
+      red: 'bg-red-50 text-red-700',
+      indigo: 'bg-indigo-50 text-indigo-700',
+      cyan: 'bg-cyan-50 text-cyan-700'
     };
     return colors[color as keyof typeof colors] || colors.blue;
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {stats.map((stat, index) => {
         const Icon = stat.icon;
         return (
-          <div key={index} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div key={index} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">{stat.title}</p>
@@ -82,7 +113,7 @@ const StatsCards: React.FC<StatsCardsProps> = ({ drivers, fleetMode }) => {
                 </div>
                 <p className={`text-xs mt-1 ${
                   stat.change.includes('+') ? 'text-green-600' : 
-                  stat.change.includes('Attention') ? 'text-red-600' : 'text-gray-500'
+                  stat.change.includes('Attention') || stat.change.includes('needed') ? 'text-red-600' : 'text-gray-500'
                 }`}>
                   {stat.change}
                 </p>

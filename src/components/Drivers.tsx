@@ -1,60 +1,86 @@
-import React from 'react';
-import { Search, Filter, Plus, MoreVertical } from 'lucide-react';
+import React, { useState } from 'react';
+import { Search, Filter, Plus, MoreVertical, Phone, Mail, Star } from 'lucide-react';
+import { mockDriversData } from '../data/mockData';
 
 type FleetMode = 'rental' | 'taxi';
+type Language = 'en' | 'ar';
 
 interface DriversProps {
   fleetMode: FleetMode;
+  language: Language;
 }
 
-const Drivers: React.FC<DriversProps> = ({ fleetMode }) => {
-  const mockDrivers = [
-    {
-      id: 1,
-      name: 'Ahmed Al-Rashid',
-      email: 'ahmed@example.com',
-      phone: '+971 50 123 4567',
-      status: 'active',
-      joinDate: '2024-01-15',
-      trips: fleetMode === 'taxi' ? 1250 : 45,
-      earnings: 15420,
-      rating: 4.8
+const Drivers: React.FC<DriversProps> = ({ fleetMode, language }) => {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'offline'>('all');
+
+  const texts = {
+    en: {
+      title: 'Drivers',
+      subtitle: 'Manage your fleet drivers and their performance',
+      addDriver: 'Add Driver',
+      searchPlaceholder: 'Search drivers...',
+      filter: 'Filter',
+      driver: 'Driver',
+      contact: 'Contact',
+      status: 'Status',
+      totalTrips: fleetMode === 'taxi' ? 'Total Trips' : 'Active Rentals',
+      earnings: 'Earnings',
+      performance: 'Performance',
+      actions: 'Actions',
+      active: 'Active',
+      offline: 'Offline',
+      all: 'All',
+      joined: 'Joined',
+      noDrivers: 'No drivers found',
+      rating: 'Rating'
     },
-    {
-      id: 2,
-      name: 'Mohammed Hassan',
-      email: 'mohammed@example.com',
-      phone: '+971 55 987 6543',
-      status: 'active',
-      joinDate: '2023-11-20',
-      trips: fleetMode === 'taxi' ? 980 : 32,
-      earnings: 12350,
-      rating: 4.6
-    },
-    {
-      id: 3,
-      name: 'Omar Khalil',
-      email: 'omar@example.com',
-      phone: '+971 52 456 7890',
-      status: 'inactive',
-      joinDate: '2024-02-10',
-      trips: fleetMode === 'taxi' ? 750 : 28,
-      earnings: 9800,
-      rating: 4.9
+    ar: {
+      title: 'السائقون',
+      subtitle: 'إدارة سائقي الأسطول وأدائهم',
+      addDriver: 'إضافة سائق',
+      searchPlaceholder: 'البحث في السائقين...',
+      filter: 'تصفية',
+      driver: 'السائق',
+      contact: 'الاتصال',
+      status: 'الحالة',
+      totalTrips: fleetMode === 'taxi' ? 'إجمالي الرحلات' : 'التأجيرات النشطة',
+      earnings: 'الأرباح',
+      performance: 'الأداء',
+      actions: 'الإجراءات',
+      active: 'نشط',
+      offline: 'غير متصل',
+      all: 'الكل',
+      joined: 'انضم في',
+      noDrivers: 'لا يوجد سائقون',
+      rating: 'التقييم'
     }
-  ];
+  };
+
+  const t = texts[language];
+
+  const filteredDrivers = mockDriversData.filter(driver => {
+    const matchesSearch = 
+      driver.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      driver.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      driver.phone.includes(searchTerm);
+    
+    const matchesStatus = statusFilter === 'all' || driver.status === statusFilter;
+    
+    return matchesSearch && matchesStatus;
+  });
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Drivers</h1>
-          <p className="text-gray-600">Manage your fleet drivers and their performance</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t.title}</h1>
+          <p className="text-gray-600">{t.subtitle}</p>
         </div>
         <button className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
           <Plus className="w-4 h-4" />
-          <span>Add Driver</span>
+          <span>{t.addDriver}</span>
         </button>
       </div>
 
@@ -64,14 +90,21 @@ const Drivers: React.FC<DriversProps> = ({ fleetMode }) => {
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input
             type="text"
-            placeholder="Search drivers..."
+            placeholder={t.searchPlaceholder}
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
         </div>
-        <button className="flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-          <Filter className="w-4 h-4" />
-          <span>Filter</span>
-        </button>
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value as any)}
+          className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        >
+          <option value="all">{t.all}</option>
+          <option value="active">{t.active}</option>
+          <option value="offline">{t.offline}</option>
+        </select>
       </div>
 
       {/* Drivers Table */}
@@ -80,61 +113,88 @@ const Drivers: React.FC<DriversProps> = ({ fleetMode }) => {
           <table className="w-full">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
-                <th className="text-left py-3 px-4 font-medium text-gray-900">Driver</th>
-                <th className="text-left py-3 px-4 font-medium text-gray-900">Contact</th>
-                <th className="text-left py-3 px-4 font-medium text-gray-900">Status</th>
-                <th className="text-left py-3 px-4 font-medium text-gray-900">
-                  {fleetMode === 'taxi' ? 'Total Trips' : 'Active Rentals'}
-                </th>
-                <th className="text-left py-3 px-4 font-medium text-gray-900">Earnings</th>
-                <th className="text-left py-3 px-4 font-medium text-gray-900">Rating</th>
-                <th className="text-left py-3 px-4 font-medium text-gray-900">Actions</th>
+                <th className="text-left py-3 px-4 font-medium text-gray-900">{t.driver}</th>
+                <th className="text-left py-3 px-4 font-medium text-gray-900">{t.contact}</th>
+                <th className="text-left py-3 px-4 font-medium text-gray-900">{t.status}</th>
+                <th className="text-left py-3 px-4 font-medium text-gray-900">{t.totalTrips}</th>
+                <th className="text-left py-3 px-4 font-medium text-gray-900">{t.earnings}</th>
+                <th className="text-left py-3 px-4 font-medium text-gray-900">{t.performance}</th>
+                <th className="text-left py-3 px-4 font-medium text-gray-900">{t.rating}</th>
+                <th className="text-left py-3 px-4 font-medium text-gray-900">{t.actions}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {mockDrivers.map((driver) => (
-                <tr key={driver.id} className="hover:bg-gray-50">
-                  <td className="py-4 px-4">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full flex items-center justify-center">
-                        <span className="text-white font-semibold text-sm">
-                          {driver.name.split(' ').map(n => n[0]).join('')}
-                        </span>
+              {filteredDrivers.length > 0 ? (
+                filteredDrivers.map((driver) => (
+                  <tr key={driver.id} className="hover:bg-gray-50">
+                    <td className="py-4 px-4">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full flex items-center justify-center">
+                          <span className="text-white font-semibold text-sm">{driver.avatar}</span>
+                        </div>
+                        <div>
+                          <div className="font-medium text-gray-900">{driver.name}</div>
+                          <div className="text-sm text-gray-500">{t.joined} {driver.joinDate}</div>
+                        </div>
                       </div>
-                      <div>
-                        <div className="font-medium text-gray-900">{driver.name}</div>
-                        <div className="text-sm text-gray-500">Joined {driver.joinDate}</div>
+                    </td>
+                    <td className="py-4 px-4">
+                      <div className="space-y-1">
+                        <div className="flex items-center space-x-2 text-sm text-gray-900">
+                          <Mail className="w-4 h-4 text-gray-400" />
+                          <span>{driver.email}</span>
+                        </div>
+                        <div className="flex items-center space-x-2 text-sm text-gray-500">
+                          <Phone className="w-4 h-4 text-gray-400" />
+                          <span>{driver.phone}</span>
+                        </div>
                       </div>
-                    </div>
-                  </td>
-                  <td className="py-4 px-4">
-                    <div className="text-sm text-gray-900">{driver.email}</div>
-                    <div className="text-sm text-gray-500">{driver.phone}</div>
-                  </td>
-                  <td className="py-4 px-4">
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                      driver.status === 'active' 
-                        ? 'bg-green-100 text-green-800' 
-                        : 'bg-gray-100 text-gray-800'
-                    }`}>
-                      {driver.status}
-                    </span>
-                  </td>
-                  <td className="py-4 px-4 text-sm text-gray-900">{driver.trips}</td>
-                  <td className="py-4 px-4 text-sm text-gray-900">${driver.earnings.toLocaleString()}</td>
-                  <td className="py-4 px-4">
-                    <div className="flex items-center space-x-1">
-                      <span className="text-sm text-gray-900">{driver.rating}</span>
-                      <span className="text-yellow-400">★</span>
-                    </div>
-                  </td>
-                  <td className="py-4 px-4">
-                    <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                      <MoreVertical className="w-4 h-4 text-gray-500" />
-                    </button>
+                    </td>
+                    <td className="py-4 px-4">
+                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                        driver.status === 'active' 
+                          ? 'bg-green-100 text-green-800' 
+                          : 'bg-gray-100 text-gray-800'
+                      }`}>
+                        {t[driver.status as keyof typeof t] || driver.status}
+                      </span>
+                    </td>
+                    <td className="py-4 px-4 text-sm text-gray-900">{driver.trips}</td>
+                    <td className="py-4 px-4 text-sm text-gray-900">${driver.earnings.toLocaleString()}</td>
+                    <td className="py-4 px-4">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-16 bg-gray-200 rounded-full h-2">
+                          <div 
+                            className={`h-2 rounded-full ${
+                              driver.performanceScore >= 90 ? 'bg-green-500' :
+                              driver.performanceScore >= 80 ? 'bg-yellow-500' : 'bg-red-500'
+                            }`}
+                            style={{ width: `${driver.performanceScore}%` }}
+                          ></div>
+                        </div>
+                        <span className="text-sm text-gray-900">{driver.performanceScore}%</span>
+                      </div>
+                    </td>
+                    <td className="py-4 px-4">
+                      <div className="flex items-center space-x-1">
+                        <Star className="w-4 h-4 text-yellow-400 fill-current" />
+                        <span className="text-sm text-gray-900">{(driver.performanceScore / 20).toFixed(1)}</span>
+                      </div>
+                    </td>
+                    <td className="py-4 px-4">
+                      <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                        <MoreVertical className="w-4 h-4 text-gray-500" />
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={8} className="py-8 text-center text-gray-500">
+                    {t.noDrivers}
                   </td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
         </div>

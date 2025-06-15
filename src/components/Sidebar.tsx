@@ -3,33 +3,64 @@ import {
   LayoutDashboard, 
   Users, 
   FileText, 
-  MessageCircle, 
+  AlertTriangle,
+  BarChart3,
   Settings, 
   Navigation,
   X
 } from 'lucide-react';
 
-type ActivePage = 'dashboard' | 'drivers' | 'contracts' | 'chat' | 'settings';
+type ActivePage = 'dashboard' | 'drivers' | 'contracts' | 'fines' | 'reports' | 'settings';
+type FleetMode = 'rental' | 'taxi';
+type Language = 'en' | 'ar';
 
 interface SidebarProps {
   activePage: ActivePage;
   setActivePage: (page: ActivePage) => void;
   sidebarOpen: boolean;
   setSidebarOpen: (open: boolean) => void;
+  language: Language;
+  fleetMode: FleetMode;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ 
   activePage, 
   setActivePage, 
   sidebarOpen, 
-  setSidebarOpen 
+  setSidebarOpen,
+  language,
+  fleetMode
 }) => {
+  const texts = {
+    en: {
+      dashboard: 'Dashboard',
+      drivers: 'Drivers',
+      contracts: fleetMode === 'rental' ? 'Contracts' : 'Shifts',
+      fines: 'Fines',
+      reports: 'Reports',
+      settings: 'Settings',
+      version: 'Version 2.1.0'
+    },
+    ar: {
+      dashboard: 'لوحة التحكم',
+      drivers: 'السائقون',
+      contracts: fleetMode === 'rental' ? 'العقود' : 'المناوبات',
+      fines: 'المخالفات',
+      reports: 'التقارير',
+      settings: 'الإعدادات',
+      version: 'الإصدار 2.1.0'
+    }
+  };
+
+  const t = texts[language];
+
   const menuItems = [
-    { id: 'dashboard' as ActivePage, label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'drivers' as ActivePage, label: 'Drivers', icon: Users },
-    { id: 'contracts' as ActivePage, label: 'Contracts', icon: FileText },
-    { id: 'chat' as ActivePage, label: 'Chat', icon: MessageCircle },
-    { id: 'settings' as ActivePage, label: 'Settings', icon: Settings },
+    { id: 'dashboard' as ActivePage, label: t.dashboard, icon: LayoutDashboard },
+    { id: 'drivers' as ActivePage, label: t.drivers, icon: Users },
+    { id: 'contracts' as ActivePage, label: t.contracts, icon: FileText },
+    { id: 'fines' as ActivePage, label: t.fines, icon: AlertTriangle },
+    { id: 'reports' as ActivePage, label: t.reports, icon: BarChart3 },
+    { id: 'settings' as ActivePage, label: t.settings, icon: Settings },
   ];
 
   return (
@@ -97,7 +128,7 @@ const Sidebar: React.FC<SidebarProps> = ({
           <div className="text-xs text-gray-500 text-center">
             NavEdge Fleet Management
             <br />
-            Version 2.1.0
+            {t.version}
           </div>
         </div>
       </div>
