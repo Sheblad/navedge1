@@ -71,33 +71,42 @@ const FleetMap: React.FC<FleetMapProps> = ({ drivers, language, onDriverClick })
 
   const t = texts[language];
 
-  // Simulate real-time GPS updates
+  // Simulate real-time GPS updates with realistic movement
   useEffect(() => {
     if (!isRealTimeActive) return;
 
     const interval = setInterval(() => {
       drivers.forEach(driver => {
         if (driver.status === 'active') {
-          // Simulate GPS movement (small random changes)
-          const newLat = driver.location.lat + (Math.random() - 0.5) * 0.002;
-          const newLng = driver.location.lng + (Math.random() - 0.5) * 0.002;
+          // Create realistic movement patterns
+          const movementSpeed = 0.0005; // Adjust for realistic speed
+          const randomDirection = Math.random() * 2 * Math.PI;
+          
+          // Simulate realistic GPS movement (following roads/paths)
+          const latChange = Math.cos(randomDirection) * movementSpeed * (0.5 + Math.random());
+          const lngChange = Math.sin(randomDirection) * movementSpeed * (0.5 + Math.random());
+          
+          // Keep drivers within Dubai bounds
+          const newLat = Math.max(25.15, Math.min(25.35, driver.location.lat + latChange));
+          const newLng = Math.max(55.15, Math.min(55.35, driver.location.lng + lngChange));
           
           // Update driver location
           driver.location.lat = newLat;
           driver.location.lng = newLng;
           
-          // Update marker position if it exists
+          // Update marker position with smooth animation
           const marker = markersRef.current.get(driver.id);
           if (marker) {
+            // Smooth movement animation
             marker.setLatLng([newLat, newLng]);
             
-            // Update popup content with new timestamp
+            // Update popup content with new timestamp and simulated data
             const popupContent = createPopupContent(driver);
             marker.setPopupContent(popupContent);
           }
         }
       });
-    }, 5000); // Update every 5 seconds for real-time feel
+    }, 3000); // Update every 3 seconds for smooth movement
 
     return () => clearInterval(interval);
   }, [drivers, isRealTimeActive]);
@@ -166,6 +175,7 @@ const FleetMap: React.FC<FleetMapProps> = ({ drivers, language, onDriverClick })
               border-radius: 12px;
               font-size: 10px;
               font-weight: 600;
+              animation: pulse 2s infinite;
             ">LIVE</div>
           </div>
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 11px;">
@@ -288,6 +298,14 @@ const FleetMap: React.FC<FleetMapProps> = ({ drivers, language, onDriverClick })
           📍 ${driver.location.lat.toFixed(6)}, ${driver.location.lng.toFixed(6)}
         </div>
       </div>
+
+      <style>
+        @keyframes pulse {
+          0% { opacity: 1; }
+          50% { opacity: 0.5; }
+          100% { opacity: 1; }
+        }
+      </style>
     `;
   };
 
