@@ -1,6 +1,6 @@
 import React from 'react';
 import { AlertTriangle, MapPin, DollarSign, Clock, Star, Phone, Calendar, FileText, Navigation, Car } from 'lucide-react';
-import { Driver } from '../data/mockData';
+import { Driver, mockContractsData } from '../data/mockData';
 
 interface DriverCardProps {
   driver: Driver;
@@ -18,6 +18,8 @@ const DriverCard: React.FC<DriverCardProps> = ({ driver, fleetMode, language, on
       contractStatus: 'Contract Status',
       vehicleAssigned: 'Vehicle Assigned',
       daysRemaining: 'Days Remaining',
+      contractExpired: 'Contract Expired',
+      contractExpiringSoon: 'Expires Soon',
       // Taxi mode
       tripsToday: 'Trips Today',
       todayEarnings: 'Today\'s Earnings',
@@ -38,6 +40,8 @@ const DriverCard: React.FC<DriverCardProps> = ({ driver, fleetMode, language, on
       contractStatus: 'حالة العقد',
       vehicleAssigned: 'المركبة المخصصة',
       daysRemaining: 'الأيام المتبقية',
+      contractExpired: 'انتهى العقد',
+      contractExpiringSoon: 'ينتهي قريباً',
       // Taxi mode
       tripsToday: 'رحلات اليوم',
       todayEarnings: 'أرباح اليوم',
@@ -56,6 +60,23 @@ const DriverCard: React.FC<DriverCardProps> = ({ driver, fleetMode, language, on
   const t = texts[language];
 
   const hasAlert = driver.performanceScore < 80 || driver.earnings < (fleetMode === 'rental' ? 1000 : 500);
+
+  // Calculate days remaining for rental contracts
+  const getContractDaysRemaining = () => {
+    if (fleetMode !== 'rental') return null;
+    
+    const contract = mockContractsData.find(c => c.driverId === driver.id && c.status === 'active');
+    if (!contract) return null;
+    
+    const endDate = new Date(contract.endDate);
+    const today = new Date();
+    const timeDiff = endDate.getTime() - today.getTime();
+    const daysRemaining = Math.ceil(timeDiff / (1000 * 3600 * 24));
+    
+    return daysRemaining;
+  };
+
+  const daysRemaining = getContractDaysRemaining();
 
   const handleCardClick = () => {
     if (onDriverClick) {
@@ -160,7 +181,21 @@ const DriverCard: React.FC<DriverCardProps> = ({ driver, fleetMode, language, on
               <Calendar className="w-4 h-4 text-gray-500 group-hover:text-emerald-500 transition-colors" />
               <span className="text-xs text-gray-500">{t.daysRemaining}</span>
             </div>
-            <span className="text-lg font-semibold text-gray-900">247 days</span>
+            {daysRemaining !== null ? (
+              <div className="flex items-center space-x-2">
+                <span className={`text-lg font-semibold ${
+                  daysRemaining < 0 ? 'text-red-600' : 
+                  daysRemaining < 30 ? 'text-yellow-600' : 'text-gray-900'
+                }`}>
+                  {daysRemaining < 0 ? t.contractExpired : `${daysRemaining} days`}
+                </span>
+                {daysRemaining > 0 && daysRemaining < 30 && (
+                  <span className="text-xs text-yellow-600 font-medium">{t.contractExpiringSoon}</span>
+                )}
+              </div>
+            ) : (
+              <span className="text-lg font-semibold text-gray-500">No contract</span>
+            )}
           </div>
         </div>
       ) : (
