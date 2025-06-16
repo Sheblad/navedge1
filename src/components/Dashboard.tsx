@@ -45,7 +45,22 @@ const Dashboard: React.FC<DashboardProps> = ({ fleetMode, language }) => {
       tripsCompleted: 'Trips Completed Today',
       averageTripTime: 'Average Trip Duration',
       peakHours: 'Peak Hours Performance',
-      driverShifts: 'Active Shifts'
+      driverShifts: 'Active Shifts',
+      // Alert messages
+      pendingFinesAlert: 'pending fine',
+      pendingFinesAlertPlural: 'pending fines',
+      requireAttention: 'require attention',
+      contractsExpiringAlert: 'rental contract',
+      contractsExpiringAlertPlural: 'rental contracts',
+      expiringThisMonth: 'expiring this month',
+      maintenanceAlert: 'vehicle',
+      maintenanceAlertPlural: 'vehicles',
+      dueForMaintenance: 'due for maintenance',
+      fleetUtilizationAlert: 'fleet utilization rate',
+      peakHoursAlert: 'drivers in high-demand zones',
+      tripsCompletedAlert: 'trips completed today',
+      driversCurrentlyActive: 'drivers currently active',
+      rentersCurrentlyActive: 'renters currently active'
     },
     ar: {
       welcome: fleetMode === 'rental' ? 'مرحباً بك في مركز نافيدج للإيجار' : 'مرحباً بك في مركز تحكم نافيدج للتاكسي',
@@ -71,7 +86,22 @@ const Dashboard: React.FC<DashboardProps> = ({ fleetMode, language }) => {
       tripsCompleted: 'الرحلات المكتملة اليوم',
       averageTripTime: 'متوسط مدة الرحلة',
       peakHours: 'أداء ساعات الذروة',
-      driverShifts: 'المناوبات النشطة'
+      driverShifts: 'المناوبات النشطة',
+      // Alert messages
+      pendingFinesAlert: 'مخالفة معلقة',
+      pendingFinesAlertPlural: 'مخالفات معلقة',
+      requireAttention: 'تتطلب انتباه',
+      contractsExpiringAlert: 'عقد إيجار',
+      contractsExpiringAlertPlural: 'عقود إيجار',
+      expiringThisMonth: 'تنتهي هذا الشهر',
+      maintenanceAlert: 'مركبة',
+      maintenanceAlertPlural: 'مركبات',
+      dueForMaintenance: 'تحتاج صيانة',
+      fleetUtilizationAlert: 'معدل استخدام الأسطول',
+      peakHoursAlert: 'سائقون في مناطق الطلب العالي',
+      tripsCompletedAlert: 'رحلة مكتملة اليوم',
+      driversCurrentlyActive: 'سائقون نشطون حالياً',
+      rentersCurrentlyActive: 'مستأجرون نشطون حالياً'
     }
   };
 
@@ -116,44 +146,44 @@ const Dashboard: React.FC<DashboardProps> = ({ fleetMode, language }) => {
     shiftsActive: activeDrivers.length
   };
 
-  // System alerts with mode-specific content
+  // System alerts with mode-specific content and proper Arabic translations
   const alerts = [
     ...(pendingFines > 0 ? [{
       type: 'warning' as const,
-      message: `${pendingFines} pending fine${pendingFines > 1 ? 's' : ''} require attention`,
+      message: `${pendingFines} ${pendingFines === 1 ? t.pendingFinesAlert : t.pendingFinesAlertPlural} ${t.requireAttention}`,
       icon: AlertCircle
     }] : []),
     ...(fleetMode === 'rental' ? [
       ...(modeSpecificStats.contractsExpiring > 0 ? [{
         type: 'info' as const,
-        message: `${modeSpecificStats.contractsExpiring} rental contracts expiring this month`,
+        message: `${modeSpecificStats.contractsExpiring} ${modeSpecificStats.contractsExpiring === 1 ? t.contractsExpiringAlert : t.contractsExpiringAlertPlural} ${t.expiringThisMonth}`,
         icon: Calendar
       }] : []),
       ...(modeSpecificStats.maintenanceAlerts > 0 ? [{
         type: 'warning' as const,
-        message: `${modeSpecificStats.maintenanceAlerts} vehicle(s) due for maintenance`,
+        message: `${modeSpecificStats.maintenanceAlerts} ${modeSpecificStats.maintenanceAlerts === 1 ? t.maintenanceAlert : t.maintenanceAlertPlural} ${t.dueForMaintenance}`,
         icon: Car
       }] : []),
       {
         type: 'success' as const,
-        message: `${modeSpecificStats.vehicleUtilization}% fleet utilization rate`,
+        message: `${modeSpecificStats.vehicleUtilization}% ${t.fleetUtilizationAlert}`,
         icon: TrendingUp
       }
     ] : [
       {
         type: 'info' as const,
-        message: `Peak hours: ${modeSpecificStats.peakHoursActive} drivers in high-demand zones`,
+        message: `${language === 'ar' ? 'ساعات الذروة:' : 'Peak hours:'} ${modeSpecificStats.peakHoursActive} ${t.peakHoursAlert}`,
         icon: MapPin
       },
       {
         type: 'success' as const,
-        message: `${modeSpecificStats.tripsToday} trips completed today`,
+        message: `${modeSpecificStats.tripsToday} ${t.tripsCompletedAlert}`,
         icon: Navigation
       }
     ]),
     {
       type: 'success' as const,
-      message: `${activeDrivers.length} ${fleetMode === 'rental' ? 'renters' : 'drivers'} currently active`,
+      message: `${activeDrivers.length} ${fleetMode === 'rental' ? t.rentersCurrentlyActive : t.driversCurrentlyActive}`,
       icon: Users
     }
   ];
