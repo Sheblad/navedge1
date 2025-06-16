@@ -43,7 +43,7 @@ const NavEdgeAssistant: React.FC<NavEdgeAssistantProps> = ({
       send: 'Send',
       listening: 'Listening...',
       typing: 'NavEdge is typing...',
-      welcomeMessage: `👋 **Welcome to NavEdge AI!**\n\nI'm your intelligent fleet management assistant. I can help you with:\n\n🚗 **Driver Management**\n• Check driver performance\n• View driver locations\n• Manage driver assignments\n\n📋 **Contract & Fine Management**\n• Review contract details\n• Track fine payments\n• Monitor compliance\n\n📊 **Analytics & Reports**\n• Performance insights\n• Revenue analysis\n• Fleet utilization\n\n💡 **Try asking:**\n• "Show me active drivers"\n• "Who has pending fines?"\n• "What's my fleet performance?"\n• "Switch to taxi mode"`
+      welcomeMessage: `👋 **Welcome to NavEdge AI!**\n\nI'm your intelligent fleet management assistant. I can help you with:\n\n🚗 **Driver Management**\n• Check driver performance\n• View driver locations\n• Manage driver assignments\n\n📋 **Contract & Fine Management**\n• Review contract details\n• Track fine payments\n• Monitor compliance\n\n📊 **Analytics & Reports**\n• Performance insights\n• Revenue analysis\n• Fleet utilization\n\n💡 **Try asking:**\n• "Show me active drivers"\n• "Who has pending fines?"\n• "What's my fleet performance?"\n• "Make a contract"\n• "Show me contracts"`
     },
     ar: {
       title: 'مساعد نافيدج الذكي',
@@ -52,7 +52,7 @@ const NavEdgeAssistant: React.FC<NavEdgeAssistantProps> = ({
       send: 'إرسال',
       listening: 'أستمع...',
       typing: 'نافيدج يكتب...',
-      welcomeMessage: `👋 **مرحباً بك في نافيدج الذكي!**\n\nأنا مساعدك الذكي لإدارة الأسطول. يمكنني مساعدتك في:\n\n🚗 **إدارة السائقين**\n• فحص أداء السائقين\n• عرض مواقع السائقين\n• إدارة تعيينات السائقين\n\n📋 **إدارة العقود والمخالفات**\n• مراجعة تفاصيل العقود\n• تتبع دفع المخالفات\n• مراقبة الامتثال\n\n📊 **التحليلات والتقارير**\n• رؤى الأداء\n• تحليل الإيرادات\n• استخدام الأسطول\n\n💡 **جرب السؤال:**\n• "أظهر لي السائقين النشطين"\n• "من لديه مخالفات معلقة؟"\n• "ما هو أداء أسطولي؟"\n• "التبديل إلى وضع التاكسي"`
+      welcomeMessage: `👋 **مرحباً بك في نافيدج الذكي!**\n\nأنا مساعدك الذكي لإدارة الأسطول. يمكنني مساعدتك في:\n\n🚗 **إدارة السائقين**\n• فحص أداء السائقين\n• عرض مواقع السائقين\n• إدارة تعيينات السائقين\n\n📋 **إدارة العقود والمخالفات**\n• مراجعة تفاصيل العقود\n• تتبع دفع المخالفات\n• مراقبة الامتثال\n\n📊 **التحليلات والتقارير**\n• رؤى الأداء\n• تحليل الإيرادات\n• استخدام الأسطول\n\n💡 **جرب السؤال:**\n• "أظهر لي السائقين النشطين"\n• "من لديه مخالفات معلقة؟"\n• "ما هو أداء أسطولي؟"\n• "إنشاء عقد"\n• "أظهر لي العقود"`
     }
   };
 
@@ -80,9 +80,103 @@ const NavEdgeAssistant: React.FC<NavEdgeAssistantProps> = ({
     return driver ? driver.name : 'Unknown Driver';
   };
 
+  // Calculate days remaining for contracts
+  const getDaysRemaining = (endDate: string) => {
+    const end = new Date(endDate);
+    const today = new Date();
+    const timeDiff = end.getTime() - today.getTime();
+    const daysRemaining = Math.ceil(timeDiff / (1000 * 3600 * 24));
+    return daysRemaining;
+  };
+
   // Enhanced AI response logic
   const generateResponse = (input: string): string => {
     const lowerInput = input.toLowerCase();
+
+    // Contract-related queries - ENHANCED LOGIC
+    if (lowerInput.includes('contract') || lowerInput.includes('make contract') || lowerInput.includes('create contract') || lowerInput.includes('new contract') || lowerInput.includes('generate contract')) {
+      
+      // Contract creation/generation
+      if (lowerInput.includes('make') || lowerInput.includes('create') || lowerInput.includes('new') || lowerInput.includes('generate')) {
+        return `📋 **Contract Generation**\n\nI can help you create a new rental contract! Here's what I need:\n\n**Required Information:**\n• Driver details (name, Emirates ID)\n• Vehicle assignment\n• Contract duration\n• Monthly rent amount\n• Deposit amount\n• Daily KM limit\n\n**Quick Actions:**\n• Go to **Contracts** page\n• Click **"Generate with OCR"** for automatic ID scanning\n• Or click **"New Contract"** for manual entry\n\n💡 **Pro Tip:** Use the OCR feature to automatically extract driver information from Emirates ID photos!\n\n**Current Available Drivers:**\n${mockDriversData.filter(d => !mockContractsData.find(c => c.driverId === d.id && c.status === 'active')).map(driver => `• ${driver.name} (${driver.vehicleId || 'No vehicle assigned'})`).join('\n') || '• All drivers currently have active contracts'}`;
+      }
+
+      // Show contracts
+      if (lowerInput.includes('show') || lowerInput.includes('list') || lowerInput.includes('view')) {
+        const activeContracts = mockContractsData.filter(c => c.status === 'active');
+        const totalRevenue = activeContracts.reduce((sum, c) => sum + c.monthlyRent, 0);
+        
+        let response = `📋 **Active Contracts Overview**\n\n**Summary:**\n• Total active contracts: ${activeContracts.length}\n• Monthly revenue: AED ${totalRevenue.toLocaleString()}\n• Average rent: AED ${Math.round(totalRevenue / activeContracts.length).toLocaleString()}\n\n**Contract Details:**\n\n`;
+        
+        activeContracts.forEach(contract => {
+          const driver = mockDriversData.find(d => d.id === contract.driverId);
+          const daysRemaining = getDaysRemaining(contract.endDate);
+          
+          response += `**${driver?.name || 'Unknown Driver'}** (${contract.id})\n`;
+          response += `• Vehicle: ${contract.vehicleId}\n`;
+          response += `• Monthly rent: AED ${contract.monthlyRent.toLocaleString()}\n`;
+          response += `• Days remaining: ${daysRemaining > 0 ? daysRemaining + ' days' : 'Expired'}\n`;
+          response += `• Status: ${daysRemaining < 30 && daysRemaining > 0 ? '⚠️ Expiring soon' : daysRemaining <= 0 ? '🔴 Expired' : '✅ Active'}\n\n`;
+        });
+
+        return response;
+      }
+
+      // Contract expiry information
+      if (lowerInput.includes('expir') || lowerInput.includes('ending') || lowerInput.includes('due')) {
+        const expiringContracts = mockContractsData.filter(contract => {
+          const daysRemaining = getDaysRemaining(contract.endDate);
+          return daysRemaining <= 30 && daysRemaining > 0;
+        });
+
+        if (expiringContracts.length === 0) {
+          return `✅ **No Contracts Expiring Soon**\n\nAll contracts are stable with more than 30 days remaining.`;
+        }
+
+        let response = `⚠️ **Contracts Expiring Soon (${expiringContracts.length})**\n\n`;
+        
+        expiringContracts.forEach(contract => {
+          const driver = mockDriversData.find(d => d.id === contract.driverId);
+          const daysRemaining = getDaysRemaining(contract.endDate);
+          
+          response += `**${driver?.name || 'Unknown'}** (${contract.id})\n`;
+          response += `• Vehicle: ${contract.vehicleId}\n`;
+          response += `• Days remaining: ${daysRemaining} days\n`;
+          response += `• Monthly rent: AED ${contract.monthlyRent.toLocaleString()}\n`;
+          response += `• Action needed: Contact for renewal\n\n`;
+        });
+
+        return response;
+      }
+
+      // Specific driver contract lookup
+      const driverMatch = mockDriversData.find(driver => 
+        lowerInput.includes(driver.name.toLowerCase()) || 
+        lowerInput.includes(driver.name.split(' ')[0].toLowerCase())
+      );
+
+      if (driverMatch) {
+        const contract = mockContractsData.find(c => c.driverId === driverMatch.id && c.status === 'active');
+        
+        if (!contract) {
+          return `❌ **${driverMatch.name}**\n\nNo active contract found for this driver.\n\n💡 **Would you like to create a new contract?**\nGo to Contracts → Generate with OCR`;
+        }
+
+        const daysRemaining = getDaysRemaining(contract.endDate);
+        
+        return `📋 **${driverMatch.name} - Contract Details**\n\n**Contract ID:** ${contract.id}\n**Vehicle:** ${contract.vehicleId}\n**Start Date:** ${contract.startDate}\n**End Date:** ${contract.endDate}\n**Days Remaining:** ${daysRemaining > 0 ? daysRemaining + ' days' : 'Expired'}\n**Monthly Rent:** AED ${contract.monthlyRent.toLocaleString()}\n**Deposit:** AED ${contract.depositAmount.toLocaleString()}\n**Daily KM Limit:** ${contract.dailyKmLimit} km\n**Status:** ${daysRemaining < 30 && daysRemaining > 0 ? '⚠️ Expiring soon' : daysRemaining <= 0 ? '🔴 Expired' : '✅ Active'}`;
+      }
+
+      // General contract information
+      const activeContracts = mockContractsData.filter(c => c.status === 'active');
+      const totalRevenue = activeContracts.reduce((sum, c) => sum + c.monthlyRent, 0);
+      const expiringCount = activeContracts.filter(contract => {
+        const daysRemaining = getDaysRemaining(contract.endDate);
+        return daysRemaining <= 30 && daysRemaining > 0;
+      }).length;
+      
+      return `📋 **Contract Management Overview**\n\n**Statistics:**\n• Active contracts: ${activeContracts.length}\n• Monthly revenue: AED ${totalRevenue.toLocaleString()}\n• Contracts expiring (30 days): ${expiringCount}\n• Average rent: AED ${Math.round(totalRevenue / activeContracts.length).toLocaleString()}\n\n**Quick Actions:**\n• "Show me contracts"\n• "Which contracts are expiring?"\n• "Make a new contract"\n• "Show Ahmed's contract"\n\n💡 **Need to create a contract?** Go to Contracts → Generate with OCR`;
+    }
 
     // Fine-related queries - FIXED LOGIC
     if (lowerInput.includes('fine') || lowerInput.includes('violation') || lowerInput.includes('penalty')) {
@@ -217,17 +311,6 @@ const NavEdgeAssistant: React.FC<NavEdgeAssistantProps> = ({
       }
     }
 
-    // Contract-related queries
-    if (lowerInput.includes('contract') || lowerInput.includes('rental') || lowerInput.includes('expir')) {
-      const activeContracts = mockContractsData.filter(c => c.status === 'active');
-      const totalRevenue = activeContracts.reduce((sum, c) => sum + c.monthlyRent, 0);
-      
-      return `📋 **Contract Overview**\n\n**Active Contracts:** ${activeContracts.length}\n**Monthly Revenue:** $${totalRevenue.toLocaleString()}\n**Average Rent:** $${Math.round(totalRevenue / activeContracts.length).toLocaleString()}\n\n**Recent Contracts:**\n${activeContracts.slice(0, 3).map(contract => {
-        const driver = mockDriversData.find(d => d.id === contract.driverId);
-        return `• ${driver?.name || 'Unknown'} - $${contract.monthlyRent}/month`;
-      }).join('\n')}`;
-    }
-
     // Revenue and analytics
     if (lowerInput.includes('revenue') || lowerInput.includes('earning') || lowerInput.includes('money') || lowerInput.includes('profit')) {
       const totalEarnings = mockDriversData.reduce((sum, d) => sum + d.earnings, 0);
@@ -251,11 +334,11 @@ const NavEdgeAssistant: React.FC<NavEdgeAssistantProps> = ({
 
     // Help and capabilities
     if (lowerInput.includes('help') || lowerInput.includes('what can you') || lowerInput.includes('capabilities')) {
-      return `🤖 **NavEdge AI Capabilities**\n\n**Driver Management:**\n• Check driver status and performance\n• View driver locations and assignments\n• Monitor driver earnings and trips\n\n**Fine & Compliance:**\n• Track traffic violations and fines\n• Monitor payment status\n• Generate compliance reports\n\n**Fleet Operations:**\n• Switch between taxi and rental modes\n• Monitor fleet utilization\n• Track revenue and performance\n\n**Analytics & Insights:**\n• Performance analytics\n• Revenue tracking\n• Operational insights\n\n💡 **Try asking:**\n• "Who got a fine?"\n• "Show me active drivers"\n• "What's my revenue?"\n• "Switch to taxi mode"`;
+      return `🤖 **NavEdge AI Capabilities**\n\n**Driver Management:**\n• Check driver status and performance\n• View driver locations and assignments\n• Monitor driver earnings and trips\n\n**Contract Management:**\n• View active contracts\n• Check contract expiry dates\n• Guide contract creation process\n• Monitor contract revenue\n\n**Fine & Compliance:**\n• Track traffic violations and fines\n• Monitor payment status\n• Generate compliance reports\n\n**Fleet Operations:**\n• Switch between taxi and rental modes\n• Monitor fleet utilization\n• Track revenue and performance\n\n💡 **Try asking:**\n• "Make a contract"\n• "Show me contracts"\n• "Who got a fine?"\n• "Show me active drivers"`;
     }
 
     // Default response for unrecognized queries
-    return `🤔 **I'm here to help!**\n\nI didn't quite understand that. Here are some things you can ask me:\n\n**Driver Queries:**\n• "Show me active drivers"\n• "Who has the best performance?"\n• "Find Omar Khalil"\n\n**Fine Management:**\n• "Who got a fine?"\n• "Show me pending fines"\n• "Omar's fine details"\n\n**Fleet Operations:**\n• "Switch to taxi mode"\n• "What's my fleet status?"\n• "Show me revenue"\n\n💡 **Just ask naturally - I understand conversational language!**`;
+    return `🤔 **I'm here to help!**\n\nI didn't quite understand that. Here are some things you can ask me:\n\n**Contract Management:**\n• "Make a contract"\n• "Show me contracts"\n• "Which contracts are expiring?"\n• "Show Ahmed's contract"\n\n**Driver Queries:**\n• "Show me active drivers"\n• "Who has the best performance?"\n• "Find Omar Khalil"\n\n**Fine Management:**\n• "Who got a fine?"\n• "Show me pending fines"\n• "Omar's fine details"\n\n**Fleet Operations:**\n• "Switch to taxi mode"\n• "What's my fleet status?"\n• "Show me revenue"\n\n💡 **Just ask naturally - I understand conversational language!**`;
   };
 
   const handleSendMessage = () => {
