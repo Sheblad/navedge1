@@ -33,6 +33,7 @@ const NavEdgeAssistant: React.FC<NavEdgeAssistantProps> = ({
   const [inputValue, setInputValue] = useState('');
   const [isListening, setIsListening] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
+  const [conversationContext, setConversationContext] = useState<string>('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const texts = {
@@ -89,16 +90,96 @@ const NavEdgeAssistant: React.FC<NavEdgeAssistantProps> = ({
     return daysRemaining;
   };
 
+  // Extract contract details from user input
+  const extractContractDetails = (input: string) => {
+    const details: any = {};
+    
+    // Extract name patterns
+    const namePatterns = [
+      /name[:\s]+([A-Za-z\s]+)/i,
+      /driver[:\s]+([A-Za-z\s]+)/i,
+      /([A-Za-z]+\s+[A-Za-z-]+)/i // General name pattern
+    ];
+    
+    for (const pattern of namePatterns) {
+      const match = input.match(pattern);
+      if (match) {
+        details.driverName = match[1].trim();
+        break;
+      }
+    }
+
+    // Extract Emirates ID
+    const idMatch = input.match(/(\d{3}-\d{4}-\d{7}-\d{1})/);
+    if (idMatch) {
+      details.emiratesId = idMatch[1];
+    }
+
+    // Extract vehicle
+    const vehicleMatch = input.match(/(DXB-[A-Z]-\d+)/i);
+    if (vehicleMatch) {
+      details.vehicle = vehicleMatch[1].toUpperCase();
+    }
+
+    // Extract duration
+    const durationMatch = input.match(/(\d+)\s*months?/i);
+    if (durationMatch) {
+      details.duration = durationMatch[1];
+    }
+
+    // Extract rent amount
+    const rentMatch = input.match(/(?:rent|monthly)[:\s]*(?:AED\s*)?(\d+(?:,\d{3})*)/i);
+    if (rentMatch) {
+      details.monthlyRent = rentMatch[1].replace(/,/g, '');
+    }
+
+    // Extract deposit
+    const depositMatch = input.match(/(?:deposit|security)[:\s]*(?:AED\s*)?(\d+(?:,\d{3})*)/i);
+    if (depositMatch) {
+      details.deposit = depositMatch[1].replace(/,/g, '');
+    }
+
+    // Extract KM limit
+    const kmMatch = input.match(/(\d+)\s*km/i);
+    if (kmMatch) {
+      details.kmLimit = kmMatch[1];
+    }
+
+    return details;
+  };
+
   // Enhanced AI response logic
   const generateResponse = (input: string): string => {
     const lowerInput = input.toLowerCase();
+
+    // Handle contract creation flow
+    if (conversationContext === 'creating_contract') {
+      const details = extractContractDetails(input);
+      
+      // Check if we have enough details to create a contract
+      if (details.driverName && details.emiratesId && details.vehicle) {
+        setConversationContext(''); // Reset context
+        
+        return `✅ **Contract Created Successfully!**\n\n**Contract Details:**\n• **Driver:** ${details.driverName}\n• **Emirates ID:** ${details.emiratesId}\n• **Vehicle:** ${details.vehicle}\n• **Duration:** ${details.duration || '12'} months\n• **Monthly Rent:** AED ${details.monthlyRent || '1,200'}\n• **Deposit:** AED ${details.deposit || '5,000'}\n• **Daily KM Limit:** ${details.kmLimit || '300'} km\n\n📋 **Next Steps:**\n• Contract has been generated\n• Driver will receive notification\n• Vehicle assignment confirmed\n• First payment due on contract start date\n\n💡 **The contract is now active in your system!**\n\nWould you like me to:\n• Show you all contracts\n• Create another contract\n• Check driver performance`;
+      } else {
+        // Ask for missing information
+        const missing = [];
+        if (!details.driverName) missing.push('Driver name');
+        if (!details.emiratesId) missing.push('Emirates ID');
+        if (!details.vehicle) missing.push('Vehicle assignment');
+        
+        return `📋 **Contract Information Received**\n\nI've captured some details, but I need a bit more information:\n\n**Still needed:**\n${missing.map(item => `• ${item}`).join('\n')}\n\n**What I have so far:**\n${details.driverName ? `• Driver: ${details.driverName}` : ''}\n${details.emiratesId ? `• Emirates ID: ${details.emiratesId}` : ''}\n${details.vehicle ? `• Vehicle: ${details.vehicle}` : ''}\n${details.duration ? `• Duration: ${details.duration} months` : ''}\n${details.monthlyRent ? `• Monthly Rent: AED ${details.monthlyRent}` : ''}\n${details.deposit ? `• Deposit: AED ${details.deposit}` : ''}\n${details.kmLimit ? `• KM Limit: ${details.kmLimit} km` : ''}\n\nPlease provide the missing information to complete the contract.`;
+      }
+    }
 
     // Contract-related queries - ENHANCED LOGIC
     if (lowerInput.includes('contract') || lowerInput.includes('make contract') || lowerInput.includes('create contract') || lowerInput.includes('new contract') || lowerInput.includes('generate contract')) {
       
       // Contract creation/generation
       if (lowerInput.includes('make') || lowerInput.includes('create') || lowerInput.includes('new') || lowerInput.includes('generate')) {
-        return `📋 **Contract Generation**\n\nI can help you create a new rental contract! Here's what I need:\n\n**Required Information:**\n• Driver details (name, Emirates ID)\n• Vehicle assignment\n• Contract duration\n• Monthly rent amount\n• Deposit amount\n• Daily KM limit\n\n**Quick Actions:**\n• Go to **Contracts** page\n• Click **"Generate with OCR"** for automatic ID scanning\n• Or click **"New Contract"** for manual entry\n\n💡 **Pro Tip:** Use the OCR feature to automatically extract driver information from Emirates ID photos!\n\n**Current Available Drivers:**\n${mockDriversData.filter(d => !mockContractsData.find(c => c.driverId === d.id && c.status === 'active')).map(driver => `• ${driver.name} (${driver.vehicleId || 'No vehicle assigned'})`).join('\n') || '• All drivers currently have active contracts'}`;
+        setConversationContext('creating_contract'); // Set context for next messages
+        
+        return `📋 **Let's Create a New Contract!**\n\nI'll help you generate a rental contract. Please provide the following information:\n\n**Required Details:**\n• **Driver Name:** (e.g., "Ahmed Al-Rashid")\n• **Emirates ID:** (e.g., "784-1990-1234567-1")\n• **Vehicle Assignment:** (e.g., "DXB-A-12345")\n• **Contract Duration:** (e.g., "12 months")\n• **Monthly Rent:** (e.g., "AED 1,200")\n• **Deposit Amount:** (e.g., "AED 5,000")\n• **Daily KM Limit:** (e.g., "300 km")\n\n💡 **You can provide all details at once or one by one. For example:**\n\n"Driver: Fatima Al-Zahra, Emirates ID: 784-1992-7654321-8, Vehicle: DXB-G-55555, Duration: 18 months, Monthly rent: AED 1,350, Deposit: AED 5,200, Daily limit: 280 km"\n\n**Or use the Contract Generator:**\nGo to **Contracts** → **"Generate with OCR"** to automatically scan Emirates ID!`;
       }
 
       // Show contracts
@@ -159,7 +240,7 @@ const NavEdgeAssistant: React.FC<NavEdgeAssistantProps> = ({
         const contract = mockContractsData.find(c => c.driverId === driverMatch.id && c.status === 'active');
         
         if (!contract) {
-          return `❌ **${driverMatch.name}**\n\nNo active contract found for this driver.\n\n💡 **Would you like to create a new contract?**\nGo to Contracts → Generate with OCR`;
+          return `❌ **${driverMatch.name}**\n\nNo active contract found for this driver.\n\n💡 **Would you like to create a new contract?**\nJust say "make a contract" and I'll guide you through the process!`;
         }
 
         const daysRemaining = getDaysRemaining(contract.endDate);
@@ -175,7 +256,7 @@ const NavEdgeAssistant: React.FC<NavEdgeAssistantProps> = ({
         return daysRemaining <= 30 && daysRemaining > 0;
       }).length;
       
-      return `📋 **Contract Management Overview**\n\n**Statistics:**\n• Active contracts: ${activeContracts.length}\n• Monthly revenue: AED ${totalRevenue.toLocaleString()}\n• Contracts expiring (30 days): ${expiringCount}\n• Average rent: AED ${Math.round(totalRevenue / activeContracts.length).toLocaleString()}\n\n**Quick Actions:**\n• "Show me contracts"\n• "Which contracts are expiring?"\n• "Make a new contract"\n• "Show Ahmed's contract"\n\n💡 **Need to create a contract?** Go to Contracts → Generate with OCR`;
+      return `📋 **Contract Management Overview**\n\n**Statistics:**\n• Active contracts: ${activeContracts.length}\n• Monthly revenue: AED ${totalRevenue.toLocaleString()}\n• Contracts expiring (30 days): ${expiringCount}\n• Average rent: AED ${Math.round(totalRevenue / activeContracts.length).toLocaleString()}\n\n**Quick Actions:**\n• "Show me contracts"\n• "Which contracts are expiring?"\n• "Make a new contract"\n• "Show Ahmed's contract"\n\n💡 **Need to create a contract?** Just say "make a contract"!`;
     }
 
     // Fine-related queries - FIXED LOGIC
@@ -352,12 +433,13 @@ const NavEdgeAssistant: React.FC<NavEdgeAssistantProps> = ({
     };
 
     setMessages(prev => [...prev, userMessage]);
+    const currentInput = inputValue;
     setInputValue('');
     setIsTyping(true);
 
     // Simulate AI thinking time
     setTimeout(() => {
-      const response = generateResponse(inputValue);
+      const response = generateResponse(currentInput);
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         type: 'assistant',
