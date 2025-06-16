@@ -190,7 +190,7 @@ export const mockContractsData: Contract[] = [
     driverId: 1,
     vehicleId: 'DXB-A-12345',
     startDate: '2024-01-15',
-    endDate: '2024-08-22', // ~180 days from now
+    endDate: '2025-08-22', // ~7 months from now
     depositAmount: 5000,
     dailyKmLimit: 300,
     monthlyRent: 1200,
@@ -207,7 +207,7 @@ export const mockContractsData: Contract[] = [
     driverId: 2,
     vehicleId: 'DXB-B-67890',
     startDate: '2023-11-20',
-    endDate: '2024-05-15', // ~90 days from now
+    endDate: '2025-05-15', // ~4 months from now
     depositAmount: 6000,
     dailyKmLimit: 350,
     monthlyRent: 1500,
@@ -224,7 +224,7 @@ export const mockContractsData: Contract[] = [
     driverId: 3,
     vehicleId: 'DXB-C-11111',
     startDate: '2024-02-10',
-    endDate: '2024-12-30', // ~330 days from now
+    endDate: '2025-12-30', // ~11 months from now
     depositAmount: 4500,
     dailyKmLimit: 280,
     monthlyRent: 1100,
@@ -241,7 +241,7 @@ export const mockContractsData: Contract[] = [
     driverId: 4,
     vehicleId: 'DXB-D-22222',
     startDate: '2024-03-05',
-    endDate: '2024-07-18', // ~150 days from now
+    endDate: '2025-07-18', // ~6 months from now
     depositAmount: 4000,
     dailyKmLimit: 250,
     monthlyRent: 1000,
@@ -258,7 +258,7 @@ export const mockContractsData: Contract[] = [
     driverId: 5,
     vehicleId: 'DXB-E-33333',
     startDate: '2023-12-01',
-    endDate: '2024-09-10', // ~220 days from now
+    endDate: '2025-09-10', // ~8 months from now
     depositAmount: 5500,
     dailyKmLimit: 320,
     monthlyRent: 1300,
@@ -275,7 +275,7 @@ export const mockContractsData: Contract[] = [
     driverId: 6,
     vehicleId: 'DXB-F-44444',
     startDate: '2024-01-20',
-    endDate: '2024-06-25', // ~120 days from now
+    endDate: '2025-06-25', // ~5 months from now
     depositAmount: 4800,
     dailyKmLimit: 290,
     monthlyRent: 1150,
