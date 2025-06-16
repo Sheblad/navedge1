@@ -11,7 +11,7 @@ interface Message {
   text: string;
   isUser: boolean;
   timestamp: Date;
-  type?: 'text' | 'action' | 'wizard' | 'confirmation' | 'data' | 'contract_form' | 'pdf_generated';
+  type?: 'text' | 'action' | 'wizard' | 'confirmation' | 'data' | 'contract_form' | 'pdf_generated' | 'fine_wizard';
   data?: any;
   actionType?: string;
   pdfUrl?: string;
@@ -26,6 +26,15 @@ interface ContractFormData {
   depositAmount: string;
 }
 
+interface FineFormData {
+  driverId: number;
+  driverName: string;
+  violationType: string;
+  amount: string;
+  location: string;
+  description: string;
+}
+
 interface NavEdgeAssistantProps {
   onClose: () => void;
   fleetMode: FleetMode;
@@ -38,6 +47,7 @@ const NavEdgeAssistant: React.FC<NavEdgeAssistantProps> = ({ onClose, fleetMode,
   const [inputText, setInputText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [activeWizard, setActiveWizard] = useState<string | null>(null);
+  const [conversationContext, setConversationContext] = useState<any>(null);
   const [contractForm, setContractForm] = useState<ContractFormData>({
     driverName: '',
     idNumber: '',
@@ -45,6 +55,14 @@ const NavEdgeAssistant: React.FC<NavEdgeAssistantProps> = ({ onClose, fleetMode,
     duration: '',
     monthlyRent: '',
     depositAmount: ''
+  });
+  const [fineForm, setFineForm] = useState<FineFormData>({
+    driverId: 0,
+    driverName: '',
+    violationType: '',
+    amount: '',
+    location: '',
+    description: ''
   });
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -65,7 +83,7 @@ const NavEdgeAssistant: React.FC<NavEdgeAssistantProps> = ({ onClose, fleetMode,
         'Create a contract for Ahmed',
         'Switch to Taxi Mode',
         'Which drivers are offline?',
-        'Show me performance rankings'
+        'Omar got a fine'
       ],
       confirm: 'Confirm',
       cancel: 'Cancel',
@@ -84,7 +102,17 @@ const NavEdgeAssistant: React.FC<NavEdgeAssistantProps> = ({ onClose, fleetMode,
       contractCreated: 'Contract Created Successfully!',
       contractDetails: 'Contract Details',
       downloadPDF: 'Download PDF Contract',
-      pdfGenerated: 'PDF Contract Generated!'
+      pdfGenerated: 'PDF Contract Generated!',
+      // Fine management
+      fineWizard: 'Fine Recording Wizard',
+      recordFine: 'Record Fine',
+      violationType: 'Violation Type',
+      fineAmount: 'Fine Amount (AED)',
+      fineLocation: 'Location',
+      fineDescription: 'Description',
+      deductFromPayroll: 'Deduct from Payroll',
+      fineRecorded: 'Fine Recorded Successfully!',
+      payrollDeducted: 'Payroll Deduction Applied!'
     },
     ar: {
       title: 'مركز التحكم نافيدج',
@@ -102,7 +130,7 @@ const NavEdgeAssistant: React.FC<NavEdgeAssistantProps> = ({ onClose, fleetMode,
         'إنشاء عقد لأحمد',
         'التبديل إلى وضع التاكسي',
         'أي السائقين غير متصلين؟',
-        'أظهر لي ترتيب الأداء'
+        'عمر حصل على مخالفة'
       ],
       confirm: 'تأكيد',
       cancel: 'إلغاء',
@@ -121,7 +149,17 @@ const NavEdgeAssistant: React.FC<NavEdgeAssistantProps> = ({ onClose, fleetMode,
       contractCreated: 'تم إنشاء العقد بنجاح!',
       contractDetails: 'تفاصيل العقد',
       downloadPDF: 'تحميل عقد PDF',
-      pdfGenerated: 'تم إنشاء عقد PDF!'
+      pdfGenerated: 'تم إنشاء عقد PDF!',
+      // Fine management
+      fineWizard: 'معالج تسجيل المخالفة',
+      recordFine: 'تسجيل مخالفة',
+      violationType: 'نوع المخالفة',
+      fineAmount: 'مبلغ المخالفة (درهم)',
+      fineLocation: 'الموقع',
+      fineDescription: 'الوصف',
+      deductFromPayroll: 'خصم من الراتب',
+      fineRecorded: 'تم تسجيل المخالفة بنجاح!',
+      payrollDeducted: 'تم تطبيق خصم الراتب!'
     }
   };
 
@@ -290,7 +328,7 @@ const NavEdgeAssistant: React.FC<NavEdgeAssistantProps> = ({ onClose, fleetMode,
       // "where is Ahmed"
       /(?:where is|location of|find)\s+(\w+)/i,
       // Just the name followed by context words
-      /(\w+)\s+(?:today|earnings|location|performance|fines|trips)/i,
+      /(\w+)\s+(?:today|earnings|location|performance|fines|trips|got|received|has)/i,
       // Name at the beginning
       /^(\w+)\s/i
     ];
@@ -364,11 +402,179 @@ const NavEdgeAssistant: React.FC<NavEdgeAssistantProps> = ({ onClose, fleetMode,
     return null;
   };
 
-  // Enhanced query processing with natural language understanding
+  // Fine processing functions
+  const extractFineInfo = (query: string): Partial<FineFormData> => {
+    const lowerQuery = query.toLowerCase();
+    
+    // Extract violation type
+    let violationType = '';
+    if (lowerQuery.includes('speed')) violationType = 'Speeding';
+    else if (lowerQuery.includes('park')) violationType = 'Illegal Parking';
+    else if (lowerQuery.includes('red light') || lowerQuery.includes('traffic light')) violationType = 'Running Red Light';
+    else if (lowerQuery.includes('phone') || lowerQuery.includes('mobile')) violationType = 'Mobile Phone Usage';
+    else if (lowerQuery.includes('lane')) violationType = 'Lane Violation';
+    else if (lowerQuery.includes('seat') || lowerQuery.includes('belt')) violationType = 'Seatbelt Violation';
+    
+    // Extract amount
+    const amountMatch = query.match(/(\d+)\s*(?:aed|dirham|dhs?)/i);
+    const amount = amountMatch ? amountMatch[1] : '';
+    
+    // Extract location
+    const locationPatterns = [
+      /(?:on|at|in)\s+([A-Za-z\s]+(?:road|street|avenue|highway|bridge))/i,
+      /(?:on|at|in)\s+([A-Za-z\s]+(?:mall|center|area|zone))/i,
+      /(?:on|at|in)\s+(sheikh\s+zayed|al\s+wasl|business\s+bay|dubai\s+mall)/i
+    ];
+    
+    let location = '';
+    for (const pattern of locationPatterns) {
+      const match = query.match(pattern);
+      if (match) {
+        location = match[1].trim();
+        break;
+      }
+    }
+    
+    return {
+      violationType,
+      amount,
+      location,
+      description: query
+    };
+  };
+
+  const recordFine = (fineData: FineFormData): string => {
+    const fineId = `FN-${String(mockFinesData.length + 1).padStart(3, '0')}`;
+    const newFine = {
+      id: fineId,
+      driverId: fineData.driverId,
+      vehiclePlate: mockDriversData.find(d => d.id === fineData.driverId)?.vehicleId || 'Unknown',
+      violation: fineData.violationType || 'Traffic Violation',
+      amount: parseInt(fineData.amount) || 0,
+      date: new Date().toISOString().split('T')[0],
+      status: 'pending' as const,
+      location: fineData.location || 'Dubai, UAE'
+    };
+    
+    // Add to mock data (in real app, this would be API call)
+    mockFinesData.push(newFine);
+    
+    return fineId;
+  };
+
+  const deductFromPayroll = (driverId: number, amount: number): { oldBalance: number; newBalance: number } => {
+    const driver = mockDriversData.find(d => d.id === driverId);
+    if (!driver) return { oldBalance: 0, newBalance: 0 };
+    
+    const oldBalance = driver.earnings;
+    driver.earnings = Math.max(0, driver.earnings - amount);
+    
+    return { oldBalance, newBalance: driver.earnings };
+  };
+
+  // Enhanced query processing with conversation context
   const processIntelligentQuery = (query: string): Message => {
     const lowerQuery = query.toLowerCase();
     
-    // PRIORITY: Check if this is structured contract data when wizard is active
+    // PRIORITY 1: Handle active conversation context
+    if (conversationContext) {
+      if (conversationContext.type === 'fine_recording') {
+        const driver = conversationContext.driver;
+        
+        // Check if user is providing fine details
+        if (lowerQuery.includes('speed') || lowerQuery.includes('park') || lowerQuery.includes('red light') || 
+            lowerQuery.includes('phone') || lowerQuery.includes('lane') || lowerQuery.includes('aed') || 
+            lowerQuery.includes('dirham') || /\d+/.test(query)) {
+          
+          const fineInfo = extractFineInfo(query);
+          const updatedFineForm = {
+            driverId: driver.id,
+            driverName: driver.name,
+            violationType: fineInfo.violationType || 'Traffic Violation',
+            amount: fineInfo.amount || '500',
+            location: fineInfo.location || 'Dubai, UAE',
+            description: query
+          };
+          
+          setFineForm(updatedFineForm);
+          
+          // Record the fine
+          const fineId = recordFine(updatedFineForm);
+          
+          // Ask about payroll deduction
+          setConversationContext({
+            type: 'payroll_confirmation',
+            driver: driver,
+            fine: updatedFineForm,
+            fineId: fineId
+          });
+          
+          return {
+            id: Date.now().toString(),
+            text: `🚨 **Fine Recorded Successfully!**\n\n**Fine ID:** ${fineId}\n**Driver:** ${driver.name}\n**Violation:** ${updatedFineForm.violationType}\n**Amount:** AED ${updatedFineForm.amount}\n**Location:** ${updatedFineForm.location}\n\n💰 **Payroll Deduction**\n\nShould I deduct AED ${updatedFineForm.amount} from ${driver.name}'s next paycheck?\n\n**Current Earnings:** AED ${driver.earnings.toLocaleString()}\n**After Deduction:** AED ${(driver.earnings - parseInt(updatedFineForm.amount)).toLocaleString()}\n\n**Type "yes" to confirm deduction or "no" to keep fine as pending.**`,
+            isUser: false,
+            timestamp: new Date(),
+            type: 'confirmation',
+            actionType: 'payroll_deduction',
+            data: { driver, fine: updatedFineForm, fineId }
+          };
+        }
+        
+        // If user didn't provide clear fine details, ask for clarification
+        return {
+          id: Date.now().toString(),
+          text: `🚨 **Recording Fine for ${driver.name}**\n\nI need more details about the fine. Please provide:\n\n**Example formats:**\n• "Speeding fine, 600 AED on Sheikh Zayed Road"\n• "Parking violation, 200 AED at Dubai Mall"\n• "Red light violation, 1000 AED"\n\n**Or tell me:**\n• What type of violation?\n• How much is the fine?\n• Where did it happen?\n\n💡 **Tip:** You can say something like "Speeding fine for 600 AED"`,
+          isUser: false,
+          timestamp: new Date(),
+          type: 'fine_wizard'
+        };
+      }
+      
+      if (conversationContext.type === 'payroll_confirmation') {
+        if (lowerQuery.includes('yes') || lowerQuery.includes('confirm') || lowerQuery.includes('deduct')) {
+          const { driver, fine } = conversationContext;
+          const amount = parseInt(fine.amount);
+          const { oldBalance, newBalance } = deductFromPayroll(driver.id, amount);
+          
+          // Clear context
+          setConversationContext(null);
+          
+          return {
+            id: Date.now().toString(),
+            text: `✅ **Payroll Deduction Applied!**\n\n**Driver:** ${driver.name}\n**Fine Amount:** AED ${amount.toLocaleString()}\n\n**Payroll Update:**\n• **Previous Balance:** AED ${oldBalance.toLocaleString()}\n• **Deduction:** -AED ${amount.toLocaleString()}\n• **New Balance:** AED ${newBalance.toLocaleString()}\n\n📋 **Actions Completed:**\n• ✅ Fine recorded in system\n• ✅ Payroll deduction processed\n• ✅ Driver notification sent\n• ✅ Accounting records updated\n\n🎯 **${driver.name}'s fine has been successfully processed and deducted from their earnings.**`,
+            isUser: false,
+            timestamp: new Date(),
+            type: 'data'
+          };
+        }
+        
+        if (lowerQuery.includes('no') || lowerQuery.includes('cancel') || lowerQuery.includes('don\'t')) {
+          const { driver, fine } = conversationContext;
+          
+          // Clear context
+          setConversationContext(null);
+          
+          return {
+            id: Date.now().toString(),
+            text: `📋 **Fine Recorded - No Payroll Deduction**\n\n**Driver:** ${driver.name}\n**Fine:** AED ${fine.amount} (Status: Pending)\n\n✅ The fine has been recorded in the system but no payroll deduction was made. The fine remains pending for manual processing.\n\n**Next Steps:**\n• Fine can be processed later through the Fines section\n• Driver will be notified about the pending fine\n• You can deduct it later by saying "Deduct ${driver.name}'s pending fine"`,
+            isUser: false,
+            timestamp: new Date(),
+            type: 'data'
+          };
+        }
+        
+        // If unclear response, ask again
+        return {
+          id: Date.now().toString(),
+          text: `❓ **Please Confirm Payroll Deduction**\n\nShould I deduct AED ${conversationContext.fine.amount} from ${conversationContext.driver.name}'s paycheck?\n\n**Type:**\n• "Yes" or "Confirm" to deduct\n• "No" or "Cancel" to keep as pending\n\n💡 **Current earnings:** AED ${conversationContext.driver.earnings.toLocaleString()}`,
+          isUser: false,
+          timestamp: new Date(),
+          type: 'confirmation'
+        };
+      }
+    }
+    
+    // PRIORITY 2: Check if this is structured contract data when wizard is active
     if (activeWizard === 'create_contract') {
       console.log('Contract wizard active, processing input:', query); // Debug log
       
@@ -412,6 +618,83 @@ const NavEdgeAssistant: React.FC<NavEdgeAssistantProps> = ({ onClose, fleetMode,
           isUser: false,
           timestamp: new Date(),
           type: 'wizard'
+        };
+      }
+    }
+    
+    // PRIORITY 3: Check for fine-related queries
+    if (lowerQuery.includes('fine') || lowerQuery.includes('got') || lowerQuery.includes('received') || 
+        lowerQuery.includes('violation') || lowerQuery.includes('penalty')) {
+      
+      const driverName = extractDriverName(query);
+      if (driverName) {
+        const driver = findDriverByName(driverName);
+        if (driver) {
+          // Set conversation context for fine recording
+          setConversationContext({
+            type: 'fine_recording',
+            driver: driver
+          });
+          
+          // Check if fine details are already in the query
+          const fineInfo = extractFineInfo(query);
+          if (fineInfo.violationType || fineInfo.amount) {
+            // Process the fine immediately
+            const updatedFineForm = {
+              driverId: driver.id,
+              driverName: driver.name,
+              violationType: fineInfo.violationType || 'Traffic Violation',
+              amount: fineInfo.amount || '500',
+              location: fineInfo.location || 'Dubai, UAE',
+              description: query
+            };
+            
+            const fineId = recordFine(updatedFineForm);
+            
+            // Ask about payroll deduction
+            setConversationContext({
+              type: 'payroll_confirmation',
+              driver: driver,
+              fine: updatedFineForm,
+              fineId: fineId
+            });
+            
+            return {
+              id: Date.now().toString(),
+              text: `🚨 **Fine Recorded for ${driver.name}!**\n\n**Fine Details:**\n• **Fine ID:** ${fineId}\n• **Violation:** ${updatedFineForm.violationType}\n• **Amount:** AED ${updatedFineForm.amount}\n• **Location:** ${updatedFineForm.location}\n\n💰 **Payroll Deduction Option**\n\nShould I deduct AED ${updatedFineForm.amount} from ${driver.name}'s next paycheck?\n\n**Current Earnings:** AED ${driver.earnings.toLocaleString()}\n**After Deduction:** AED ${(driver.earnings - parseInt(updatedFineForm.amount)).toLocaleString()}\n\n**Type "yes" to confirm deduction or "no" to keep fine as pending.**`,
+              isUser: false,
+              timestamp: new Date(),
+              type: 'confirmation',
+              actionType: 'payroll_deduction',
+              data: { driver, fine: updatedFineForm, fineId }
+            };
+          } else {
+            // Ask for fine details
+            return {
+              id: Date.now().toString(),
+              text: `🚨 **Recording Fine for ${driver.name}**\n\nI found ${driver.name} in the system. What type of fine did they receive?\n\n**Common violations:**\n• Speeding (600-1000 AED)\n• Illegal Parking (200-500 AED)\n• Running Red Light (1000 AED)\n• Mobile Phone Usage (800 AED)\n• Lane Violation (400 AED)\n\n**Please tell me:**\n• What type of violation?\n• How much is the fine?\n• Where did it happen?\n\n💡 **Example:** "Speeding fine, 600 AED on Sheikh Zayed Road"`,
+              isUser: false,
+              timestamp: new Date(),
+              type: 'fine_wizard'
+            };
+          }
+        } else {
+          return {
+            id: Date.now().toString(),
+            text: `❌ **Driver Not Found**\n\nI couldn't find a driver named "${driverName}". Here are the available drivers:\n\n${mockDriversData.map(d => `• ${d.name}`).join('\n')}\n\n💡 **Try saying:** "Omar got a fine" or "Ahmed received a violation"`,
+            isUser: false,
+            timestamp: new Date(),
+            type: 'text'
+          };
+        }
+      } else {
+        // General fine query without specific driver
+        return {
+          id: Date.now().toString(),
+          text: `🚨 **Fine Management**\n\nI can help you record fines and manage payroll deductions. \n\n**To record a fine, say:**\n• "[Driver name] got a fine"\n• "[Driver name] received a speeding fine"\n• "[Driver name] has a parking violation"\n\n**Examples:**\n• "Omar got a fine"\n• "Ahmed received a speeding fine for 600 AED"\n• "Mohammed has a parking violation"\n\n**Current pending fines:** ${mockFinesData.filter(f => f.status === 'pending').length}\n\n💡 **Which driver received a fine?**`,
+          isUser: false,
+          timestamp: new Date(),
+          type: 'text'
         };
       }
     }
@@ -688,7 +971,7 @@ const NavEdgeAssistant: React.FC<NavEdgeAssistantProps> = ({ onClose, fleetMode,
     // Default intelligent response with suggestions
     return {
       id: Date.now().toString(),
-      text: `🧠 **NavEdge Intelligence Ready**\n\nI can help you with:\n\n**💰 Earnings & Money:**\n• "How much did Ahmed make today?"\n• "Who earned the most?"\n• "Show me earnings overview"\n\n**📍 Driver Locations:**\n• "Where is Omar located?"\n• "Show me all driver locations"\n\n**👥 Driver Management:**\n• "Which drivers are offline?"\n• "Show me drivers with fines"\n• "Tell me about Mohammed"\n\n**📊 Performance & Stats:**\n• "Performance rankings"\n• "Show me fleet overview"\n\n**⚙️ Fleet Operations:**\n• "Create a contract for Ahmed"\n• "Make a PDF contract"\n• "Switch to taxi mode"\n\n**💡 Tip:** Try asking "How much did [driver name] make today?" or "Create a contract for Ahmed"`,
+      text: `🧠 **NavEdge Intelligence Ready**\n\nI can help you with:\n\n**💰 Earnings & Money:**\n• "How much did Ahmed make today?"\n• "Who earned the most?"\n• "Show me earnings overview"\n\n**📍 Driver Locations:**\n• "Where is Omar located?"\n• "Show me all driver locations"\n\n**👥 Driver Management:**\n• "Which drivers are offline?"\n• "Show me drivers with fines"\n• "Tell me about Mohammed"\n\n**🚨 Fine Management:**\n• "Omar got a fine"\n• "Ahmed received a speeding fine"\n• "Record a parking violation for Hassan"\n\n**📊 Performance & Stats:**\n• "Performance rankings"\n• "Show me fleet overview"\n\n**⚙️ Fleet Operations:**\n• "Create a contract for Ahmed"\n• "Make a PDF contract"\n• "Switch to taxi mode"\n\n**💡 Tip:** Try saying "Omar got a fine" and I'll help you record it and handle payroll deductions!`,
       isUser: false,
       timestamp: new Date(),
       type: 'text'
@@ -710,11 +993,32 @@ const NavEdgeAssistant: React.FC<NavEdgeAssistantProps> = ({ onClose, fleetMode,
           }
           break;
           
+        case 'payroll_deduction':
+          if (message.data) {
+            const { driver, fine } = message.data;
+            const amount = parseInt(fine.amount);
+            const { oldBalance, newBalance } = deductFromPayroll(driver.id, amount);
+            
+            responseText = `✅ **Payroll Deduction Applied!**\n\n**Driver:** ${driver.name}\n**Fine Amount:** AED ${amount.toLocaleString()}\n\n**Payroll Update:**\n• **Previous Balance:** AED ${oldBalance.toLocaleString()}\n• **Deduction:** -AED ${amount.toLocaleString()}\n• **New Balance:** AED ${newBalance.toLocaleString()}\n\n📋 **Actions Completed:**\n• ✅ Fine recorded in system\n• ✅ Payroll deduction processed\n• ✅ Driver notification sent\n• ✅ Accounting records updated\n\n🎯 **${driver.name}'s fine has been successfully processed and deducted from their earnings.**`;
+            
+            // Clear conversation context
+            setConversationContext(null);
+          }
+          break;
+          
         default:
           responseText = '✅ **Action completed successfully!**';
       }
     } else {
-      responseText = '❌ **Action cancelled.** No changes have been made.';
+      if (message.actionType === 'payroll_deduction' && message.data) {
+        const { driver, fine } = message.data;
+        responseText = `📋 **Fine Recorded - No Payroll Deduction**\n\n**Driver:** ${driver.name}\n**Fine:** AED ${fine.amount} (Status: Pending)\n\n✅ The fine has been recorded in the system but no payroll deduction was made. The fine remains pending for manual processing.\n\n**Next Steps:**\n• Fine can be processed later through the Fines section\n• Driver will be notified about the pending fine\n• You can deduct it later by saying "Deduct ${driver.name}'s pending fine"`;
+        
+        // Clear conversation context
+        setConversationContext(null);
+      } else {
+        responseText = '❌ **Action cancelled.** No changes have been made.';
+      }
     }
 
     const responseMessage: Message = {
@@ -834,7 +1138,13 @@ const NavEdgeAssistant: React.FC<NavEdgeAssistantProps> = ({ onClose, fleetMode,
             </div>
             {activeWizard && (
               <div className="px-3 py-1 bg-green-500/80 rounded-full text-white text-xs font-medium animate-pulse">
-                CONTRACT WIZARD
+                {activeWizard === 'create_contract' ? 'CONTRACT WIZARD' : 'WIZARD ACTIVE'}
+              </div>
+            )}
+            {conversationContext && (
+              <div className="px-3 py-1 bg-orange-500/80 rounded-full text-white text-xs font-medium animate-pulse">
+                {conversationContext.type === 'fine_recording' ? 'RECORDING FINE' : 
+                 conversationContext.type === 'payroll_confirmation' ? 'PAYROLL PENDING' : 'ACTIVE CONTEXT'}
               </div>
             )}
             <button
@@ -857,7 +1167,7 @@ const NavEdgeAssistant: React.FC<NavEdgeAssistantProps> = ({ onClose, fleetMode,
                 <div className={`p-2 rounded-full ${
                   message.isUser 
                     ? 'bg-blue-600' 
-                    : message.type === 'action' || message.type === 'wizard'
+                    : message.type === 'action' || message.type === 'wizard' || message.type === 'fine_wizard'
                       ? 'bg-gradient-to-r from-green-500 to-emerald-600'
                       : message.type === 'confirmation'
                         ? 'bg-gradient-to-r from-orange-500 to-red-600'
@@ -869,7 +1179,7 @@ const NavEdgeAssistant: React.FC<NavEdgeAssistantProps> = ({ onClose, fleetMode,
                 }`}>
                   {message.isUser ? (
                     <Sparkles className="w-4 h-4 text-white" />
-                  ) : message.type === 'action' || message.type === 'wizard' ? (
+                  ) : message.type === 'action' || message.type === 'wizard' || message.type === 'fine_wizard' ? (
                     <Settings className="w-4 h-4 text-white" />
                   ) : message.type === 'confirmation' ? (
                     <AlertTriangle className="w-4 h-4 text-white" />
@@ -885,7 +1195,7 @@ const NavEdgeAssistant: React.FC<NavEdgeAssistantProps> = ({ onClose, fleetMode,
                   className={`px-4 py-3 rounded-2xl ${
                     message.isUser
                       ? 'bg-blue-600 text-white'
-                      : message.type === 'action' || message.type === 'wizard'
+                      : message.type === 'action' || message.type === 'wizard' || message.type === 'fine_wizard'
                         ? 'bg-green-50 text-green-900 border border-green-200'
                         : message.type === 'confirmation'
                           ? 'bg-orange-50 text-orange-900 border border-orange-200'
@@ -900,7 +1210,7 @@ const NavEdgeAssistant: React.FC<NavEdgeAssistantProps> = ({ onClose, fleetMode,
                   <p className={`text-xs mt-2 ${
                     message.isUser 
                       ? 'text-blue-100' 
-                      : message.type === 'action' || message.type === 'wizard'
+                      : message.type === 'action' || message.type === 'wizard' || message.type === 'fine_wizard'
                         ? 'text-green-600'
                         : message.type === 'confirmation'
                           ? 'text-orange-600'
@@ -949,9 +1259,14 @@ const NavEdgeAssistant: React.FC<NavEdgeAssistantProps> = ({ onClose, fleetMode,
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
               onKeyPress={handleKeyPress}
-              placeholder={activeWizard === 'create_contract' ? 
-                'Enter: Name, Emirates ID, Vehicle ID, Duration, Rent, Deposit' : 
-                t.placeholder
+              placeholder={
+                conversationContext?.type === 'fine_recording' ? 
+                  'Describe the fine (e.g., "Speeding fine, 600 AED on Sheikh Zayed Road")' :
+                conversationContext?.type === 'payroll_confirmation' ?
+                  'Type "yes" to confirm deduction or "no" to cancel' :
+                activeWizard === 'create_contract' ? 
+                  'Enter: Name, Emirates ID, Vehicle ID, Duration, Rent, Deposit' : 
+                  t.placeholder
               }
               className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
@@ -965,7 +1280,7 @@ const NavEdgeAssistant: React.FC<NavEdgeAssistantProps> = ({ onClose, fleetMode,
           </div>
 
           {/* Quick Actions */}
-          {messages.length === 1 && (
+          {messages.length === 1 && !conversationContext && !activeWizard && (
             <div className="mt-4">
               <p className="text-sm font-medium text-gray-700 mb-3 flex items-center">
                 <Zap className="w-4 h-4 mr-2" />
@@ -982,6 +1297,31 @@ const NavEdgeAssistant: React.FC<NavEdgeAssistantProps> = ({ onClose, fleetMode,
                   </button>
                 ))}
               </div>
+            </div>
+          )}
+
+          {/* Context Helpers */}
+          {conversationContext?.type === 'fine_recording' && (
+            <div className="mt-4 p-4 bg-orange-50 border border-orange-200 rounded-lg">
+              <div className="flex items-center space-x-2 mb-2">
+                <AlertTriangle className="w-4 h-4 text-orange-600" />
+                <span className="text-sm font-medium text-orange-800">Recording Fine for {conversationContext.driver.name}</span>
+              </div>
+              <p className="text-xs text-orange-700">
+                💡 **Examples:** "Speeding fine, 600 AED" | "Parking violation, 200 AED at Dubai Mall" | "Red light violation, 1000 AED"
+              </p>
+            </div>
+          )}
+
+          {conversationContext?.type === 'payroll_confirmation' && (
+            <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+              <div className="flex items-center space-x-2 mb-2">
+                <DollarSign className="w-4 h-4 text-green-600" />
+                <span className="text-sm font-medium text-green-800">Payroll Deduction Pending</span>
+              </div>
+              <p className="text-xs text-green-700">
+                💰 **Confirm:** Type "yes" to deduct AED {conversationContext.fine.amount} from {conversationContext.driver.name}'s paycheck
+              </p>
             </div>
           )}
 
