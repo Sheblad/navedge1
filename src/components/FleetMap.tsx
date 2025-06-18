@@ -15,6 +15,7 @@ const FleetMap: React.FC<FleetMapProps> = ({ drivers, language, onDriverClick })
   const markersRef = useRef<Map<number, L.Marker>>(new Map());
   const [selectedDriver, setSelectedDriver] = useState<Driver | null>(null);
   const [isRealTimeActive, setIsRealTimeActive] = useState(true);
+  const [liveDriverUpdates, setLiveDriverUpdates] = useState<Map<number, any>>(new Map());
 
   const texts = {
     en: {
@@ -40,7 +41,8 @@ const FleetMap: React.FC<FleetMapProps> = ({ drivers, language, onDriverClick })
       clickForDetails: 'Click driver for details',
       liveUpdates: 'Live Updates',
       gpsConnected: 'GPS Connected',
-      trackingActive: 'Tracking Active'
+      trackingActive: 'Tracking Active',
+      mobileDriverConnected: 'Mobile Driver Connected'
     },
     ar: {
       status: 'الحالة',
@@ -65,11 +67,122 @@ const FleetMap: React.FC<FleetMapProps> = ({ drivers, language, onDriverClick })
       clickForDetails: 'انقر على السائق للتفاصيل',
       liveUpdates: 'التحديثات المباشرة',
       gpsConnected: 'GPS متصل',
-      trackingActive: 'التتبع نشط'
+      trackingActive: 'التتبع نشط',
+      mobileDriverConnected: 'سائق الهاتف المحمول متصل'
     }
   };
 
   const t = texts[language];
+
+  // Listen for real-time driver updates from mobile app
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data.type === 'DRIVER_LOCATION_UPDATE') {
+        const { driverId, location, vehicleId, driverName } = event.data.data;
+        
+        // Update live driver data
+        setLiveDriverUpdates(prev => new Map(prev.set(driverId, {
+          location,
+          vehicleId,
+          driverName,
+          lastUpdate: Date.now(),
+          isLive: true
+        })));
+
+        // Update marker position
+        const marker = markersRef.current.get(driverId);
+        if (marker) {
+          marker.setLatLng([location.lat, location.lng]);
+          
+          // Update popup with live data
+          const popupContent = createPopupContent(
+            drivers.find(d => d.id === driverId) || {
+              id: driverId,
+              name: driverName,
+              vehicleId,
+              location,
+              status: 'active',
+              trips: 0,
+              earnings: 0,
+              performanceScore: 85,
+              avatar: driverName.split(' ').map((n: string) => n[0]).join(''),
+              email: '',
+              phone: '',
+              joinDate: ''
+            },
+            true // isLive flag
+          );
+          marker.setPopupContent(popupContent);
+        } else {
+          // Create new marker for live driver
+          addLiveDriverMarker(driverId, location, driverName, vehicleId);
+        }
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, [drivers]);
+
+  const addLiveDriverMarker = (driverId: number, location: any, driverName: string, vehicleId: string) => {
+    if (!mapInstanceRef.current) return;
+
+    const marker = L.marker([location.lat, location.lng], {
+      icon: createDriverIcon({
+        id: driverId,
+        name: driverName,
+        vehicleId,
+        status: 'active',
+        performanceScore: 85,
+        earnings: 0,
+        trips: 0,
+        avatar: driverName.split(' ').map((n: string) => n[0]).join(''),
+        email: '',
+        phone: '',
+        joinDate: '',
+        location
+      }, true)
+    }).addTo(mapInstanceRef.current);
+
+    markersRef.current.set(driverId, marker);
+
+    const popupContent = createPopupContent({
+      id: driverId,
+      name: driverName,
+      vehicleId,
+      location,
+      status: 'active',
+      trips: 0,
+      earnings: 0,
+      performanceScore: 85,
+      avatar: driverName.split(' ').map((n: string) => n[0]).join(''),
+      email: '',
+      phone: '',
+      joinDate: ''
+    }, true);
+
+    marker.bindPopup(popupContent, {
+      maxWidth: 350,
+      className: 'custom-popup'
+    });
+
+    marker.on('click', () => {
+      setSelectedDriver({
+        id: driverId,
+        name: driverName,
+        vehicleId,
+        location,
+        status: 'active',
+        trips: 0,
+        earnings: 0,
+        performanceScore: 85,
+        avatar: driverName.split(' ').map((n: string) => n[0]).join(''),
+        email: '',
+        phone: '',
+        joinDate: ''
+      });
+    });
+  };
 
   // Simulate real-time GPS updates with realistic movement
   useEffect(() => {
@@ -111,7 +224,7 @@ const FleetMap: React.FC<FleetMapProps> = ({ drivers, language, onDriverClick })
     return () => clearInterval(interval);
   }, [drivers, isRealTimeActive]);
 
-  const createPopupContent = (driver: Driver) => {
+  const createPopupContent = (driver: Driver, isLive = false) => {
     const hasAlert = driver.performanceScore < 80 || driver.earnings < 500;
     const speed = Math.floor(Math.random() * 60) + 20; // Simulate speed
     const heading = Math.floor(Math.random() * 360); // Simulate heading
@@ -153,30 +266,31 @@ const FleetMap: React.FC<FleetMapProps> = ({ drivers, language, onDriverClick })
                 ${driver.status === 'active' ? 'animation: pulse 2s infinite;' : ''}
               "></div>
               <span style="font-size: 12px; color: #64748b; font-weight: 500;">${driver.vehicleId || 'No vehicle assigned'}</span>
+              ${isLive ? '<span style="margin-left: 8px; padding: 2px 6px; background: #10b981; color: white; border-radius: 8px; font-size: 10px; font-weight: 600;">LIVE</span>' : ''}
             </div>
           </div>
         </div>
 
         <!-- Real-time GPS Data -->
         <div style="
-          background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+          background: linear-gradient(135deg, ${isLive ? '#dcfce7' : '#dbeafe'} 0%, ${isLive ? '#bbf7d0' : '#bfdbfe'} 100%);
           padding: 12px;
           border-radius: 8px;
           margin-bottom: 16px;
-          border: 1px solid #93c5fd;
+          border: 1px solid ${isLive ? '#86efac' : '#93c5fd'};
         ">
           <div style="display: flex; align-items: center; margin-bottom: 8px;">
-            <span style="color: #1d4ed8; font-size: 12px; font-weight: 600;">📍 ${t.realTimeTracking}</span>
+            <span style="color: ${isLive ? '#15803d' : '#1d4ed8'}; font-size: 12px; font-weight: 600;">📍 ${t.realTimeTracking}</span>
             <div style="
               margin-left: auto;
               padding: 2px 8px;
-              background: #10b981;
+              background: ${isLive ? '#10b981' : '#3b82f6'};
               color: white;
               border-radius: 12px;
               font-size: 10px;
               font-weight: 600;
               animation: pulse 2s infinite;
-            ">LIVE</div>
+            ">${isLive ? 'MOBILE' : 'SIM'}</div>
           </div>
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 11px;">
             <div>
@@ -244,6 +358,21 @@ const FleetMap: React.FC<FleetMapProps> = ({ drivers, language, onDriverClick })
           </div>
         ` : ''}
 
+        ${isLive ? `
+          <div style="
+            margin-bottom: 16px; 
+            padding: 10px; 
+            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); 
+            border: 1px solid #bbf7d0; 
+            border-radius: 8px;
+          ">
+            <div style="display: flex; align-items: center;">
+              <span style="margin-right: 8px;">📱</span>
+              <p style="margin: 0; font-size: 12px; color: #15803d; font-weight: 600;">${t.mobileDriverConnected}</p>
+            </div>
+          </div>
+        ` : ''}
+
         <!-- Action Buttons -->
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
           <button 
@@ -266,7 +395,7 @@ const FleetMap: React.FC<FleetMapProps> = ({ drivers, language, onDriverClick })
             👤 ${t.viewProfile}
           </button>
           <button 
-            onclick="window.callDriver('${driver.phone}')"
+            onclick="window.callDriver('${driver.phone || '+971501234567'}')"
             style="
               padding: 10px 16px;
               background: linear-gradient(135deg, #10b981, #059669);
@@ -324,9 +453,9 @@ const FleetMap: React.FC<FleetMapProps> = ({ drivers, language, onDriverClick })
     }).addTo(map);
 
     // Custom icon for drivers with real-time indicators
-    const createDriverIcon = (driver: Driver) => {
+    const createDriverIcon = (driver: Driver, isLive = false) => {
       const hasAlert = driver.performanceScore < 80 || driver.earnings < 500;
-      const color = driver.status === 'active' ? (hasAlert ? '#ef4444' : '#10b981') : '#6b7280';
+      const color = driver.status === 'active' ? (hasAlert ? '#ef4444' : isLive ? '#10b981' : '#3b82f6') : '#6b7280';
       const pulseAnimation = driver.status === 'active' ? 'animation: pulse 2s infinite;' : '';
       
       return L.divIcon({
@@ -379,11 +508,26 @@ const FleetMap: React.FC<FleetMapProps> = ({ drivers, language, onDriverClick })
               right: -2px;
               width: 12px;
               height: 12px;
-              background-color: ${driver.status === 'active' ? '#10b981' : '#6b7280'};
+              background-color: ${isLive ? '#10b981' : driver.status === 'active' ? '#3b82f6' : '#6b7280'};
               border: 2px solid white;
               border-radius: 50%;
               ${pulseAnimation}
             "></div>
+            
+            ${isLive ? `
+              <!-- Live indicator -->
+              <div style="
+                position: absolute;
+                top: -8px;
+                left: -8px;
+                width: 8px;
+                height: 8px;
+                background-color: #10b981;
+                border: 1px solid white;
+                border-radius: 50%;
+                animation: pulse 1s infinite;
+              "></div>
+            ` : ''}
           </div>
           
           <style>
@@ -399,6 +543,9 @@ const FleetMap: React.FC<FleetMapProps> = ({ drivers, language, onDriverClick })
         iconAnchor: [16, 16]
       });
     };
+
+    // Store createDriverIcon in component scope
+    (window as any).createDriverIcon = createDriverIcon;
 
     // Add driver markers
     drivers.forEach((driver) => {
@@ -437,6 +584,7 @@ const FleetMap: React.FC<FleetMapProps> = ({ drivers, language, onDriverClick })
       onAdd: function(map: L.Map) {
         const activeCount = drivers.filter(d => d.status === 'active').length;
         const offlineCount = drivers.length - activeCount;
+        const liveCount = liveDriverUpdates.size;
         
         const div = L.DomUtil.create('div', 'fleet-status-control');
         div.style.cssText = `
@@ -463,10 +611,14 @@ const FleetMap: React.FC<FleetMapProps> = ({ drivers, language, onDriverClick })
             <span style="font-weight: 700; font-size: 14px; color: #1e293b;">${t.fleetStatus}</span>
           </div>
           
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px;">
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 12px;">
             <div style="background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); padding: 8px; border-radius: 6px; text-align: center;">
               <div style="font-size: 18px; font-weight: 700; color: #1d4ed8;">${activeCount}</div>
               <div style="font-size: 10px; color: #1e40af; font-weight: 500;">${t.active}</div>
+            </div>
+            <div style="background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%); padding: 8px; border-radius: 6px; text-align: center;">
+              <div style="font-size: 18px; font-weight: 700; color: #15803d;">${liveCount}</div>
+              <div style="font-size: 10px; color: #166534; font-weight: 500;">LIVE</div>
             </div>
             <div style="background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%); padding: 8px; border-radius: 6px; text-align: center;">
               <div style="font-size: 18px; font-weight: 700; color: #6b7280;">${offlineCount}</div>
@@ -477,7 +629,7 @@ const FleetMap: React.FC<FleetMapProps> = ({ drivers, language, onDriverClick })
           <div style="border-top: 1px solid #e2e8f0; padding-top: 8px;">
             <div style="font-size: 11px; color: #64748b; margin-bottom: 6px; font-weight: 600;">${t.legend}:</div>
             <div style="font-size: 10px; color: #64748b; line-height: 1.4;">
-              <div style="margin-bottom: 2px;">🟢 ${t.active} | 🔴 ${t.needsAttention} | ⚫ ${t.offline}</div>
+              <div style="margin-bottom: 2px;">🟢 ${t.active} | 🟢 Live Mobile | ⚫ ${t.offline}</div>
               <div style="color: #10b981; font-weight: 500;">📡 ${t.gpsConnected} • ${t.liveUpdates}</div>
             </div>
           </div>
@@ -578,6 +730,7 @@ const FleetMap: React.FC<FleetMapProps> = ({ drivers, language, onDriverClick })
       // Clean up global functions
       delete (window as any).openDriverProfile;
       delete (window as any).callDriver;
+      delete (window as any).createDriverIcon;
     };
   }, [drivers, language, onDriverClick]);
 
@@ -606,6 +759,12 @@ const FleetMap: React.FC<FleetMapProps> = ({ drivers, language, onDriverClick })
               }`}></div>
               <span>{isRealTimeActive ? t.liveUpdates : 'Paused'}</span>
             </div>
+            {liveDriverUpdates.size > 0 && (
+              <div className="flex items-center space-x-2 px-3 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
+                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+                <span>{liveDriverUpdates.size} Mobile Connected</span>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -648,6 +807,28 @@ const FleetMap: React.FC<FleetMapProps> = ({ drivers, language, onDriverClick })
           </div>
         </div>
       )}
+
+      {/* Mobile App Instructions */}
+      <div className="p-4 border-t border-gray-200 bg-blue-50">
+        <div className="flex items-start space-x-3">
+          <div className="p-2 bg-blue-600 rounded-lg">
+            <Navigation className="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <h4 className="font-semibold text-blue-900 mb-2">Mobile Driver App Available!</h4>
+            <p className="text-blue-800 text-sm mb-3">
+              Drivers can now use their mobile phones for real-time GPS tracking. 
+              Visit <strong>/mobile.html</strong> on any smartphone to start tracking.
+            </p>
+            <div className="flex items-center space-x-4 text-xs text-blue-700">
+              <span>📱 Works on any smartphone</span>
+              <span>🌐 No app store needed</span>
+              <span>📍 Real-time GPS tracking</span>
+              <span>💾 Works offline</span>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
