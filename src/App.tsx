@@ -10,6 +10,8 @@ import NavEdgeAssistant from './components/AIAssistant';
 import Settings from './components/Settings';
 import Reports from './components/Reports';
 import Login from './components/Login';
+import { mockDriversData } from './data/mockData';
+import type { Driver } from './data/mockData';
 
 type ActivePage = 'dashboard' | 'drivers' | 'contracts' | 'fines' | 'incidents' | 'reports' | 'settings';
 type FleetMode = 'rental' | 'taxi';
@@ -22,6 +24,9 @@ function App() {
   const [language, setLanguage] = useState<Language>('en');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showNavEdgeAssistant, setShowNavEdgeAssistant] = useState(false);
+  
+  // Shared drivers state
+  const [drivers, setDrivers] = useState<Driver[]>(mockDriversData);
 
   // Check authentication on mount
   useEffect(() => {
@@ -48,12 +53,17 @@ function App() {
     setFleetMode(mode);
   };
 
+  // Handle adding new driver
+  const handleAddDriver = (newDriver: Driver) => {
+    setDrivers(prevDrivers => [...prevDrivers, newDriver]);
+  };
+
   const renderActivePage = () => {
     switch (activePage) {
       case 'dashboard':
-        return <Dashboard fleetMode={fleetMode} language={language} />;
+        return <Dashboard fleetMode={fleetMode} language={language} drivers={drivers} />;
       case 'drivers':
-        return <Drivers fleetMode={fleetMode} language={language} />;
+        return <Drivers fleetMode={fleetMode} language={language} drivers={drivers} onAddDriver={handleAddDriver} />;
       case 'contracts':
         return <Contracts fleetMode={fleetMode} language={language} />;
       case 'fines':
@@ -70,7 +80,7 @@ function App() {
           setLanguage={setLanguage}
         />;
       default:
-        return <Dashboard fleetMode={fleetMode} language={language} />;
+        return <Dashboard fleetMode={fleetMode} language={language} drivers={drivers} />;
     }
   };
 

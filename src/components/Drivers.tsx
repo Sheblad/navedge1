@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Search, Filter, Plus, MoreVertical, Phone, Mail, Star, X, Upload, Calendar, User, FileText, Car, DollarSign, MapPin, Camera } from 'lucide-react';
-import { mockDriversData } from '../data/mockData';
 import DriverProfile from './DriverProfile';
+import type { Driver } from '../data/mockData';
 
 type FleetMode = 'rental' | 'taxi';
 type Language = 'en' | 'ar';
@@ -9,6 +9,8 @@ type Language = 'en' | 'ar';
 interface DriversProps {
   fleetMode: FleetMode;
   language: Language;
+  drivers: Driver[];
+  onAddDriver: (driver: Driver) => void;
 }
 
 interface NewDriverData {
@@ -45,13 +47,12 @@ interface NewDriverData {
   documents?: File[];
 }
 
-const Drivers: React.FC<DriversProps> = ({ fleetMode, language }) => {
+const Drivers: React.FC<DriversProps> = ({ fleetMode, language, drivers, onAddDriver }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'offline'>('all');
   const [selectedDriverId, setSelectedDriverId] = useState<number | null>(null);
   const [showAddDriver, setShowAddDriver] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
-  const [drivers, setDrivers] = useState(mockDriversData);
   
   const [newDriverData, setNewDriverData] = useState<NewDriverData>({
     firstName: '',
@@ -326,7 +327,7 @@ const Drivers: React.FC<DriversProps> = ({ fleetMode, language }) => {
 
   const handleSubmitDriver = () => {
     // Create new driver object
-    const newDriver = {
+    const newDriver: Driver = {
       id: Math.max(...drivers.map(d => d.id)) + 1,
       name: `${newDriverData.firstName} ${newDriverData.lastName}`,
       email: newDriverData.email,
@@ -334,7 +335,7 @@ const Drivers: React.FC<DriversProps> = ({ fleetMode, language }) => {
       avatar: `${newDriverData.firstName[0]}${newDriverData.lastName[0]}`.toUpperCase(),
       trips: 0,
       earnings: 0,
-      status: 'active' as const,
+      status: 'active',
       performanceScore: 85,
       joinDate: newDriverData.startDate,
       location: { 
@@ -344,8 +345,8 @@ const Drivers: React.FC<DriversProps> = ({ fleetMode, language }) => {
       vehicleId: newDriverData.vehicleAssignment || undefined
     };
 
-    // Add to drivers list
-    setDrivers([...drivers, newDriver]);
+    // Add to drivers list via callback
+    onAddDriver(newDriver);
     
     // Show success and close form
     alert(`${t.driverAdded}\n${t.driverAddedDesc}`);

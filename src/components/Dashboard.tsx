@@ -3,7 +3,8 @@ import DriverCard from './DriverCard';
 import DriverProfile from './DriverProfile';
 import FleetMap from './FleetMap';
 import StatsCards from './StatsCards';
-import { mockDriversData, mockFinesData } from '../data/mockData';
+import { mockFinesData } from '../data/mockData';
+import type { Driver } from '../data/mockData';
 import { TrendingUp, AlertCircle, Users, DollarSign, Clock, MapPin, Car, Navigation, Calendar, FileText } from 'lucide-react';
 
 type FleetMode = 'rental' | 'taxi';
@@ -12,10 +13,10 @@ type Language = 'en' | 'ar';
 interface DashboardProps {
   fleetMode: FleetMode;
   language: Language;
+  drivers: Driver[];
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ fleetMode, language }) => {
-  const [drivers, setDrivers] = useState(mockDriversData);
+const Dashboard: React.FC<DashboardProps> = ({ fleetMode, language, drivers }) => {
   const [fines, setFines] = useState(mockFinesData);
   const [realTimeUpdates, setRealTimeUpdates] = useState(true);
   const [selectedDriverId, setSelectedDriverId] = useState<number | null>(null);
@@ -112,21 +113,21 @@ const Dashboard: React.FC<DashboardProps> = ({ fleetMode, language }) => {
     if (!realTimeUpdates) return;
 
     const interval = setInterval(() => {
-      setDrivers(prevDrivers => 
-        prevDrivers.map(driver => ({
-          ...driver,
-          earnings: driver.earnings + Math.floor(Math.random() * (fleetMode === 'taxi' ? 50 : 20)),
-          trips: driver.trips + (Math.random() > (fleetMode === 'taxi' ? 0.7 : 0.9) ? 1 : 0),
-          location: {
+      // Update drivers with new earnings and trips
+      drivers.forEach(driver => {
+        if (driver.status === 'active') {
+          driver.earnings += Math.floor(Math.random() * (fleetMode === 'taxi' ? 50 : 20));
+          driver.trips += (Math.random() > (fleetMode === 'taxi' ? 0.7 : 0.9) ? 1 : 0);
+          driver.location = {
             lat: driver.location.lat + (Math.random() - 0.5) * 0.001,
             lng: driver.location.lng + (Math.random() - 0.5) * 0.001
-          }
-        }))
-      );
+          };
+        }
+      });
     }, fleetMode === 'taxi' ? 15000 : 60000); // Taxi updates faster
 
     return () => clearInterval(interval);
-  }, [realTimeUpdates, fleetMode]);
+  }, [realTimeUpdates, fleetMode, drivers]);
 
   const activeDrivers = drivers.filter(d => d.status === 'active');
   const totalEarnings = drivers.reduce((sum, d) => sum + d.earnings, 0);
