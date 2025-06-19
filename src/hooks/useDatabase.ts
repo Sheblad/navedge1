@@ -17,7 +17,7 @@ export function useDrivers() {
       setError(null);
     } catch (err) {
       console.error('Error loading drivers:', err);
-      setError('Failed to load drivers');
+      setError('Failed to load drivers from database');
       
       // Fallback to localStorage
       const localDrivers = localStorage.getItem('navedge_drivers');

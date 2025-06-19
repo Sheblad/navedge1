@@ -12,7 +12,9 @@ import Reports from './components/Reports';
 import Login from './components/Login';
 import ErrorBoundary from './components/ErrorBoundary';
 import BackupManager from './components/BackupManager';
-import { mockDriversData } from './data/mockData';
+import DataMigration from './components/DataMigration';
+import { useDrivers, useFines } from './hooks/useDatabase';
+import { DatabaseService } from './services/database';
 import type { Driver } from './data/mockData';
 
 type ActivePage = 'dashboard' | 'drivers' | 'contracts' | 'fines' | 'incidents' | 'reports' | 'settings';
@@ -21,13 +23,13 @@ type Language = 'en' | 'ar' | 'hi' | 'ur';
 
 // Storage keys
 const STORAGE_KEYS = {
-  DRIVERS: 'navedge_drivers',
   FLEET_MODE: 'navedge_fleet_mode',
   LANGUAGE: 'navedge_language',
   LAST_BACKUP: 'navedge_last_backup',
   AUTO_BACKUP: 'navedge_auto_backup',
   AUTO_BACKUP_INTERVAL: 'navedge_auto_backup_interval',
-  NEXT_AUTO_BACKUP: 'navedge_next_auto_backup'
+  NEXT_AUTO_BACKUP: 'navedge_next_auto_backup',
+  MIGRATION_COMPLETE: 'navedge_migration_complete'
 };
 
 function App() {
@@ -37,42 +39,63 @@ function App() {
   const [language, setLanguage] = useState<Language>('en');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showNavEdgeAssistant, setShowNavEdgeAssistant] = useState(false);
-  const [drivers, setDrivers] = useState<Driver[]>(mockDriversData);
-  const [loading, setLoading] = useState(false);
   const [showBackupManager, setShowBackupManager] = useState(false);
-  
-  // Load persisted data on mount
+  const [showDataMigration, setShowDataMigration] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(true);
+
+  // Use database hooks
+  const { 
+    drivers, 
+    loading: driversLoading, 
+    error: driversError,
+    addDriver,
+    updateDriver,
+    deleteDriver,
+    bulkImportDrivers
+  } = useDrivers();
+
+  const { fines, loading: finesLoading } = useFines();
+
+  // Load persisted settings on mount
   useEffect(() => {
-    // Check authentication
-    const token = localStorage.getItem('navedge_token');
-    if (token) {
-      setIsAuthenticated(true);
-    }
-
-    // Load fleet mode
-    const savedFleetMode = localStorage.getItem(STORAGE_KEYS.FLEET_MODE);
-    if (savedFleetMode && (savedFleetMode === 'rental' || savedFleetMode === 'taxi')) {
-      setFleetMode(savedFleetMode as FleetMode);
-    }
-
-    // Load language
-    const savedLanguage = localStorage.getItem(STORAGE_KEYS.LANGUAGE);
-    if (savedLanguage && ['en', 'ar', 'hi', 'ur'].includes(savedLanguage)) {
-      setLanguage(savedLanguage as Language);
-    }
-
-    // Load drivers from localStorage
-    const savedDrivers = localStorage.getItem(STORAGE_KEYS.DRIVERS);
-    if (savedDrivers) {
+    const initializeApp = async () => {
       try {
-        setDrivers(JSON.parse(savedDrivers));
-      } catch (e) {
-        console.error('Error parsing drivers from localStorage:', e);
-      }
-    }
+        // Check authentication
+        const token = localStorage.getItem('navedge_token');
+        if (token) {
+          setIsAuthenticated(true);
+        }
 
-    // Check for auto backup
-    checkAutoBackup();
+        // Load fleet mode
+        const savedFleetMode = localStorage.getItem(STORAGE_KEYS.FLEET_MODE);
+        if (savedFleetMode && (savedFleetMode === 'rental' || savedFleetMode === 'taxi')) {
+          setFleetMode(savedFleetMode as FleetMode);
+        }
+
+        // Load language
+        const savedLanguage = localStorage.getItem(STORAGE_KEYS.LANGUAGE);
+        if (savedLanguage && ['en', 'ar', 'hi', 'ur'].includes(savedLanguage)) {
+          setLanguage(savedLanguage as Language);
+        }
+
+        // Check if migration is needed
+        const migrationComplete = localStorage.getItem(STORAGE_KEYS.MIGRATION_COMPLETE);
+        const hasLocalData = localStorage.getItem('navedge_drivers');
+        
+        if (!migrationComplete && hasLocalData && token) {
+          setShowDataMigration(true);
+        }
+
+        // Check for auto backup
+        checkAutoBackup();
+      } catch (error) {
+        console.error('App initialization error:', error);
+      } finally {
+        setIsInitializing(false);
+      }
+    };
+
+    initializeApp();
   }, []);
 
   // Save fleet mode to localStorage whenever it changes
@@ -84,11 +107,6 @@ function App() {
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.LANGUAGE, language);
   }, [language]);
-
-  // Save drivers to localStorage whenever they change
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.DRIVERS, JSON.stringify(drivers));
-  }, [drivers]);
 
   // Check if auto backup is due
   const checkAutoBackup = () => {
@@ -102,15 +120,22 @@ function App() {
     const nextBackup = new Date(nextBackupDate);
 
     if (now >= nextBackup) {
-      // Auto backup is due
       setShowBackupManager(true);
     }
   };
 
-  // Handle login - expects a token string
+  // Handle login
   const handleLogin = (token: string) => {
     localStorage.setItem('navedge_token', token);
     setIsAuthenticated(true);
+    
+    // Check if migration is needed after login
+    const migrationComplete = localStorage.getItem(STORAGE_KEYS.MIGRATION_COMPLETE);
+    const hasLocalData = localStorage.getItem('navedge_drivers');
+    
+    if (!migrationComplete && hasLocalData) {
+      setShowDataMigration(true);
+    }
   };
 
   // Handle logout
@@ -124,27 +149,51 @@ function App() {
     setFleetMode(mode);
   };
 
-  // Driver management functions
-  const handleAddDriver = (newDriver: Driver) => {
-    setDrivers(prev => [...prev, newDriver]);
-  };
-
-  const handleUpdateDriver = (updatedDriver: Driver) => {
-    setDrivers(prev => prev.map(driver => 
-      driver.id === updatedDriver.id ? updatedDriver : driver
-    ));
-  };
-
-  const handleDeleteDriver = (driverId: number) => {
-    setDrivers(prev => prev.filter(driver => driver.id !== driverId));
+  // Handle migration completion
+  const handleMigrationComplete = () => {
+    localStorage.setItem(STORAGE_KEYS.MIGRATION_COMPLETE, 'true');
+    setShowDataMigration(false);
   };
 
   // Backup and restore functions
-  const handleRestoreData = (restoredDrivers: Driver[]) => {
-    setDrivers(restoredDrivers);
+  const handleRestoreData = async (restoredDrivers: Driver[]) => {
+    try {
+      await bulkImportDrivers(restoredDrivers);
+    } catch (error) {
+      console.error('Error restoring data:', error);
+      alert('Failed to restore data. Please try again.');
+    }
   };
 
   const renderActivePage = () => {
+    if (driversLoading && drivers.length === 0) {
+      return (
+        <div className="flex items-center justify-center h-full">
+          <div className="flex flex-col items-center">
+            <div className="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
+            <p className="mt-4 text-gray-600">Loading fleet data...</p>
+          </div>
+        </div>
+      );
+    }
+
+    if (driversError) {
+      return (
+        <div className="flex items-center justify-center h-full">
+          <div className="text-center">
+            <div className="text-red-600 mb-4">⚠️ Database Connection Error</div>
+            <p className="text-gray-600 mb-4">{driversError}</p>
+            <button 
+              onClick={() => window.location.reload()}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              Retry Connection
+            </button>
+          </div>
+        </div>
+      );
+    }
+
     switch (activePage) {
       case 'dashboard':
         return (
@@ -159,9 +208,9 @@ function App() {
               fleetMode={fleetMode} 
               language={language} 
               drivers={drivers} 
-              onAddDriver={handleAddDriver}
-              onUpdateDriver={handleUpdateDriver}
-              onRemoveDriver={handleDeleteDriver}
+              onAddDriver={addDriver}
+              onUpdateDriver={updateDriver}
+              onRemoveDriver={deleteDriver}
             />
           </ErrorBoundary>
         );
@@ -209,6 +258,23 @@ function App() {
     }
   };
 
+  // Show loading screen during initialization
+  if (isInitializing) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="flex flex-col items-center">
+          <div className="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
+          <p className="mt-4 text-gray-600">Initializing NavEdge...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show data migration if needed
+  if (showDataMigration) {
+    return <DataMigration onMigrationComplete={handleMigrationComplete} />;
+  }
+
   if (!isAuthenticated) {
     return (
       <ErrorBoundary>
@@ -246,16 +312,7 @@ function App() {
         />
         
         <main className="flex-1 p-4 lg:p-6">
-          {loading ? (
-            <div className="flex items-center justify-center h-full">
-              <div className="flex flex-col items-center">
-                <div className="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
-                <p className="mt-4 text-gray-600">Loading fleet data...</p>
-              </div>
-            </div>
-          ) : (
-            renderActivePage()
-          )}
+          {renderActivePage()}
         </main>
       </div>
 

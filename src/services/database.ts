@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Driver, Fine, Contract } from '../data/mockData';
+import { mockDriversData } from '../data/mockData';
 
 // Supabase configuration
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
@@ -23,12 +24,11 @@ export class DatabaseService {
         throw error;
       }
 
-      return data || [];
+      return data?.map(this.convertDriverFromDB) || [];
     } catch (error) {
       console.error('Database error:', error);
-      // Fallback to localStorage for offline mode
-      const localDrivers = localStorage.getItem('navedge_drivers');
-      return localDrivers ? JSON.parse(localDrivers) : [];
+      // Fallback to mock data for demo purposes
+      return mockDriversData;
     }
   }
 
@@ -59,7 +59,6 @@ export class DatabaseService {
         throw error;
       }
 
-      // Convert database format back to app format
       return this.convertDriverFromDB(data);
     } catch (error) {
       console.error('Database error:', error);
@@ -133,7 +132,7 @@ export class DatabaseService {
         throw error;
       }
 
-      return data || [];
+      return data?.map(this.convertFineFromDB) || [];
     } catch (error) {
       console.error('Database error:', error);
       return [];

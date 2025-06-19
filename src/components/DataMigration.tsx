@@ -121,7 +121,7 @@ const DataMigration: React.FC<DataMigrationProps> = ({ onMigrationComplete }) =>
               <li>✅ Multi-device access</li>
               <li>✅ Real-time synchronization</li>
               <li>✅ Automatic backups</li>
-              <li>✅ Enhance security</li>
+              <li>✅ Enhanced security</li>
               <li>✅ Offline support</li>
             </ul>
           </div>
