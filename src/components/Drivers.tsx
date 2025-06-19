@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { Search, Filter, Plus, MoreVertical, Phone, Mail, Star, Satellite } from 'lucide-react';
+import { Search, Filter, Plus, MoreVertical, Phone, Mail, Star, Satellite, Upload, Database } from 'lucide-react';
 import { Driver } from '../data/mockData';
 import DriverProfile from './DriverProfile';
 import GPSIntegrationWizard from './GPSIntegrationWizard';
 import AddDriverForm from './AddDriverForm';
+import BulkImportDrivers from './BulkImportDrivers';
 
 type FleetMode = 'rental' | 'taxi';
 type Language = 'en' | 'ar' | 'hi' | 'ur';
@@ -30,6 +31,7 @@ const Drivers: React.FC<DriversProps> = ({
   const [selectedDriverId, setSelectedDriverId] = useState<number | null>(null);
   const [showGPSWizard, setShowGPSWizard] = useState(false);
   const [showAddDriverForm, setShowAddDriverForm] = useState(false);
+  const [showBulkImport, setShowBulkImport] = useState(false);
 
   const texts = {
     en: {
@@ -37,6 +39,7 @@ const Drivers: React.FC<DriversProps> = ({
       subtitle: 'Manage your fleet drivers and their performance',
       addDriver: 'Add Driver',
       addGPS: 'Add GPS Trackers',
+      bulkImport: 'Bulk Import',
       searchPlaceholder: 'Search drivers...',
       filter: 'Filter',
       driver: 'Driver',
@@ -63,6 +66,7 @@ const Drivers: React.FC<DriversProps> = ({
       subtitle: 'إدارة سائقي الأسطول وأدائهم',
       addDriver: 'إضافة سائق',
       addGPS: 'إضافة أجهزة GPS',
+      bulkImport: 'استيراد بالجملة',
       searchPlaceholder: 'البحث في السائقين...',
       filter: 'تصفية',
       driver: 'السائق',
@@ -89,6 +93,7 @@ const Drivers: React.FC<DriversProps> = ({
       subtitle: 'अपने फ्लीट ड्राइवरों और उनके प्रदर्शन का प्रबंधन करें',
       addDriver: 'ड्राइवर जोड़ें',
       addGPS: 'GPS ट्रैकर जोड़ें',
+      bulkImport: 'बल्क इम्पोर्ट',
       searchPlaceholder: 'ड्राइवर खोजें...',
       filter: 'फ़िल्टर',
       driver: 'ड्राइवर',
@@ -115,6 +120,7 @@ const Drivers: React.FC<DriversProps> = ({
       subtitle: 'اپنے فلیٹ ڈرائیورز اور ان کی کارکردگی کا انتظام کریں',
       addDriver: 'ڈرائیور شامل کریں',
       addGPS: 'GPS ٹریکرز شامل کریں',
+      bulkImport: 'بلک امپورٹ',
       searchPlaceholder: 'ڈرائیورز تلاش کریں...',
       filter: 'فلٹر',
       driver: 'ڈرائیور',
@@ -165,6 +171,21 @@ const Drivers: React.FC<DriversProps> = ({
     setShowAddDriverForm(false);
   };
 
+  const handleBulkImport = (driversToImport: Omit<Driver, 'id'>[]) => {
+    // Add IDs to the imported drivers
+    const newDrivers = driversToImport.map((driver, index) => ({
+      ...driver,
+      id: Math.max(...drivers.map(d => d.id), 0) + index + 1
+    }));
+    
+    // Add each driver
+    newDrivers.forEach(driver => {
+      onAddDriver(driver);
+    });
+    
+    setShowBulkImport(false);
+  };
+
   if (selectedDriverId) {
     return (
       <DriverProfile
@@ -185,6 +206,13 @@ const Drivers: React.FC<DriversProps> = ({
           <p className="text-gray-600">{t.subtitle}</p>
         </div>
         <div className="flex space-x-3">
+          <button 
+            onClick={() => setShowBulkImport(true)}
+            className="flex items-center space-x-2 px-4 py-2 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 transition-all duration-300"
+          >
+            <Database className="w-4 h-4" />
+            <span>{t.bulkImport}</span>
+          </button>
           <button 
             onClick={() => setShowGPSWizard(true)}
             className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg hover:from-green-700 hover:to-emerald-700 transition-all duration-300 shadow-lg hover:shadow-xl"
@@ -371,6 +399,15 @@ const Drivers: React.FC<DriversProps> = ({
         <AddDriverForm 
           onAddDriver={handleAddNewDriver}
           onClose={() => setShowAddDriverForm(false)}
+          language={language}
+        />
+      )}
+
+      {/* Bulk Import Modal */}
+      {showBulkImport && (
+        <BulkImportDrivers
+          onImportDrivers={handleBulkImport}
+          onClose={() => setShowBulkImport(false)}
           language={language}
         />
       )}

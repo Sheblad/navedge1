@@ -290,7 +290,9 @@ export class DatabaseService {
         lng: dbDriver.location_lng
       },
       vehicleId: dbDriver.vehicle_id,
-      contractId: dbDriver.contract_id
+      contractId: dbDriver.contract_id,
+      trips_today: dbDriver.trips_today || 0,
+      earnings_today: dbDriver.earnings_today || 0
     };
   }
 
@@ -364,7 +366,7 @@ export class OfflineSync {
   private static SYNC_QUEUE_KEY = 'navedge_sync_queue';
 
   static addToSyncQueue(operation: {
-    type: 'CREATE' | 'UPDATE' | 'DELETE';
+    type: 'CREATE' | 'UPDATE' | 'DELETE' | 'BULK_IMPORT';
     table: 'drivers' | 'fines' | 'contracts';
     data: any;
     timestamp: number;
@@ -407,6 +409,8 @@ export class OfflineSync {
           await DatabaseService.updateDriver(operation.data);
         } else if (operation.type === 'DELETE') {
           await DatabaseService.deleteDriver(operation.data.id);
+        } else if (operation.type === 'BULK_IMPORT') {
+          await DatabaseService.bulkImportDrivers(operation.data);
         }
         break;
       // Add other tables as needed

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { DatabaseService, OfflineSync } from '../services/database';
 import type { Driver, Fine, Contract } from '../data/mockData';
 
@@ -107,6 +107,18 @@ export function useDrivers() {
       await loadDrivers(); // Reload all drivers
     } catch (err) {
       console.error('Error bulk importing drivers:', err);
+      
+      // Add to offline sync queue
+      OfflineSync.addToSyncQueue({
+        type: 'BULK_IMPORT',
+        table: 'drivers',
+        data: driversToImport,
+        timestamp: Date.now()
+      });
+      
+      // Add locally
+      setDrivers(prev => [...prev, ...driversToImport]);
+      
       throw err;
     }
   };
