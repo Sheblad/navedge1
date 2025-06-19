@@ -22,6 +22,7 @@ const BulkImportDrivers: React.FC<BulkImportDriversProps> = ({ onImportDrivers, 
     vehicleId: ''
   });
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [clipboardData, setClipboardData] = useState('');
 
   const texts = {
     en: {
@@ -473,12 +474,20 @@ const BulkImportDrivers: React.FC<BulkImportDriversProps> = ({ onImportDrivers, 
           <textarea
             className="w-full h-32 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
             placeholder={t.pasteHere}
-            onChange={(e) => {
-              if (e.target.value.trim()) {
-                parseClipboardData(e.target.value);
+            value={clipboardData}
+            onChange={(e) => setClipboardData(e.target.value)}
+          />
+          <button
+            onClick={() => {
+              if (clipboardData.trim()) {
+                parseClipboardData(clipboardData);
               }
             }}
-          />
+            disabled={!clipboardData.trim()}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+          >
+            {t.parseData}
+          </button>
         </div>
       </div>
       
