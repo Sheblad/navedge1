@@ -12,13 +12,23 @@ interface DriversProps {
   language: Language;
   drivers: Driver[];
   onAddDriver: (driver: Driver) => void;
+  onUpdateDriver?: (driver: Driver) => void;
+  onRemoveDriver?: (driverId: number) => void;
 }
 
-const Drivers: React.FC<DriversProps> = ({ fleetMode, language, drivers, onAddDriver }) => {
+const Drivers: React.FC<DriversProps> = ({ 
+  fleetMode, 
+  language, 
+  drivers, 
+  onAddDriver,
+  onUpdateDriver,
+  onRemoveDriver 
+}) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'offline'>('all');
   const [selectedDriverId, setSelectedDriverId] = useState<number | null>(null);
   const [showGPSWizard, setShowGPSWizard] = useState(false);
+  const [showAddDriverForm, setShowAddDriverForm] = useState(false);
 
   const texts = {
     en: {
@@ -45,7 +55,16 @@ const Drivers: React.FC<DriversProps> = ({ fleetMode, language, drivers, onAddDr
       gpsStatus: 'GPS Status',
       gpsConnected: 'GPS Connected',
       gpsNotConnected: 'No GPS',
-      mobileApp: 'Mobile App'
+      mobileApp: 'Mobile App',
+      // Add driver form
+      addNewDriver: 'Add New Driver',
+      driverName: 'Driver Name',
+      emailAddress: 'Email Address',
+      phoneNumber: 'Phone Number',
+      vehicleId: 'Vehicle ID',
+      cancel: 'Cancel',
+      saveDriver: 'Save Driver',
+      driverAdded: 'Driver added successfully!'
     },
     ar: {
       title: 'السائقون',
@@ -71,7 +90,16 @@ const Drivers: React.FC<DriversProps> = ({ fleetMode, language, drivers, onAddDr
       gpsStatus: 'حالة GPS',
       gpsConnected: 'GPS متصل',
       gpsNotConnected: 'لا يوجد GPS',
-      mobileApp: 'تطبيق الهاتف'
+      mobileApp: 'تطبيق الهاتف',
+      // Add driver form
+      addNewDriver: 'إضافة سائق جديد',
+      driverName: 'اسم السائق',
+      emailAddress: 'عنوان البريد الإلكتروني',
+      phoneNumber: 'رقم الهاتف',
+      vehicleId: 'رقم المركبة',
+      cancel: 'إلغاء',
+      saveDriver: 'حفظ السائق',
+      driverAdded: 'تم إضافة السائق بنجاح!'
     },
     hi: {
       title: 'ड्राइवर',
@@ -97,7 +125,16 @@ const Drivers: React.FC<DriversProps> = ({ fleetMode, language, drivers, onAddDr
       gpsStatus: 'GPS स्थिति',
       gpsConnected: 'GPS कनेक्टेड',
       gpsNotConnected: 'कोई GPS नहीं',
-      mobileApp: 'मोबाइल ऐप'
+      mobileApp: 'मोबाइल ऐप',
+      // Add driver form
+      addNewDriver: 'नया ड्राइवर जोड़ें',
+      driverName: 'ड्राइवर का नाम',
+      emailAddress: 'ईमेल पता',
+      phoneNumber: 'फोन नंबर',
+      vehicleId: 'वाहन ID',
+      cancel: 'रद्द करें',
+      saveDriver: 'ड्राइवर सहेजें',
+      driverAdded: 'ड्राइवर सफलतापूर्वक जोड़ा गया!'
     },
     ur: {
       title: 'ڈرائیورز',
@@ -123,7 +160,16 @@ const Drivers: React.FC<DriversProps> = ({ fleetMode, language, drivers, onAddDr
       gpsStatus: 'GPS حالت',
       gpsConnected: 'GPS جڑا ہوا',
       gpsNotConnected: 'کوئی GPS نہیں',
-      mobileApp: 'موبائل ایپ'
+      mobileApp: 'موبائل ایپ',
+      // Add driver form
+      addNewDriver: 'نیا ڈرائیور شامل کریں',
+      driverName: 'ڈرائیور کا نام',
+      emailAddress: 'ای میل ایڈریس',
+      phoneNumber: 'فون نمبر',
+      vehicleId: 'گاڑی ID',
+      cancel: 'منسوخ کریں',
+      saveDriver: 'ڈرائیور محفوظ کریں',
+      driverAdded: 'ڈرائیور کامیابی سے شامل کر دیا گیا!'
     }
   };
 
@@ -143,6 +189,109 @@ const Drivers: React.FC<DriversProps> = ({ fleetMode, language, drivers, onAddDr
   const handleDriverClick = (driverId: number) => {
     setSelectedDriverId(driverId);
   };
+
+  const handleAddNewDriver = (formData: any) => {
+    const newDriver: Driver = {
+      id: Math.max(...drivers.map(d => d.id), 0) + 1,
+      name: formData.name,
+      email: formData.email,
+      phone: formData.phone,
+      avatar: formData.name.split(' ').map((n: string) => n[0]).join('').toUpperCase(),
+      trips: 0,
+      earnings: 0,
+      status: 'active',
+      performanceScore: 85,
+      joinDate: new Date().toISOString().split('T')[0],
+      location: { lat: 25.2048, lng: 55.2708 }, // Default Dubai location
+      vehicleId: formData.vehicleId || undefined
+    };
+
+    onAddDriver(newDriver);
+    setShowAddDriverForm(false);
+    
+    // Show success message
+    alert(t.driverAdded);
+  };
+
+  const renderAddDriverForm = () => (
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
+        <div className="p-6 border-b border-gray-200">
+          <h2 className="text-xl font-bold text-gray-900">{t.addNewDriver}</h2>
+        </div>
+        
+        <form onSubmit={(e) => {
+          e.preventDefault();
+          const formData = new FormData(e.target as HTMLFormElement);
+          handleAddNewDriver({
+            name: formData.get('name'),
+            email: formData.get('email'),
+            phone: formData.get('phone'),
+            vehicleId: formData.get('vehicleId')
+          });
+        }} className="p-6 space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">{t.driverName}</label>
+            <input
+              type="text"
+              name="name"
+              required
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              placeholder="Enter driver name"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">{t.emailAddress}</label>
+            <input
+              type="email"
+              name="email"
+              required
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              placeholder="driver@example.com"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">{t.phoneNumber}</label>
+            <input
+              type="tel"
+              name="phone"
+              required
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              placeholder="+971 50 123 4567"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">{t.vehicleId}</label>
+            <input
+              type="text"
+              name="vehicleId"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              placeholder="DXB-A-12345 (optional)"
+            />
+          </div>
+          
+          <div className="flex space-x-3 pt-4">
+            <button
+              type="button"
+              onClick={() => setShowAddDriverForm(false)}
+              className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+            >
+              {t.cancel}
+            </button>
+            <button
+              type="submit"
+              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              {t.saveDriver}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
 
   if (selectedDriverId) {
     return (
@@ -171,7 +320,10 @@ const Drivers: React.FC<DriversProps> = ({ fleetMode, language, drivers, onAddDr
             <Satellite className="w-4 h-4" />
             <span>{t.addGPS}</span>
           </button>
-          <button className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+          <button 
+            onClick={() => setShowAddDriverForm(true)}
+            className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
             <Plus className="w-4 h-4" />
             <span>{t.addDriver}</span>
           </button>
@@ -341,6 +493,9 @@ const Drivers: React.FC<DriversProps> = ({ fleetMode, language, drivers, onAddDr
           </table>
         </div>
       </div>
+
+      {/* Add Driver Form Modal */}
+      {showAddDriverForm && renderAddDriverForm()}
 
       {/* GPS Integration Wizard */}
       {showGPSWizard && (

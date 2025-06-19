@@ -18,6 +18,13 @@ type ActivePage = 'dashboard' | 'drivers' | 'contracts' | 'fines' | 'incidents' 
 type FleetMode = 'rental' | 'taxi';
 type Language = 'en' | 'ar' | 'hi' | 'ur';
 
+// Storage keys
+const STORAGE_KEYS = {
+  DRIVERS: 'navedge_drivers',
+  FLEET_MODE: 'navedge_fleet_mode',
+  LANGUAGE: 'navedge_language'
+};
+
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [activePage, setActivePage] = useState<ActivePage>('dashboard');
@@ -26,16 +33,66 @@ function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showNavEdgeAssistant, setShowNavEdgeAssistant] = useState(false);
   
-  // Shared drivers state
-  const [drivers, setDrivers] = useState<Driver[]>(mockDriversData);
+  // Shared drivers state with persistent storage
+  const [drivers, setDrivers] = useState<Driver[]>([]);
 
-  // Check authentication on mount
+  // Load persisted data on mount
   useEffect(() => {
+    // Check authentication
     const token = localStorage.getItem('navedge_token');
     if (token) {
       setIsAuthenticated(true);
     }
+
+    // Load drivers from localStorage, fallback to mock data if none exist
+    const savedDrivers = localStorage.getItem(STORAGE_KEYS.DRIVERS);
+    if (savedDrivers) {
+      try {
+        const parsedDrivers = JSON.parse(savedDrivers);
+        setDrivers(parsedDrivers);
+        console.log('Loaded drivers from storage:', parsedDrivers.length, 'drivers');
+      } catch (error) {
+        console.error('Error parsing saved drivers:', error);
+        setDrivers(mockDriversData);
+        localStorage.setItem(STORAGE_KEYS.DRIVERS, JSON.stringify(mockDriversData));
+      }
+    } else {
+      // First time - save mock data to localStorage
+      setDrivers(mockDriversData);
+      localStorage.setItem(STORAGE_KEYS.DRIVERS, JSON.stringify(mockDriversData));
+      console.log('Initialized drivers storage with mock data');
+    }
+
+    // Load fleet mode
+    const savedFleetMode = localStorage.getItem(STORAGE_KEYS.FLEET_MODE);
+    if (savedFleetMode && (savedFleetMode === 'rental' || savedFleetMode === 'taxi')) {
+      setFleetMode(savedFleetMode as FleetMode);
+    }
+
+    // Load language
+    const savedLanguage = localStorage.getItem(STORAGE_KEYS.LANGUAGE);
+    if (savedLanguage && ['en', 'ar', 'hi', 'ur'].includes(savedLanguage)) {
+      setLanguage(savedLanguage as Language);
+    }
   }, []);
+
+  // Save drivers to localStorage whenever drivers state changes
+  useEffect(() => {
+    if (drivers.length > 0) {
+      localStorage.setItem(STORAGE_KEYS.DRIVERS, JSON.stringify(drivers));
+      console.log('Saved drivers to storage:', drivers.length, 'drivers');
+    }
+  }, [drivers]);
+
+  // Save fleet mode to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.FLEET_MODE, fleetMode);
+  }, [fleetMode]);
+
+  // Save language to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.LANGUAGE, language);
+  }, [language]);
 
   // Handle login - expects a token string
   const handleLogin = (token: string) => {
@@ -54,9 +111,33 @@ function App() {
     setFleetMode(mode);
   };
 
-  // Handle adding new driver
+  // Handle adding new driver with persistent storage
   const handleAddDriver = (newDriver: Driver) => {
-    setDrivers(prevDrivers => [...prevDrivers, newDriver]);
+    setDrivers(prevDrivers => {
+      const updatedDrivers = [...prevDrivers, newDriver];
+      console.log('Added new driver:', newDriver.name, '- Total drivers:', updatedDrivers.length);
+      return updatedDrivers;
+    });
+  };
+
+  // Handle updating existing driver
+  const handleUpdateDriver = (updatedDriver: Driver) => {
+    setDrivers(prevDrivers => {
+      const updatedDrivers = prevDrivers.map(driver => 
+        driver.id === updatedDriver.id ? updatedDriver : driver
+      );
+      console.log('Updated driver:', updatedDriver.name);
+      return updatedDrivers;
+    });
+  };
+
+  // Handle removing driver
+  const handleRemoveDriver = (driverId: number) => {
+    setDrivers(prevDrivers => {
+      const updatedDrivers = prevDrivers.filter(driver => driver.id !== driverId);
+      console.log('Removed driver ID:', driverId, '- Remaining drivers:', updatedDrivers.length);
+      return updatedDrivers;
+    });
   };
 
   const renderActivePage = () => {
@@ -70,7 +151,14 @@ function App() {
       case 'drivers':
         return (
           <ErrorBoundary>
-            <Drivers fleetMode={fleetMode} language={language} drivers={drivers} onAddDriver={handleAddDriver} />
+            <Drivers 
+              fleetMode={fleetMode} 
+              language={language} 
+              drivers={drivers} 
+              onAddDriver={handleAddDriver}
+              onUpdateDriver={handleUpdateDriver}
+              onRemoveDriver={handleRemoveDriver}
+            />
           </ErrorBoundary>
         );
       case 'contracts':
