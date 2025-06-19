@@ -11,7 +11,6 @@ import Settings from './components/Settings';
 import Reports from './components/Reports';
 import Login from './components/Login';
 import ErrorBoundary from './components/ErrorBoundary';
-import DataMigration from './components/DataMigration';
 import { mockDriversData } from './data/mockData';
 import type { Driver } from './data/mockData';
 
@@ -23,8 +22,7 @@ type Language = 'en' | 'ar' | 'hi' | 'ur';
 const STORAGE_KEYS = {
   DRIVERS: 'navedge_drivers',
   FLEET_MODE: 'navedge_fleet_mode',
-  LANGUAGE: 'navedge_language',
-  MIGRATION_COMPLETED: 'navedge_migration_completed'
+  LANGUAGE: 'navedge_language'
 };
 
 function App() {
@@ -34,24 +32,9 @@ function App() {
   const [language, setLanguage] = useState<Language>('en');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showNavEdgeAssistant, setShowNavEdgeAssistant] = useState(false);
-  const [showMigration, setShowMigration] = useState(false);
-  const [isSupabaseConfigured, setIsSupabaseConfigured] = useState(false);
   const [drivers, setDrivers] = useState<Driver[]>(mockDriversData);
   const [loading, setLoading] = useState(false);
   
-  // Check if Supabase is configured
-  useEffect(() => {
-    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-    const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-    
-    if (supabaseUrl && supabaseKey) {
-      setIsSupabaseConfigured(true);
-    } else {
-      console.warn('Supabase not configured. Using localStorage fallback.');
-      setIsSupabaseConfigured(false);
-    }
-  }, []);
-
   // Load persisted data on mount
   useEffect(() => {
     // Check authentication
@@ -81,13 +64,7 @@ function App() {
         console.error('Error parsing drivers from localStorage:', e);
       }
     }
-
-    // Check if migration is needed
-    const migrationCompleted = localStorage.getItem(STORAGE_KEYS.MIGRATION_COMPLETED);
-    if (isSupabaseConfigured && !migrationCompleted && isAuthenticated) {
-      setShowMigration(true);
-    }
-  }, [isAuthenticated, isSupabaseConfigured]);
+  }, []);
 
   // Save fleet mode to localStorage whenever it changes
   useEffect(() => {
@@ -108,12 +85,6 @@ function App() {
   const handleLogin = (token: string) => {
     localStorage.setItem('navedge_token', token);
     setIsAuthenticated(true);
-    
-    // Check if migration is needed after login
-    const migrationCompleted = localStorage.getItem(STORAGE_KEYS.MIGRATION_COMPLETED);
-    if (isSupabaseConfigured && !migrationCompleted) {
-      setShowMigration(true);
-    }
   };
 
   // Handle logout
@@ -125,12 +96,6 @@ function App() {
   // Handle fleet mode change from NavEdge Assistant
   const handleFleetModeChange = (mode: FleetMode) => {
     setFleetMode(mode);
-  };
-
-  // Handle migration completion
-  const handleMigrationComplete = () => {
-    localStorage.setItem(STORAGE_KEYS.MIGRATION_COMPLETED, 'true');
-    setShowMigration(false);
   };
 
   // Driver management functions
@@ -221,14 +186,6 @@ function App() {
           language={language}
           setLanguage={setLanguage}
         />
-      </ErrorBoundary>
-    );
-  }
-
-  if (showMigration) {
-    return (
-      <ErrorBoundary>
-        <DataMigration onMigrationComplete={handleMigrationComplete} />
       </ErrorBoundary>
     );
   }

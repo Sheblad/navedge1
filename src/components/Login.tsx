@@ -70,24 +70,19 @@ const Login: React.FC<LoginProps> = ({ onLogin, language, setLanguage }) => {
     setError('');
 
     try {
-      // Fallback to demo login for development
-      if (username === 'admin' && password === 'password123') {
-        const token = 'demo_token_' + Date.now();
-        onLogin(token);
-      } else {
-        setError(t.invalidCredentials);
-      }
+      // Simple demo login
+      setTimeout(() => {
+        if (username === 'admin' && password === 'password123') {
+          const token = 'demo_token_' + Date.now();
+          onLogin(token);
+        } else {
+          setError(t.invalidCredentials);
+        }
+        setIsLoading(false);
+      }, 1000);
     } catch (err) {
       console.error('Login error:', err);
-      
-      // Fallback to demo login for development
-      if (username === 'admin' && password === 'password123') {
-        const token = 'demo_token_' + Date.now();
-        onLogin(token);
-      } else {
-        setError(t.invalidCredentials);
-      }
-    } finally {
+      setError(t.invalidCredentials);
       setIsLoading(false);
     }
   };
