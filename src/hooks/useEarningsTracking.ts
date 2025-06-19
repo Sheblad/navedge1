@@ -46,7 +46,7 @@ export function useEarningsTracking(fleetMode: 'rental' | 'taxi') {
   }, [earningEvents]);
 
   // Record a new earning event
-  const recordEarning = (
+  const recordEarning = useCallback((
     driver: Driver,
     amount: number,
     type: 'trip' | 'rental' | 'bonus' | 'penalty',
@@ -80,10 +80,10 @@ export function useEarningsTracking(fleetMode: 'rental' | 'taxi') {
     }
 
     return newEvent;
-  };
+  }, [isTracking, addNotification, fleetMode]);
 
   // Record a trip completion (taxi mode)
-  const recordTripCompletion = (
+  const recordTripCompletion = useCallback((
     driver: Driver,
     distance: number,
     duration: number,
@@ -118,10 +118,10 @@ export function useEarningsTracking(fleetMode: 'rental' | 'taxi') {
     driver.trips += 1;
     
     return event;
-  };
+  }, [fleetMode, recordEarning]);
 
   // Record a rental payment (rental mode)
-  const recordRentalPayment = (
+  const recordRentalPayment = useCallback((
     driver: Driver,
     contractId: string,
     days: number = 30 // Default to monthly payment
@@ -143,22 +143,22 @@ export function useEarningsTracking(fleetMode: 'rental' | 'taxi') {
     });
     
     return event;
-  };
+  }, [fleetMode, recordEarning]);
 
   // Get earnings for a specific driver
-  const getDriverEarnings = (driverId: number) => {
+  const getDriverEarnings = useCallback((driverId: number) => {
     return earningEvents.filter(event => event.driverId === driverId);
-  };
+  }, [earningEvents]);
 
   // Get total earnings for a specific driver
-  const getDriverTotalEarnings = (driverId: number) => {
+  const getDriverTotalEarnings = useCallback((driverId: number) => {
     return earningEvents
       .filter(event => event.driverId === driverId)
       .reduce((total, event) => total + event.amount, 0);
-  };
+  }, [earningEvents]);
 
   // Get earnings for a specific time period
-  const getEarningsForPeriod = (
+  const getEarningsForPeriod = useCallback((
     startDate: Date,
     endDate: Date,
     driverId?: number
@@ -168,10 +168,10 @@ export function useEarningsTracking(fleetMode: 'rental' | 'taxi') {
       const matchesTimeframe = event.timestamp >= startDate && event.timestamp <= endDate;
       return matchesDriver && matchesTimeframe;
     });
-  };
+  }, [earningEvents]);
 
   // Get earnings summary by type
-  const getEarningsSummaryByType = (driverId?: number) => {
+  const getEarningsSummaryByType = useCallback((driverId?: number) => {
     const filteredEvents = driverId 
       ? earningEvents.filter(event => event.driverId === driverId)
       : earningEvents;
@@ -183,7 +183,7 @@ export function useEarningsTracking(fleetMode: 'rental' | 'taxi') {
       penalty: filteredEvents.filter(e => e.type === 'penalty').reduce((sum, e) => sum + e.amount, 0),
       total: filteredEvents.reduce((sum, e) => sum + e.amount, 0)
     };
-  };
+  }, [earningEvents]);
 
   // Simulate automatic earnings for active drivers
   const simulateAutomaticEarnings = useCallback((drivers: Driver[]) => {
@@ -222,7 +222,7 @@ export function useEarningsTracking(fleetMode: 'rental' | 'taxi') {
         });
       }
     }
-  }, [fleetMode, addNotification]);
+  }, [fleetMode, recordTripCompletion, recordRentalPayment]);
 
   return {
     earningEvents,

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { AlertTriangle, Calendar, Users, TrendingUp, Car, FileText } from 'lucide-react';
 import { mockDriversData, mockFinesData } from '../data/mockData';
 
@@ -101,11 +101,11 @@ export function useSystemAlerts(language: 'en' | 'ar' | 'hi' | 'ur', fleetMode: 
     localStorage.setItem(DISMISSED_ALERTS_KEY, JSON.stringify(dismissedAlerts));
   }, [dismissedAlerts]);
 
-  const dismissAlert = (alertId: string) => {
+  const dismissAlert = useCallback((alertId: string) => {
     setDismissedAlerts(prev => [...prev, alertId]);
-  };
+  }, []);
 
-  const generateSystemAlerts = (): SystemAlert[] => {
+  const generateSystemAlerts = useCallback((): SystemAlert[] => {
     const alerts: SystemAlert[] = [];
     const activeDrivers = mockDriversData.filter(d => d.status === 'active');
     const pendingFines = mockFinesData.filter(f => f.status === 'pending').length;
@@ -201,13 +201,13 @@ export function useSystemAlerts(language: 'en' | 'ar' | 'hi' | 'ur', fleetMode: 
     }
 
     return alerts;
-  };
+  }, [dismissedAlerts, fleetMode, t]);
 
   const alerts = generateSystemAlerts();
 
   return {
     alerts,
     dismissAlert,
-    clearDismissedAlerts: () => setDismissedAlerts([])
+    clearDismissedAlerts: useCallback(() => setDismissedAlerts([]), [])
   };
 }

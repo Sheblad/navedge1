@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import type { Notification } from '../components/NotificationCenter';
 import { mockDriversData, mockFinesData } from '../data/mockData';
 
@@ -90,7 +90,7 @@ export function useNotifications() {
     setNotifications(prev => prev.length === 0 ? initialNotifications : prev);
   };
 
-  const addNotification = (notification: Omit<Notification, 'id' | 'timestamp' | 'read'>) => {
+  const addNotification = useCallback((notification: Omit<Notification, 'id' | 'timestamp' | 'read'>) => {
     const newNotification: Notification = {
       ...notification,
       id: `notif-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
@@ -100,9 +100,9 @@ export function useNotifications() {
 
     setNotifications(prev => [newNotification, ...prev]);
     return newNotification;
-  };
+  }, []);
 
-  const markAsRead = (notificationId: string) => {
+  const markAsRead = useCallback((notificationId: string) => {
     setNotifications(prev =>
       prev.map(notification =>
         notification.id === notificationId
@@ -110,26 +110,26 @@ export function useNotifications() {
           : notification
       )
     );
-  };
+  }, []);
 
-  const markAllAsRead = () => {
+  const markAllAsRead = useCallback(() => {
     setNotifications(prev =>
       prev.map(notification => ({ ...notification, read: true }))
     );
-  };
+  }, []);
 
-  const deleteNotification = (notificationId: string) => {
+  const deleteNotification = useCallback((notificationId: string) => {
     setNotifications(prev =>
       prev.filter(notification => notification.id !== notificationId)
     );
-  };
+  }, []);
 
-  const clearAllNotifications = () => {
+  const clearAllNotifications = useCallback(() => {
     setNotifications([]);
-  };
+  }, []);
 
   // Auto-generate notifications for new fines (simulation)
-  const generateFineNotification = (driverId: number, violation: string, amount: number) => {
+  const generateFineNotification = useCallback((driverId: number, violation: string, amount: number) => {
     const driver = mockDriversData.find(d => d.id === driverId);
     if (driver) {
       addNotification({
@@ -140,10 +140,10 @@ export function useNotifications() {
         driverId
       });
     }
-  };
+  }, [addNotification]);
 
   // Auto-generate notifications for incidents
-  const generateIncidentNotification = (driverId: number, incidentType: string, severity: string) => {
+  const generateIncidentNotification = useCallback((driverId: number, incidentType: string, severity: string) => {
     const driver = mockDriversData.find(d => d.id === driverId);
     if (driver) {
       addNotification({
@@ -154,10 +154,10 @@ export function useNotifications() {
         driverId
       });
     }
-  };
+  }, [addNotification]);
 
   // Auto-generate notifications for performance issues
-  const generatePerformanceNotification = (driverId: number, score: number) => {
+  const generatePerformanceNotification = useCallback((driverId: number, score: number) => {
     const driver = mockDriversData.find(d => d.id === driverId);
     if (driver && score < 80) {
       addNotification({
@@ -168,10 +168,10 @@ export function useNotifications() {
         driverId
       });
     }
-  };
+  }, [addNotification]);
 
   // Auto-generate notifications for contract expiry
-  const generateContractNotification = (driverId: number, daysUntilExpiry: number) => {
+  const generateContractNotification = useCallback((driverId: number, daysUntilExpiry: number) => {
     const driver = mockDriversData.find(d => d.id === driverId);
     if (driver) {
       addNotification({
@@ -182,7 +182,7 @@ export function useNotifications() {
         driverId
       });
     }
-  };
+  }, [addNotification]);
 
   return {
     notifications,
