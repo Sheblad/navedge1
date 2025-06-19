@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Filter, Plus, MoreVertical, Phone, Mail, Star, X, Upload, Calendar, User, FileText, Car, DollarSign, MapPin, Camera } from 'lucide-react';
+import { Search, Filter, Plus, MoreVertical, Phone, Mail, Star, X, Upload, Calendar, User, FileText, Car, DollarSign, MapPin, Camera, Smartphone, Wifi, QrCode, Link } from 'lucide-react';
 import DriverProfile from './DriverProfile';
 import type { Driver } from '../data/mockData';
 
@@ -41,6 +41,17 @@ interface NewDriverData {
   startDate: string;
   contractDuration: string;
   
+  // GPS Tracking Setup
+  gpsTrackingMethod: 'mobile_app' | 'gps_device' | 'both';
+  mobileAppAccess: boolean;
+  gpsDeviceId: string;
+  trackingPermissions: {
+    realTimeLocation: boolean;
+    routeHistory: boolean;
+    speedMonitoring: boolean;
+    geofenceAlerts: boolean;
+  };
+  
   // Additional Information
   notes: string;
   photo?: File;
@@ -53,6 +64,7 @@ const Drivers: React.FC<DriversProps> = ({ fleetMode, language, drivers, onAddDr
   const [selectedDriverId, setSelectedDriverId] = useState<number | null>(null);
   const [showAddDriver, setShowAddDriver] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
+  const [showGPSSetup, setShowGPSSetup] = useState(false);
   
   const [newDriverData, setNewDriverData] = useState<NewDriverData>({
     firstName: '',
@@ -74,6 +86,15 @@ const Drivers: React.FC<DriversProps> = ({ fleetMode, language, drivers, onAddDr
     depositAmount: '',
     startDate: new Date().toISOString().split('T')[0],
     contractDuration: '12',
+    gpsTrackingMethod: 'mobile_app',
+    mobileAppAccess: true,
+    gpsDeviceId: '',
+    trackingPermissions: {
+      realTimeLocation: true,
+      routeHistory: true,
+      speedMonitoring: true,
+      geofenceAlerts: false
+    },
     notes: ''
   });
 
@@ -107,6 +128,7 @@ const Drivers: React.FC<DriversProps> = ({ fleetMode, language, drivers, onAddDr
       contactInfo: 'Contact Information',
       licenseInfo: 'License Information',
       contractInfo: 'Contract Information',
+      gpsSetup: 'GPS Tracking Setup',
       additionalInfo: 'Additional Information',
       
       // Personal Information
@@ -142,6 +164,25 @@ const Drivers: React.FC<DriversProps> = ({ fleetMode, language, drivers, onAddDr
       startDate: 'Start Date',
       contractDuration: 'Contract Duration (months)',
       
+      // GPS Tracking Setup
+      gpsTrackingMethod: 'GPS Tracking Method',
+      mobileApp: 'Mobile App Tracking',
+      gpsDevice: 'GPS Device',
+      bothMethods: 'Mobile App + GPS Device',
+      mobileAppDesc: 'Driver uses smartphone for GPS tracking',
+      gpsDeviceDesc: 'Hardware GPS device installed in vehicle',
+      bothMethodsDesc: 'Dual tracking for maximum accuracy',
+      mobileAppAccess: 'Enable Mobile App Access',
+      gpsDeviceId: 'GPS Device ID',
+      trackingPermissions: 'Tracking Permissions',
+      realTimeLocation: 'Real-time Location Tracking',
+      routeHistory: 'Route History Recording',
+      speedMonitoring: 'Speed Monitoring',
+      geofenceAlerts: 'Geofence Alerts',
+      generateQRCode: 'Generate QR Code for Mobile App',
+      sendAppLink: 'Send App Link via SMS',
+      setupGPSDevice: 'Setup GPS Device',
+      
       // Additional Information
       notes: 'Additional Notes',
       uploadPhoto: 'Upload Driver Photo',
@@ -152,10 +193,22 @@ const Drivers: React.FC<DriversProps> = ({ fleetMode, language, drivers, onAddDr
       previous: 'Previous',
       cancel: 'Cancel',
       addDriverBtn: 'Add Driver',
+      setupGPS: 'Setup GPS Tracking',
       
       // Success
       driverAdded: 'Driver Added Successfully!',
-      driverAddedDesc: 'The new driver has been added to your fleet.',
+      driverAddedDesc: 'The new driver has been added to your fleet with GPS tracking configured.',
+      
+      // GPS Setup
+      gpsSetupTitle: 'GPS Tracking Setup',
+      gpsSetupDesc: 'Configure GPS tracking for the new driver',
+      mobileAppSetup: 'Mobile App Setup',
+      qrCodeInstructions: 'Driver can scan this QR code to access the mobile tracking app',
+      appLinkInstructions: 'Or send the app link directly to their phone',
+      gpsDeviceSetup: 'GPS Device Setup',
+      deviceIdInstructions: 'Enter the GPS device ID that will be installed in the vehicle',
+      trackingPreferences: 'Tracking Preferences',
+      permissionsDesc: 'Configure what tracking data will be collected',
       
       // Placeholders
       firstNamePlaceholder: 'Enter first name',
@@ -168,6 +221,7 @@ const Drivers: React.FC<DriversProps> = ({ fleetMode, language, drivers, onAddDr
       emergencyPhonePlaceholder: '+971 55 987 6543',
       licenseNumberPlaceholder: 'License number',
       vehicleAssignmentPlaceholder: 'DXB-A-12345',
+      gpsDeviceIdPlaceholder: 'GPS-DEV-001',
       notesPlaceholder: 'Any additional notes about the driver...'
     },
     ar: {
@@ -199,6 +253,7 @@ const Drivers: React.FC<DriversProps> = ({ fleetMode, language, drivers, onAddDr
       contactInfo: 'معلومات الاتصال',
       licenseInfo: 'معلومات الرخصة',
       contractInfo: 'معلومات العقد',
+      gpsSetup: 'إعداد تتبع GPS',
       additionalInfo: 'معلومات إضافية',
       
       // Personal Information
@@ -234,6 +289,25 @@ const Drivers: React.FC<DriversProps> = ({ fleetMode, language, drivers, onAddDr
       startDate: 'تاريخ البداية',
       contractDuration: 'مدة العقد (أشهر)',
       
+      // GPS Tracking Setup
+      gpsTrackingMethod: 'طريقة تتبع GPS',
+      mobileApp: 'تتبع تطبيق الهاتف المحمول',
+      gpsDevice: 'جهاز GPS',
+      bothMethods: 'تطبيق الهاتف + جهاز GPS',
+      mobileAppDesc: 'السائق يستخدم الهاتف الذكي لتتبع GPS',
+      gpsDeviceDesc: 'جهاز GPS مثبت في المركبة',
+      bothMethodsDesc: 'تتبع مزدوج لأقصى دقة',
+      mobileAppAccess: 'تفعيل الوصول لتطبيق الهاتف',
+      gpsDeviceId: 'رقم جهاز GPS',
+      trackingPermissions: 'أذونات التتبع',
+      realTimeLocation: 'تتبع الموقع المباشر',
+      routeHistory: 'تسجيل تاريخ المسار',
+      speedMonitoring: 'مراقبة السرعة',
+      geofenceAlerts: 'تنبيهات الحدود الجغرافية',
+      generateQRCode: 'إنشاء رمز QR لتطبيق الهاتف',
+      sendAppLink: 'إرسال رابط التطبيق عبر SMS',
+      setupGPSDevice: 'إعداد جهاز GPS',
+      
       // Additional Information
       notes: 'ملاحظات إضافية',
       uploadPhoto: 'رفع صورة السائق',
@@ -244,10 +318,22 @@ const Drivers: React.FC<DriversProps> = ({ fleetMode, language, drivers, onAddDr
       previous: 'السابق',
       cancel: 'إلغاء',
       addDriverBtn: 'إضافة السائق',
+      setupGPS: 'إعداد تتبع GPS',
       
       // Success
       driverAdded: 'تم إضافة السائق بنجاح!',
-      driverAddedDesc: 'تم إضافة السائق الجديد إلى أسطولك.',
+      driverAddedDesc: 'تم إضافة السائق الجديد إلى أسطولك مع تكوين تتبع GPS.',
+      
+      // GPS Setup
+      gpsSetupTitle: 'إعداد تتبع GPS',
+      gpsSetupDesc: 'تكوين تتبع GPS للسائق الجديد',
+      mobileAppSetup: 'إعداد تطبيق الهاتف المحمول',
+      qrCodeInstructions: 'يمكن للسائق مسح رمز QR هذا للوصول إلى تطبيق التتبع',
+      appLinkInstructions: 'أو إرسال رابط التطبيق مباشرة إلى هاتفه',
+      gpsDeviceSetup: 'إعداد جهاز GPS',
+      deviceIdInstructions: 'أدخل رقم جهاز GPS الذي سيتم تثبيته في المركبة',
+      trackingPreferences: 'تفضيلات التتبع',
+      permissionsDesc: 'تكوين بيانات التتبع التي سيتم جمعها',
       
       // Placeholders
       firstNamePlaceholder: 'أدخل الاسم الأول',
@@ -260,6 +346,7 @@ const Drivers: React.FC<DriversProps> = ({ fleetMode, language, drivers, onAddDr
       emergencyPhonePlaceholder: '+971 55 987 6543',
       licenseNumberPlaceholder: 'رقم الرخصة',
       vehicleAssignmentPlaceholder: 'DXB-A-12345',
+      gpsDeviceIdPlaceholder: 'GPS-DEV-001',
       notesPlaceholder: 'أي ملاحظات إضافية حول السائق...'
     }
   };
@@ -289,6 +376,7 @@ const Drivers: React.FC<DriversProps> = ({ fleetMode, language, drivers, onAddDr
   const handleCloseAddDriver = () => {
     setShowAddDriver(false);
     setCurrentStep(1);
+    setShowGPSSetup(false);
     setNewDriverData({
       firstName: '',
       lastName: '',
@@ -309,12 +397,21 @@ const Drivers: React.FC<DriversProps> = ({ fleetMode, language, drivers, onAddDr
       depositAmount: '',
       startDate: new Date().toISOString().split('T')[0],
       contractDuration: '12',
+      gpsTrackingMethod: 'mobile_app',
+      mobileAppAccess: true,
+      gpsDeviceId: '',
+      trackingPermissions: {
+        realTimeLocation: true,
+        routeHistory: true,
+        speedMonitoring: true,
+        geofenceAlerts: false
+      },
       notes: ''
     });
   };
 
   const handleNextStep = () => {
-    if (currentStep < 5) {
+    if (currentStep < 6) {
       setCurrentStep(currentStep + 1);
     }
   };
@@ -348,17 +445,224 @@ const Drivers: React.FC<DriversProps> = ({ fleetMode, language, drivers, onAddDr
     // Add to drivers list via callback
     onAddDriver(newDriver);
     
-    // Show success and close form
-    alert(`${t.driverAdded}\n${t.driverAddedDesc}`);
-    handleCloseAddDriver();
+    // Show GPS setup if mobile app is enabled
+    if (newDriverData.mobileAppAccess) {
+      setShowGPSSetup(true);
+    } else {
+      // Show success and close form
+      alert(`${t.driverAdded}\n${t.driverAddedDesc}`);
+      handleCloseAddDriver();
+    }
   };
 
-  const updateDriverData = (field: keyof NewDriverData, value: string) => {
+  const updateDriverData = (field: keyof NewDriverData, value: any) => {
     setNewDriverData(prev => ({
       ...prev,
       [field]: value
     }));
   };
+
+  const generateQRCode = () => {
+    const mobileAppUrl = `${window.location.origin}/mobile.html`;
+    // In a real app, you would generate an actual QR code
+    alert(`QR Code would be generated for: ${mobileAppUrl}\n\nDriver credentials:\nID: driver${Math.floor(Math.random() * 1000)}\nPassword: ${newDriverData.firstName.toLowerCase()}123`);
+  };
+
+  const sendAppLink = () => {
+    const mobileAppUrl = `${window.location.origin}/mobile.html`;
+    // In a real app, you would send SMS via API
+    alert(`SMS would be sent to ${newDriverData.phone}:\n\n"Welcome to NavEdge! Download the driver app: ${mobileAppUrl}\nYour login: driver${Math.floor(Math.random() * 1000)}\nPassword: ${newDriverData.firstName.toLowerCase()}123"`);
+  };
+
+  const renderGPSSetupStep = () => (
+    <div className="space-y-6">
+      <div>
+        <h4 className="text-lg font-medium text-gray-900 mb-4">{t.gpsTrackingMethod}</h4>
+        <p className="text-sm text-gray-600 mb-6">Choose how this driver will be tracked</p>
+        
+        <div className="grid grid-cols-1 gap-4">
+          <div 
+            className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
+              newDriverData.gpsTrackingMethod === 'mobile_app' 
+                ? 'border-blue-500 bg-blue-50' 
+                : 'border-gray-200 hover:border-gray-300'
+            }`}
+            onClick={() => updateDriverData('gpsTrackingMethod', 'mobile_app')}
+          >
+            <div className="flex items-center space-x-3">
+              <Smartphone className={`w-6 h-6 ${newDriverData.gpsTrackingMethod === 'mobile_app' ? 'text-blue-600' : 'text-gray-500'}`} />
+              <div>
+                <h5 className={`font-medium ${newDriverData.gpsTrackingMethod === 'mobile_app' ? 'text-blue-900' : 'text-gray-900'}`}>
+                  {t.mobileApp}
+                </h5>
+                <p className={`text-sm ${newDriverData.gpsTrackingMethod === 'mobile_app' ? 'text-blue-700' : 'text-gray-600'}`}>
+                  {t.mobileAppDesc}
+                </p>
+              </div>
+            </div>
+          </div>
+          
+          <div 
+            className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
+              newDriverData.gpsTrackingMethod === 'gps_device' 
+                ? 'border-blue-500 bg-blue-50' 
+                : 'border-gray-200 hover:border-gray-300'
+            }`}
+            onClick={() => updateDriverData('gpsTrackingMethod', 'gps_device')}
+          >
+            <div className="flex items-center space-x-3">
+              <MapPin className={`w-6 h-6 ${newDriverData.gpsTrackingMethod === 'gps_device' ? 'text-blue-600' : 'text-gray-500'}`} />
+              <div>
+                <h5 className={`font-medium ${newDriverData.gpsTrackingMethod === 'gps_device' ? 'text-blue-900' : 'text-gray-900'}`}>
+                  {t.gpsDevice}
+                </h5>
+                <p className={`text-sm ${newDriverData.gpsTrackingMethod === 'gps_device' ? 'text-blue-700' : 'text-gray-600'}`}>
+                  {t.gpsDeviceDesc}
+                </p>
+              </div>
+            </div>
+          </div>
+          
+          <div 
+            className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
+              newDriverData.gpsTrackingMethod === 'both' 
+                ? 'border-blue-500 bg-blue-50' 
+                : 'border-gray-200 hover:border-gray-300'
+            }`}
+            onClick={() => updateDriverData('gpsTrackingMethod', 'both')}
+          >
+            <div className="flex items-center space-x-3">
+              <Wifi className={`w-6 h-6 ${newDriverData.gpsTrackingMethod === 'both' ? 'text-blue-600' : 'text-gray-500'}`} />
+              <div>
+                <h5 className={`font-medium ${newDriverData.gpsTrackingMethod === 'both' ? 'text-blue-900' : 'text-gray-900'}`}>
+                  {t.bothMethods}
+                </h5>
+                <p className={`text-sm ${newDriverData.gpsTrackingMethod === 'both' ? 'text-blue-700' : 'text-gray-600'}`}>
+                  {t.bothMethodsDesc}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile App Setup */}
+      {(newDriverData.gpsTrackingMethod === 'mobile_app' || newDriverData.gpsTrackingMethod === 'both') && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <h5 className="font-medium text-blue-900 mb-3">{t.mobileAppSetup}</h5>
+          <div className="space-y-3">
+            <label className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                checked={newDriverData.mobileAppAccess}
+                onChange={(e) => updateDriverData('mobileAppAccess', e.target.checked)}
+                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              />
+              <span className="text-sm text-blue-800">{t.mobileAppAccess}</span>
+            </label>
+            
+            {newDriverData.mobileAppAccess && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={generateQRCode}
+                  className="flex items-center space-x-2 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  <QrCode className="w-4 h-4" />
+                  <span className="text-sm">{t.generateQRCode}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={sendAppLink}
+                  className="flex items-center space-x-2 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                >
+                  <Smartphone className="w-4 h-4" />
+                  <span className="text-sm">{t.sendAppLink}</span>
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* GPS Device Setup */}
+      {(newDriverData.gpsTrackingMethod === 'gps_device' || newDriverData.gpsTrackingMethod === 'both') && (
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            {t.gpsDeviceId}
+          </label>
+          <input
+            type="text"
+            value={newDriverData.gpsDeviceId}
+            onChange={(e) => updateDriverData('gpsDeviceId', e.target.value)}
+            placeholder={t.gpsDeviceIdPlaceholder}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          />
+          <p className="text-xs text-gray-500 mt-1">{t.deviceIdInstructions}</p>
+        </div>
+      )}
+
+      {/* Tracking Permissions */}
+      <div>
+        <h5 className="font-medium text-gray-900 mb-3">{t.trackingPermissions}</h5>
+        <p className="text-sm text-gray-600 mb-4">{t.permissionsDesc}</p>
+        
+        <div className="space-y-3">
+          <label className="flex items-center space-x-3">
+            <input
+              type="checkbox"
+              checked={newDriverData.trackingPermissions.realTimeLocation}
+              onChange={(e) => updateDriverData('trackingPermissions', {
+                ...newDriverData.trackingPermissions,
+                realTimeLocation: e.target.checked
+              })}
+              className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+            />
+            <span className="text-sm text-gray-700">{t.realTimeLocation}</span>
+          </label>
+          
+          <label className="flex items-center space-x-3">
+            <input
+              type="checkbox"
+              checked={newDriverData.trackingPermissions.routeHistory}
+              onChange={(e) => updateDriverData('trackingPermissions', {
+                ...newDriverData.trackingPermissions,
+                routeHistory: e.target.checked
+              })}
+              className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+            />
+            <span className="text-sm text-gray-700">{t.routeHistory}</span>
+          </label>
+          
+          <label className="flex items-center space-x-3">
+            <input
+              type="checkbox"
+              checked={newDriverData.trackingPermissions.speedMonitoring}
+              onChange={(e) => updateDriverData('trackingPermissions', {
+                ...newDriverData.trackingPermissions,
+                speedMonitoring: e.target.checked
+              })}
+              className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+            />
+            <span className="text-sm text-gray-700">{t.speedMonitoring}</span>
+          </label>
+          
+          <label className="flex items-center space-x-3">
+            <input
+              type="checkbox"
+              checked={newDriverData.trackingPermissions.geofenceAlerts}
+              onChange={(e) => updateDriverData('trackingPermissions', {
+                ...newDriverData.trackingPermissions,
+                geofenceAlerts: e.target.checked
+              })}
+              className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+            />
+            <span className="text-sm text-gray-700">{t.geofenceAlerts}</span>
+          </label>
+        </div>
+      </div>
+    </div>
+  );
 
   const renderStepContent = () => {
     switch (currentStep) {
@@ -686,6 +990,9 @@ const Drivers: React.FC<DriversProps> = ({ fleetMode, language, drivers, onAddDr
         );
 
       case 5:
+        return renderGPSSetupStep();
+
+      case 6:
         return (
           <div className="space-y-6">
             <div>
@@ -730,6 +1037,113 @@ const Drivers: React.FC<DriversProps> = ({ fleetMode, language, drivers, onAddDr
     }
   };
 
+  const renderGPSSetupModal = () => {
+    if (!showGPSSetup) return null;
+
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+          <div className="p-6 border-b border-gray-200">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900">{t.gpsSetupTitle}</h2>
+                <p className="text-gray-600">{t.gpsSetupDesc}</p>
+              </div>
+              <button
+                onClick={() => setShowGPSSetup(false)}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <X className="w-6 h-6 text-gray-500" />
+              </button>
+            </div>
+          </div>
+
+          <div className="p-6 space-y-6">
+            {/* Mobile App Setup */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+              <h3 className="text-lg font-semibold text-blue-900 mb-4">{t.mobileAppSetup}</h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="text-center">
+                  <div className="w-32 h-32 bg-white border-2 border-blue-300 rounded-lg mx-auto mb-4 flex items-center justify-center">
+                    <QrCode className="w-16 h-16 text-blue-600" />
+                  </div>
+                  <p className="text-sm text-blue-800 mb-3">{t.qrCodeInstructions}</p>
+                  <button
+                    onClick={generateQRCode}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    {t.generateQRCode}
+                  </button>
+                </div>
+                
+                <div className="text-center">
+                  <div className="w-32 h-32 bg-white border-2 border-green-300 rounded-lg mx-auto mb-4 flex items-center justify-center">
+                    <Smartphone className="w-16 h-16 text-green-600" />
+                  </div>
+                  <p className="text-sm text-green-800 mb-3">{t.appLinkInstructions}</p>
+                  <button
+                    onClick={sendAppLink}
+                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                  >
+                    {t.sendAppLink}
+                  </button>
+                </div>
+              </div>
+              
+              <div className="mt-6 p-4 bg-white rounded-lg border border-blue-200">
+                <h4 className="font-medium text-blue-900 mb-2">Mobile App URL:</h4>
+                <div className="flex items-center space-x-2">
+                  <code className="flex-1 px-3 py-2 bg-gray-100 rounded text-sm">
+                    {window.location.origin}/mobile.html
+                  </code>
+                  <button
+                    onClick={() => navigator.clipboard.writeText(`${window.location.origin}/mobile.html`)}
+                    className="px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+                  >
+                    <Link className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Driver Credentials */}
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Driver Login Credentials</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Driver ID:</label>
+                  <code className="block px-3 py-2 bg-white border rounded text-sm">
+                    driver{Math.floor(Math.random() * 1000)}
+                  </code>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Password:</label>
+                  <code className="block px-3 py-2 bg-white border rounded text-sm">
+                    {newDriverData.firstName.toLowerCase()}123
+                  </code>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="p-6 border-t border-gray-200 flex justify-end space-x-3">
+            <button
+              onClick={() => {
+                setShowGPSSetup(false);
+                alert(`${t.driverAdded}\n${t.driverAddedDesc}`);
+                handleCloseAddDriver();
+              }}
+              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Complete Setup
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   const renderAddDriverModal = () => {
     if (!showAddDriver) return null;
 
@@ -738,6 +1152,7 @@ const Drivers: React.FC<DriversProps> = ({ fleetMode, language, drivers, onAddDr
       t.contactInfo,
       t.licenseInfo,
       t.contractInfo,
+      t.gpsSetup,
       t.additionalInfo
     ];
 
@@ -749,7 +1164,7 @@ const Drivers: React.FC<DriversProps> = ({ fleetMode, language, drivers, onAddDr
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-2xl font-bold text-gray-900">{t.addNewDriver}</h2>
-                <p className="text-gray-600">{t.step} {currentStep} {t.of} 5: {stepTitles[currentStep - 1]}</p>
+                <p className="text-gray-600">{t.step} {currentStep} {t.of} 6: {stepTitles[currentStep - 1]}</p>
               </div>
               <button
                 onClick={handleCloseAddDriver}
@@ -762,7 +1177,7 @@ const Drivers: React.FC<DriversProps> = ({ fleetMode, language, drivers, onAddDr
             {/* Progress Bar */}
             <div className="mt-4">
               <div className="flex items-center space-x-2">
-                {[1, 2, 3, 4, 5].map((step) => (
+                {[1, 2, 3, 4, 5, 6].map((step) => (
                   <div key={step} className="flex items-center">
                     <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
                       step <= currentStep 
@@ -771,8 +1186,8 @@ const Drivers: React.FC<DriversProps> = ({ fleetMode, language, drivers, onAddDr
                     }`}>
                       {step}
                     </div>
-                    {step < 5 && (
-                      <div className={`w-12 h-1 mx-2 ${
+                    {step < 6 && (
+                      <div className={`w-8 h-1 mx-2 ${
                         step < currentStep ? 'bg-blue-600' : 'bg-gray-200'
                       }`} />
                     )}
@@ -797,10 +1212,10 @@ const Drivers: React.FC<DriversProps> = ({ fleetMode, language, drivers, onAddDr
             </button>
             
             <button
-              onClick={currentStep === 5 ? handleSubmitDriver : handleNextStep}
+              onClick={currentStep === 6 ? handleSubmitDriver : handleNextStep}
               className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
-              {currentStep === 5 ? t.addDriverBtn : t.next}
+              {currentStep === 6 ? t.addDriverBtn : t.next}
             </button>
           </div>
         </div>
@@ -964,6 +1379,9 @@ const Drivers: React.FC<DriversProps> = ({ fleetMode, language, drivers, onAddDr
 
       {/* Add Driver Modal */}
       {renderAddDriverModal()}
+      
+      {/* GPS Setup Modal */}
+      {renderGPSSetupModal()}
     </div>
   );
 };
