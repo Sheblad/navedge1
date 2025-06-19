@@ -1,66 +1,66 @@
 import React, { useState, useEffect } from 'react';
-import Header from './components/Header';
 import Sidebar from './components/Sidebar';
+import Header from './components/Header';
 import Dashboard from './components/Dashboard';
 import Drivers from './components/Drivers';
-import Fines from './components/Fines';
-import Reports from './components/Reports';
-import Settings from './components/Settings';
-import Login from './components/Login';
 import Contracts from './components/Contracts';
+import Fines from './components/Fines';
 import Incidents from './components/Incidents';
-import Chat from './components/Chat';
+import NavEdgeAssistant from './components/AIAssistant';
+import Settings from './components/Settings';
+import Reports from './components/Reports';
+import Login from './components/Login';
 import ErrorBoundary from './components/ErrorBoundary';
 import { mockDriversData } from './data/mockData';
+import type { Driver } from './data/mockData';
 
+type ActivePage = 'dashboard' | 'drivers' | 'contracts' | 'fines' | 'incidents' | 'reports' | 'settings';
 type FleetMode = 'rental' | 'taxi';
 type Language = 'en' | 'ar' | 'hi' | 'ur';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [currentView, setCurrentView] = useState('dashboard');
+  const [activePage, setActivePage] = useState<ActivePage>('dashboard');
   const [fleetMode, setFleetMode] = useState<FleetMode>('rental');
   const [language, setLanguage] = useState<Language>('en');
-  const [drivers, setDrivers] = useState(mockDriversData);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [showNavEdgeAssistant, setShowNavEdgeAssistant] = useState(false);
+  
+  // Shared drivers state
+  const [drivers, setDrivers] = useState<Driver[]>(mockDriversData);
 
-  // Check for saved authentication state
+  // Check authentication on mount
   useEffect(() => {
-    const savedAuth = localStorage.getItem('navedge_auth');
-    if (savedAuth === 'true') {
+    const token = localStorage.getItem('navedge_token');
+    if (token) {
       setIsAuthenticated(true);
     }
   }, []);
 
-  const handleLogin = (username: string, password: string) => {
-    // Simple authentication logic
-    if (username === 'admin' && password === 'admin') {
-      setIsAuthenticated(true);
-      localStorage.setItem('navedge_auth', 'true');
-      return true;
-    }
-    return false;
+  // Handle login - expects a token string
+  const handleLogin = (token: string) => {
+    localStorage.setItem('navedge_token', token);
+    setIsAuthenticated(true);
   };
 
+  // Handle logout
   const handleLogout = () => {
+    localStorage.removeItem('navedge_token');
     setIsAuthenticated(false);
-    localStorage.removeItem('navedge_auth');
-    setCurrentView('dashboard');
   };
 
-  if (!isAuthenticated) {
-    return (
-      <ErrorBoundary>
-        <Login 
-          onLogin={handleLogin} 
-          language={language}
-          setLanguage={setLanguage}
-        />
-      </ErrorBoundary>
-    );
-  }
+  // Handle fleet mode change from NavEdge Assistant
+  const handleFleetModeChange = (mode: FleetMode) => {
+    setFleetMode(mode);
+  };
 
-  const renderContent = () => {
-    switch (currentView) {
+  // Handle adding new driver
+  const handleAddDriver = (newDriver: Driver) => {
+    setDrivers(prevDrivers => [...prevDrivers, newDriver]);
+  };
+
+  const renderActivePage = () => {
+    switch (activePage) {
       case 'dashboard':
         return (
           <ErrorBoundary>
@@ -70,19 +70,19 @@ function App() {
       case 'drivers':
         return (
           <ErrorBoundary>
-            <Drivers fleetMode={fleetMode} language={language} drivers={drivers} setDrivers={setDrivers} />
-          </ErrorBoundary>
-        );
-      case 'fines':
-        return (
-          <ErrorBoundary>
-            <Fines fleetMode={fleetMode} language={language} />
+            <Drivers fleetMode={fleetMode} language={language} drivers={drivers} onAddDriver={handleAddDriver} />
           </ErrorBoundary>
         );
       case 'contracts':
         return (
           <ErrorBoundary>
             <Contracts fleetMode={fleetMode} language={language} />
+          </ErrorBoundary>
+        );
+      case 'fines':
+        return (
+          <ErrorBoundary>
+            <Fines fleetMode={fleetMode} language={language} />
           </ErrorBoundary>
         );
       case 'incidents':
@@ -95,12 +95,6 @@ function App() {
         return (
           <ErrorBoundary>
             <Reports fleetMode={fleetMode} language={language} />
-          </ErrorBoundary>
-        );
-      case 'chat':
-        return (
-          <ErrorBoundary>
-            <Chat fleetMode={fleetMode} language={language} />
           </ErrorBoundary>
         );
       case 'settings':
@@ -123,24 +117,56 @@ function App() {
     }
   };
 
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <Header 
-        fleetMode={fleetMode} 
-        language={language} 
-        onLogout={handleLogout}
-      />
-      <div className="flex">
-        <Sidebar 
-          currentView={currentView} 
-          setCurrentView={setCurrentView}
-          fleetMode={fleetMode}
+  if (!isAuthenticated) {
+    return (
+      <ErrorBoundary>
+        <Login 
+          onLogin={handleLogin} 
           language={language}
+          setLanguage={setLanguage}
         />
-        <main className="flex-1 p-6 ml-64">
-          {renderContent()}
+      </ErrorBoundary>
+    );
+  }
+
+  return (
+    <div className={`min-h-screen bg-gray-50 flex ${language === 'ar' || language === 'ur' ? 'rtl' : 'ltr'}`}>
+      {/* Sidebar */}
+      <Sidebar 
+        activePage={activePage} 
+        setActivePage={setActivePage}
+        sidebarOpen={sidebarOpen}
+        setSidebarOpen={setSidebarOpen}
+        language={language}
+        fleetMode={fleetMode}
+      />
+      
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col lg:ml-64">
+        <Header 
+          fleetMode={fleetMode}
+          setFleetMode={setFleetMode}
+          language={language}
+          setLanguage={setLanguage}
+          setSidebarOpen={setSidebarOpen}
+          onLogout={handleLogout}
+          setShowNavEdgeAssistant={setShowNavEdgeAssistant}
+        />
+        
+        <main className="flex-1 p-4 lg:p-6">
+          {renderActivePage()}
         </main>
       </div>
+
+      {/* NavEdge Assistant */}
+      {showNavEdgeAssistant && (
+        <NavEdgeAssistant 
+          onClose={() => setShowNavEdgeAssistant(false)}
+          fleetMode={fleetMode}
+          language={language}
+          onFleetModeChange={handleFleetModeChange}
+        />
+      )}
     </div>
   );
 }
