@@ -3,9 +3,11 @@ import L from 'leaflet';
 import { Driver } from '../data/mockData';
 import { MapPin, Navigation, Clock, Phone, Eye, Zap } from 'lucide-react';
 
+type Language = 'en' | 'ar' | 'hi' | 'ur';
+
 interface FleetMapProps {
   drivers: Driver[];
-  language: 'en' | 'ar';
+  language: Language;
   onDriverClick?: (driverId: number) => void;
 }
 
@@ -69,6 +71,58 @@ const FleetMap: React.FC<FleetMapProps> = ({ drivers, language, onDriverClick })
       gpsConnected: 'GPS متصل',
       trackingActive: 'التتبع نشط',
       mobileDriverConnected: 'سائق الهاتف المحمول متصل'
+    },
+    hi: {
+      status: 'स्थिति',
+      trips: 'यात्राएं',
+      earnings: 'कमाई',
+      performance: 'प्रदर्शन',
+      requiresAttention: '⚠️ ध्यान देने की आवश्यकता',
+      fleetStatus: 'लाइव फ्लीट स्थिति',
+      activeDrivers: 'सक्रिय ड्राइवर',
+      offlineDrivers: 'ऑफ़लाइन ड्राइवर',
+      legend: 'लेजेंड',
+      active: 'सक्रिय',
+      offline: 'ऑफ़लाइन',
+      needsAttention: 'ध्यान चाहिए',
+      viewProfile: 'पूरी प्रोफ़ाइल देखें',
+      currentLocation: 'वर्तमान स्थान',
+      lastUpdate: 'अंतिम अपडेट',
+      speed: 'गति',
+      heading: 'दिशा',
+      accuracy: 'GPS सटीकता',
+      realTimeTracking: 'रियल-टाइम ट्रैकिंग',
+      clickForDetails: 'विवरण के लिए ड्राइवर पर क्लिक करें',
+      liveUpdates: 'लाइव अपडेट',
+      gpsConnected: 'GPS कनेक्टेड',
+      trackingActive: 'ट्रैकिंग सक्रिय',
+      mobileDriverConnected: 'मोबाइल ड्राइवर कनेक्टेड'
+    },
+    ur: {
+      status: 'حالت',
+      trips: 'سفر',
+      earnings: 'کمائی',
+      performance: 'کارکردگی',
+      requiresAttention: '⚠️ توجہ درکار',
+      fleetStatus: 'لائیو فلیٹ کی حالت',
+      activeDrivers: 'فعال ڈرائیورز',
+      offlineDrivers: 'آف لائن ڈرائیورز',
+      legend: 'لیجنڈ',
+      active: 'فعال',
+      offline: 'آف لائن',
+      needsAttention: 'توجہ چاہیے',
+      viewProfile: 'مکمل پروفائل دیکھیں',
+      currentLocation: 'موجودہ مقام',
+      lastUpdate: 'آخری اپڈیٹ',
+      speed: 'رفتار',
+      heading: 'سمت',
+      accuracy: 'GPS درستگی',
+      realTimeTracking: 'ریئل ٹائم ٹریکنگ',
+      clickForDetails: 'تفصیلات کے لیے ڈرائیور پر کلک کریں',
+      liveUpdates: 'لائیو اپڈیٹس',
+      gpsConnected: 'GPS جڑا ہوا',
+      trackingActive: 'ٹریکنگ فعال',
+      mobileDriverConnected: 'موبائل ڈرائیور جڑا ہوا'
     }
   };
 

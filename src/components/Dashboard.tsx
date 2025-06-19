@@ -8,7 +8,7 @@ import type { Driver } from '../data/mockData';
 import { TrendingUp, AlertCircle, Users, DollarSign, Clock, MapPin, Car, Navigation, Calendar, FileText } from 'lucide-react';
 
 type FleetMode = 'rental' | 'taxi';
-type Language = 'en' | 'ar';
+type Language = 'en' | 'ar' | 'hi' | 'ur';
 
 interface DashboardProps {
   fleetMode: FleetMode;
@@ -103,6 +103,88 @@ const Dashboard: React.FC<DashboardProps> = ({ fleetMode, language, drivers }) =
       tripsCompletedAlert: 'رحلة مكتملة اليوم',
       driversCurrentlyActive: 'سائقون نشطون حالياً',
       rentersCurrentlyActive: 'مستأجرون نشطون حالياً'
+    },
+    hi: {
+      welcome: fleetMode === 'rental' ? 'नेवएज रेंटल हब में आपका स्वागत है' : 'नेवएज टैक्सी कंट्रोल में आपका स्वागत है',
+      subtitle: fleetMode === 'rental' 
+        ? 'आपका AI-संचालित वाहन किराया प्रबंधन डैशबोर्ड' 
+        : 'आपका AI-संचालित टैक्सी फ्लीट संचालन केंद्र',
+      activeDrivers: fleetMode === 'rental' ? 'सक्रिय किराएदार' : 'ड्यूटी पर ड्राइवर',
+      liveTracking: fleetMode === 'rental' ? 'लाइव वाहन ट्रैकिंग' : 'लाइव टैक्सी फ्लीट',
+      noDrivers: fleetMode === 'rental' ? 'कोई सक्रिय किराएदार नहीं मिला' : 'कोई ड्राइवर ड्यूटी पर नहीं',
+      realTimeUpdates: 'रियल-टाइम अपडेट',
+      fleetOverview: fleetMode === 'rental' ? 'रेंटल फ्लीट अवलोकन' : 'टैक्सी संचालन अवलोकन',
+      quickStats: 'त्वरित आंकड़े',
+      alerts: 'सिस्टम अलर्ट',
+      performance: 'प्रदर्शन अंतर्दृष्टि',
+      // Rental specific
+      monthlyRevenue: 'मासिक किराया राजस्व',
+      contractsExpiring: 'जल्द समाप्त होने वाले अनुबंध',
+      vehicleUtilization: 'वाहन उपयोग दर',
+      depositsPending: 'लंबित जमा',
+      maintenanceAlerts: 'रखरखाव अलर्ट',
+      // Taxi specific
+      dailyRevenue: 'आज की यात्रा आय',
+      tripsCompleted: 'आज पूरी की गई यात्राएं',
+      averageTripTime: 'औसत यात्रा अवधि',
+      peakHours: 'पीक ऑवर्स प्रदर्शन',
+      driverShifts: 'सक्रिय शिफ्ट',
+      // Alert messages
+      pendingFinesAlert: 'लंबित जुर्माना',
+      pendingFinesAlertPlural: 'लंबित जुर्माने',
+      requireAttention: 'ध्यान देने की आवश्यकता',
+      contractsExpiringAlert: 'किराया अनुबंध',
+      contractsExpiringAlertPlural: 'किराया अनुबंध',
+      expiringThisMonth: 'इस महीने समाप्त हो रहे',
+      maintenanceAlert: 'वाहन',
+      maintenanceAlertPlural: 'वाहन',
+      dueForMaintenance: 'रखरखाव के लिए देय',
+      fleetUtilizationAlert: 'फ्लीट उपयोग दर',
+      peakHoursAlert: 'उच्च मांग क्षेत्रों में ड्राइवर',
+      tripsCompletedAlert: 'आज पूरी की गई यात्राएं',
+      driversCurrentlyActive: 'वर्तमान में सक्रिय ड्राइवर',
+      rentersCurrentlyActive: 'वर्तमान में सक्रिय किराएदार'
+    },
+    ur: {
+      welcome: fleetMode === 'rental' ? 'نیو ایج رینٹل ہب میں خوش آمدید' : 'نیو ایج ٹیکسی کنٹرول میں خوش آمدید',
+      subtitle: fleetMode === 'rental' 
+        ? 'آپ کا AI سے چلنے والا گاڑی کرایہ منیجمنٹ ڈیش بورڈ' 
+        : 'آپ کا AI سے چلنے والا ٹیکسی فلیٹ آپریشن سینٹر',
+      activeDrivers: fleetMode === 'rental' ? 'فعال کرایہ دار' : 'ڈیوٹی پر ڈرائیورز',
+      liveTracking: fleetMode === 'rental' ? 'لائیو گاڑی ٹریکنگ' : 'لائیو ٹیکسی فلیٹ',
+      noDrivers: fleetMode === 'rental' ? 'کوئی فعال کرایہ دار نہیں ملا' : 'کوئی ڈرائیور ڈیوٹی پر نہیں',
+      realTimeUpdates: 'ریئل ٹائم اپڈیٹس',
+      fleetOverview: fleetMode === 'rental' ? 'رینٹل فلیٹ جائزہ' : 'ٹیکسی آپریشنز جائزہ',
+      quickStats: 'فوری اعداد و شمار',
+      alerts: 'سسٹم الرٹس',
+      performance: 'کارکردگی کی بصیرت',
+      // Rental specific
+      monthlyRevenue: 'ماہانہ کرایہ آمدنی',
+      contractsExpiring: 'جلد ختم ہونے والے کنٹریکٹس',
+      vehicleUtilization: 'گاڑی کا استعمال کی شرح',
+      depositsPending: 'زیر التواء ڈپازٹس',
+      maintenanceAlerts: 'دیکھ بھال کے الرٹس',
+      // Taxi specific
+      dailyRevenue: 'آج کی سفری آمدنی',
+      tripsCompleted: 'آج مکمل ہونے والے سفر',
+      averageTripTime: 'اوسط سفر کا دورانیہ',
+      peakHours: 'پیک اوقات کی کارکردگی',
+      driverShifts: 'فعال شفٹس',
+      // Alert messages
+      pendingFinesAlert: 'زیر التواء جرمانہ',
+      pendingFinesAlertPlural: 'زیر التواء جرمانے',
+      requireAttention: 'توجہ درکار',
+      contractsExpiringAlert: 'کرایہ کنٹریکٹ',
+      contractsExpiringAlertPlural: 'کرایہ کنٹریکٹس',
+      expiringThisMonth: 'اس مہینے ختم ہو رہے',
+      maintenanceAlert: 'گاڑی',
+      maintenanceAlertPlural: 'گاڑیاں',
+      dueForMaintenance: 'دیکھ بھال کے لیے واجب',
+      fleetUtilizationAlert: 'فلیٹ استعمال کی شرح',
+      peakHoursAlert: 'زیادہ مانگ والے علاقوں میں ڈرائیورز',
+      tripsCompletedAlert: 'آج مکمل ہونے والے سفر',
+      driversCurrentlyActive: 'فی الوقت فعال ڈرائیورز',
+      rentersCurrentlyActive: 'فی الوقت فعال کرایہ دار'
     }
   };
 
@@ -147,12 +229,12 @@ const Dashboard: React.FC<DashboardProps> = ({ fleetMode, language, drivers }) =
     shiftsActive: activeDrivers.length
   };
 
-  // System alerts with mode-specific content and proper Arabic translations
+  // System alerts with mode-specific content and proper translations
   const alerts = [
     ...(pendingFines > 0 ? [{
       type: 'warning' as const,
       message: `${pendingFines} ${pendingFines === 1 ? t.pendingFinesAlert : t.pendingFinesAlertPlural} ${t.requireAttention}`,
-      icon: AlertCircle
+      icon: AlertTriangle
     }] : []),
     ...(fleetMode === 'rental' ? [
       ...(modeSpecificStats.contractsExpiring > 0 ? [{
@@ -173,7 +255,7 @@ const Dashboard: React.FC<DashboardProps> = ({ fleetMode, language, drivers }) =
     ] : [
       {
         type: 'info' as const,
-        message: `${language === 'ar' ? 'ساعات الذروة:' : 'Peak hours:'} ${modeSpecificStats.peakHoursActive} ${t.peakHoursAlert}`,
+        message: `${language === 'ar' ? 'ساعات الذروة:' : language === 'hi' ? 'पीक ऑवर्स:' : language === 'ur' ? 'پیک اوقات:' : 'Peak hours:'} ${modeSpecificStats.peakHoursActive} ${t.peakHoursAlert}`,
         icon: MapPin
       },
       {

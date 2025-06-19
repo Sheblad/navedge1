@@ -4,7 +4,7 @@ import { mockContractsData, mockDriversData } from '../data/mockData';
 import ContractGenerator from './ContractGenerator';
 
 type FleetMode = 'rental' | 'taxi';
-type Language = 'en' | 'ar';
+type Language = 'en' | 'ar' | 'hi' | 'ur';
 
 interface ContractsProps {
   fleetMode: FleetMode;
@@ -106,6 +106,96 @@ const Contracts: React.FC<ContractsProps> = ({ fleetMode, language }) => {
       dayShift: 'مناوبة نهارية',
       nightShift: 'مناوبة ليلية',
       peakShift: 'ساعات الذروة'
+    },
+    hi: {
+      // Rental mode
+      rentalTitle: 'किराया अनुबंध',
+      rentalSubtitle: 'OCR और स्वचालित जनरेशन के साथ किराया अनुबंधों का प्रबंधन करें',
+      newContract: 'नया अनुबंध',
+      generateWithOCR: 'OCR के साथ जेनरेट करें',
+      searchContracts: 'अनुबंध खोजें...',
+      activeContracts: 'सक्रिय अनुबंध',
+      monthlyRevenue: 'मासिक राजस्व',
+      avgContractDuration: 'औसत अनुबंध अवधि',
+      contractsExpiring: 'जल्द समाप्त हो रहे',
+      // Taxi mode
+      taxiTitle: 'ड्राइवर शिफ्ट और शेड्यूल',
+      taxiSubtitle: 'ड्राइवर शिफ्ट, शेड्यूल और ड्यूटी रोस्टर प्रबंधित करें',
+      newShift: 'नई शिफ्ट',
+      scheduleShift: 'शिफ्ट शेड्यूल करें',
+      searchShifts: 'शिफ्ट खोजें...',
+      activeShifts: 'सक्रिय शिफ्ट',
+      dailyRevenue: 'दैनिक राजस्व',
+      avgShiftDuration: 'औसत शिफ्ट अवधि',
+      shiftsToday: 'आज की शिफ्ट',
+      // Common
+      driver: 'ड्राइवर',
+      vehicle: 'वाहन',
+      duration: 'अवधि',
+      amount: fleetMode === 'rental' ? 'मासिक किराया' : 'शिफ्ट दर',
+      deposit: 'जमा',
+      status: 'स्थिति',
+      actions: 'कार्रवाई',
+      active: 'सक्रिय',
+      expired: 'समाप्त',
+      terminated: 'समाप्त किया गया',
+      all: 'सभी',
+      viewContract: fleetMode === 'rental' ? 'अनुबंध देखें' : 'शिफ्ट देखें',
+      editContract: fleetMode === 'rental' ? 'अनुबंध संपादित करें' : 'शिफ्ट संपादित करें',
+      terminateContract: fleetMode === 'rental' ? 'अनुबंध समाप्त करें' : 'शिफ्ट समाप्त करें',
+      downloadPDF: 'PDF डाउनलोड करें',
+      contractId: fleetMode === 'rental' ? 'अनुबंध आईडी' : 'शिफ्ट आईडी',
+      startTime: 'प्रारंभ समय',
+      endTime: 'समाप्ति समय',
+      shiftType: 'शिफ्ट प्रकार',
+      dayShift: 'दिन की शिफ्ट',
+      nightShift: 'रात की शिफ्ट',
+      peakShift: 'पीक ऑवर्स'
+    },
+    ur: {
+      // Rental mode
+      rentalTitle: 'کرایہ کنٹریکٹس',
+      rentalSubtitle: 'OCR اور آٹومیٹڈ جنریشن کے ساتھ کرایہ کنٹریکٹس کا انتظام کریں',
+      newContract: 'نیا کنٹریکٹ',
+      generateWithOCR: 'OCR کے ساتھ جنریٹ کریں',
+      searchContracts: 'کنٹریکٹس تلاش کریں...',
+      activeContracts: 'فعال کنٹریکٹس',
+      monthlyRevenue: 'ماہانہ آمدنی',
+      avgContractDuration: 'اوسط کنٹریکٹ مدت',
+      contractsExpiring: 'جلد ختم ہونے والے',
+      // Taxi mode
+      taxiTitle: 'ڈرائیور شفٹس اور شیڈول',
+      taxiSubtitle: 'ڈرائیور شفٹس، شیڈول اور ڈیوٹی روسٹر کا انتظام کریں',
+      newShift: 'نئی شفٹ',
+      scheduleShift: 'شفٹ شیڈول کریں',
+      searchShifts: 'شفٹس تلاش کریں...',
+      activeShifts: 'فعال شفٹس',
+      dailyRevenue: 'روزانہ آمدنی',
+      avgShiftDuration: 'اوسط شفٹ مدت',
+      shiftsToday: 'آج کی شفٹس',
+      // Common
+      driver: 'ڈرائیور',
+      vehicle: 'گاڑی',
+      duration: 'مدت',
+      amount: fleetMode === 'rental' ? 'ماہانہ کرایہ' : 'شفٹ ریٹ',
+      deposit: 'ڈپازٹ',
+      status: 'حالت',
+      actions: 'اقدامات',
+      active: 'فعال',
+      expired: 'ختم',
+      terminated: 'ختم کردہ',
+      all: 'تمام',
+      viewContract: fleetMode === 'rental' ? 'کنٹریکٹ دیکھیں' : 'شفٹ دیکھیں',
+      editContract: fleetMode === 'rental' ? 'کنٹریکٹ میں ترمیم کریں' : 'شفٹ میں ترمیم کریں',
+      terminateContract: fleetMode === 'rental' ? 'کنٹریکٹ ختم کریں' : 'شفٹ ختم کریں',
+      downloadPDF: 'PDF ڈاؤنلوڈ کریں',
+      contractId: fleetMode === 'rental' ? 'کنٹریکٹ ID' : 'شفٹ ID',
+      startTime: 'شروع کا وقت',
+      endTime: 'ختم کا وقت',
+      shiftType: 'شفٹ کی قسم',
+      dayShift: 'دن کی شفٹ',
+      nightShift: 'رات کی شفٹ',
+      peakShift: 'پیک اوقات'
     }
   };
 

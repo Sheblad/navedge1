@@ -2,10 +2,12 @@ import React from 'react';
 import { AlertTriangle, MapPin, DollarSign, Clock, Star, Phone, Calendar, FileText, Navigation, Car } from 'lucide-react';
 import { Driver, mockContractsData } from '../data/mockData';
 
+type Language = 'en' | 'ar' | 'hi' | 'ur';
+
 interface DriverCardProps {
   driver: Driver;
   fleetMode: 'rental' | 'taxi';
-  language: 'en' | 'ar';
+  language: Language;
   onDriverClick?: (driverId: number) => void;
 }
 
@@ -54,6 +56,50 @@ const DriverCard: React.FC<DriverCardProps> = ({ driver, fleetMode, language, on
       active: 'نشط',
       onShift: 'في المناوبة',
       offline: 'غير متصل'
+    },
+    hi: {
+      // Rental mode
+      rentalActive: 'सक्रिय किराया',
+      monthlyEarnings: 'मासिक आय',
+      contractStatus: 'अनुबंध स्थिति',
+      vehicleAssigned: 'वाहन आवंटित',
+      daysRemaining: 'शेष दिन',
+      contractExpired: 'अनुबंध समाप्त',
+      contractExpiringSoon: 'जल्द समाप्त',
+      // Taxi mode
+      tripsToday: 'आज की यात्राएं',
+      todayEarnings: 'आज की कमाई',
+      shiftStatus: 'शिफ्ट स्थिति',
+      onDuty: 'ड्यूटी पर',
+      performance: 'प्रदर्शन',
+      contact: 'संपर्क',
+      viewProfile: 'पूरी प्रोफ़ाइल देखें',
+      // Status
+      active: 'सक्रिय',
+      onShift: 'शिफ्ट में',
+      offline: 'ऑफ़लाइन'
+    },
+    ur: {
+      // Rental mode
+      rentalActive: 'فعال کرایہ',
+      monthlyEarnings: 'ماہانہ آمدنی',
+      contractStatus: 'کنٹریکٹ کی حالت',
+      vehicleAssigned: 'گاڑی تفویض',
+      daysRemaining: 'باقی دن',
+      contractExpired: 'کنٹریکٹ ختم',
+      contractExpiringSoon: 'جلد ختم',
+      // Taxi mode
+      tripsToday: 'آج کے سفر',
+      todayEarnings: 'آج کی کمائی',
+      shiftStatus: 'شفٹ کی حالت',
+      onDuty: 'ڈیوٹی پر',
+      performance: 'کارکردگی',
+      contact: 'رابطہ',
+      viewProfile: 'مکمل پروفائل دیکھیں',
+      // Status
+      active: 'فعال',
+      onShift: 'شفٹ میں',
+      offline: 'آف لائن'
     }
   };
 

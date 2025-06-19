@@ -2,11 +2,13 @@ import React from 'react';
 import { Users, Car, DollarSign, AlertTriangle, TrendingUp, Clock, Navigation, FileText, Calendar, MapPin } from 'lucide-react';
 import { Driver, Fine } from '../data/mockData';
 
+type Language = 'en' | 'ar' | 'hi' | 'ur';
+
 interface StatsCardsProps {
   drivers: Driver[];
   fines: Fine[];
   fleetMode: 'rental' | 'taxi';
-  language: 'en' | 'ar';
+  language: Language;
 }
 
 const StatsCards: React.FC<StatsCardsProps> = ({ drivers, fines, fleetMode, language }) => {
@@ -16,9 +18,9 @@ const StatsCards: React.FC<StatsCardsProps> = ({ drivers, fines, fleetMode, lang
       activeRentals: 'Active Rentals',
       monthlyRevenue: 'Monthly Revenue',
       contractsExpiring: 'Contracts Expiring',
-      fleetUtilization: 'Fleet Utilization',
+      vehicleUtilization: 'Vehicle Utilization',
       avgRentalDuration: 'Avg Rental Duration',
-      maintenanceDue: 'Maintenance Due',
+      maintenanceAlerts: 'Maintenance Alerts',
       // Taxi mode
       driversOnDuty: 'Drivers on Duty',
       tripsToday: 'Trips Today',
@@ -35,9 +37,9 @@ const StatsCards: React.FC<StatsCardsProps> = ({ drivers, fines, fleetMode, lang
       activeRentals: 'الإيجارات النشطة',
       monthlyRevenue: 'الإيرادات الشهرية',
       contractsExpiring: 'العقود المنتهية',
-      fleetUtilization: 'استخدام الأسطول',
+      vehicleUtilization: 'استخدام الأسطول',
       avgRentalDuration: 'متوسط مدة الإيجار',
-      maintenanceDue: 'الصيانة المستحقة',
+      maintenanceAlerts: 'تنبيهات الصيانة',
       // Taxi mode
       driversOnDuty: 'السائقون في الخدمة',
       tripsToday: 'رحلات اليوم',
@@ -48,6 +50,44 @@ const StatsCards: React.FC<StatsCardsProps> = ({ drivers, fines, fleetMode, lang
       // Common
       pendingFines: 'المخالفات المعلقة',
       avgPerformance: 'متوسط الأداء'
+    },
+    hi: {
+      // Rental mode
+      activeRentals: 'सक्रिय किराए',
+      monthlyRevenue: 'मासिक राजस्व',
+      contractsExpiring: 'समाप्त हो रहे अनुबंध',
+      vehicleUtilization: 'वाहन उपयोग',
+      avgRentalDuration: 'औसत किराया अवधि',
+      maintenanceAlerts: 'रखरखाव अलर्ट',
+      // Taxi mode
+      driversOnDuty: 'ड्यूटी पर ड्राइवर',
+      tripsToday: 'आज की यात्राएं',
+      dailyRevenue: 'दैनिक राजस्व',
+      avgTripTime: 'औसत यात्रा समय',
+      peakHoursActive: 'पीक ऑवर्स सक्रिय',
+      customerRating: 'ग्राहक रेटिंग',
+      // Common
+      pendingFines: 'लंबित जुर्माने',
+      avgPerformance: 'औसत प्रदर्शन'
+    },
+    ur: {
+      // Rental mode
+      activeRentals: 'فعال کرایے',
+      monthlyRevenue: 'ماہانہ آمدنی',
+      contractsExpiring: 'ختم ہونے والے کنٹریکٹس',
+      vehicleUtilization: 'گاڑی کا استعمال',
+      avgRentalDuration: 'اوسط کرایہ مدت',
+      maintenanceAlerts: 'دیکھ بھال الرٹس',
+      // Taxi mode
+      driversOnDuty: 'ڈیوٹی پر ڈرائیورز',
+      tripsToday: 'آج کے سفر',
+      dailyRevenue: 'روزانہ آمدنی',
+      avgTripTime: 'اوسط سفر کا وقت',
+      peakHoursActive: 'پیک اوقات فعال',
+      customerRating: 'کسٹمر ریٹنگ',
+      // Common
+      pendingFines: 'زیر التواء جرمانے',
+      avgPerformance: 'اوسط کارکردگی'
     }
   };
 
@@ -64,7 +104,7 @@ const StatsCards: React.FC<StatsCardsProps> = ({ drivers, fines, fleetMode, lang
   const modeSpecificData = fleetMode === 'rental' ? {
     contractsExpiring: 3,
     avgRentalDuration: '11.2 months',
-    maintenanceDue: 2,
+    maintenanceAlerts: 2,
     fleetUtilization: utilizationRate
   } : {
     avgTripTime: '24 min',
@@ -103,7 +143,7 @@ const StatsCards: React.FC<StatsCardsProps> = ({ drivers, fines, fleetMode, lang
       textColor: 'text-yellow-700'
     },
     {
-      title: t.fleetUtilization,
+      title: t.vehicleUtilization,
       value: `${modeSpecificData.fleetUtilization.toFixed(1)}%`,
       icon: TrendingUp,
       color: 'emerald',

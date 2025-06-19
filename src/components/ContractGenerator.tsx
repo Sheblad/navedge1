@@ -3,7 +3,7 @@ import { Upload, FileText, Download, Eye, Camera, Loader2 } from 'lucide-react';
 import Tesseract from 'tesseract.js';
 import jsPDF from 'jspdf';
 
-type Language = 'en' | 'ar';
+type Language = 'en' | 'ar' | 'hi' | 'ur';
 
 interface ContractGeneratorProps {
   language: Language;
@@ -98,6 +98,58 @@ const ContractGenerator: React.FC<ContractGeneratorProps> = ({ language, onClose
       next: 'التالي',
       back: 'السابق',
       close: 'إغلاق'
+    },
+    hi: {
+      title: 'OCR के साथ अनुबंध जेनरेटर',
+      step1: 'एमिरेट्स आईडी अपलोड करें',
+      step2: 'जानकारी निकालें',
+      step3: 'अनुबंध विवरण',
+      step4: 'प्रीव्यू और जेनरेट',
+      uploadId: 'एमिरेट्स आईडी या लाइसेंस अपलोड करें',
+      dragDrop: 'अपनी एमिरेट्स आईडी यहां खींचें और छोड़ें, या ब्राउज़ करने के लिए क्लिक करें',
+      processing: 'छवि प्रोसेसिंग...',
+      extracting: 'आईडी से जानकारी निकाल रहा है...',
+      fullName: 'पूरा नाम',
+      idNumber: 'आईडी नंबर',
+      expiryDate: 'समाप्ति तिथि',
+      nationality: 'राष्ट्रीयता',
+      startDate: 'किराया प्रारंभ तिथि',
+      duration: 'अवधि (महीने)',
+      dailyKmLimit: 'दैनिक KM सीमा',
+      depositAmount: 'जमा राशि (AED)',
+      monthlyRent: 'मासिक किराया (AED)',
+      vehicleId: 'वाहन आईडी',
+      generateContract: 'अनुबंध जेनरेट करें',
+      downloadPDF: 'PDF डाउनलोड करें',
+      next: 'अगला',
+      back: 'पीछे',
+      close: 'बंद करें'
+    },
+    ur: {
+      title: 'OCR کے ساتھ کنٹریکٹ جنریٹر',
+      step1: 'ایمریٹس ID اپلوڈ کریں',
+      step2: 'معلومات نکالیں',
+      step3: 'کنٹریکٹ کی تفصیلات',
+      step4: 'پیش نظارہ اور جنریٹ',
+      uploadId: 'ایمریٹس ID یا لائسنس اپلوڈ کریں',
+      dragDrop: 'اپنی ایمریٹس ID یہاں کھینچیں اور چھوڑیں، یا براؤز کرنے کے لیے کلک کریں',
+      processing: 'تصویر پروسیسنگ...',
+      extracting: 'ID سے معلومات نکال رہا ہے...',
+      fullName: 'پورا نام',
+      idNumber: 'ID نمبر',
+      expiryDate: 'ختم ہونے کی تاریخ',
+      nationality: 'قومیت',
+      startDate: 'کرایہ شروع کی تاریخ',
+      duration: 'مدت (مہینے)',
+      dailyKmLimit: 'روزانہ KM حد',
+      depositAmount: 'ڈپازٹ رقم (AED)',
+      monthlyRent: 'ماہانہ کرایہ (AED)',
+      vehicleId: 'گاڑی ID',
+      generateContract: 'کنٹریکٹ جنریٹ کریں',
+      downloadPDF: 'PDF ڈاؤنلوڈ کریں',
+      next: 'اگلا',
+      back: 'پیچھے',
+      close: 'بند کریں'
     }
   };
 

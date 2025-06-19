@@ -5,7 +5,7 @@ import DriverProfile from './DriverProfile';
 import GPSIntegrationWizard from './GPSIntegrationWizard';
 
 type FleetMode = 'rental' | 'taxi';
-type Language = 'en' | 'ar';
+type Language = 'en' | 'ar' | 'hi' | 'ur';
 
 interface DriversProps {
   fleetMode: FleetMode;
@@ -72,6 +72,58 @@ const Drivers: React.FC<DriversProps> = ({ fleetMode, language, drivers, onAddDr
       gpsConnected: 'GPS متصل',
       gpsNotConnected: 'لا يوجد GPS',
       mobileApp: 'تطبيق الهاتف'
+    },
+    hi: {
+      title: 'ड्राइवर',
+      subtitle: 'अपने फ्लीट ड्राइवरों और उनके प्रदर्शन का प्रबंधन करें',
+      addDriver: 'ड्राइवर जोड़ें',
+      addGPS: 'GPS ट्रैकर जोड़ें',
+      searchPlaceholder: 'ड्राइवर खोजें...',
+      filter: 'फ़िल्टर',
+      driver: 'ड्राइवर',
+      contact: 'संपर्क',
+      status: 'स्थिति',
+      totalTrips: fleetMode === 'taxi' ? 'कुल यात्राएं' : 'सक्रिय किराए',
+      earnings: 'कमाई',
+      performance: 'प्रदर्शन',
+      actions: 'कार्रवाई',
+      active: 'सक्रिय',
+      offline: 'ऑफ़लाइन',
+      all: 'सभी',
+      joined: 'शामिल हुए',
+      noDrivers: 'कोई ड्राइवर नहीं मिला',
+      rating: 'रेटिंग',
+      viewProfile: 'प्रोफ़ाइल देखें',
+      gpsStatus: 'GPS स्थिति',
+      gpsConnected: 'GPS कनेक्टेड',
+      gpsNotConnected: 'कोई GPS नहीं',
+      mobileApp: 'मोबाइल ऐप'
+    },
+    ur: {
+      title: 'ڈرائیورز',
+      subtitle: 'اپنے فلیٹ ڈرائیورز اور ان کی کارکردگی کا انتظام کریں',
+      addDriver: 'ڈرائیور شامل کریں',
+      addGPS: 'GPS ٹریکرز شامل کریں',
+      searchPlaceholder: 'ڈرائیورز تلاش کریں...',
+      filter: 'فلٹر',
+      driver: 'ڈرائیور',
+      contact: 'رابطہ',
+      status: 'حالت',
+      totalTrips: fleetMode === 'taxi' ? 'کل سفر' : 'فعال کرایے',
+      earnings: 'کمائی',
+      performance: 'کارکردگی',
+      actions: 'اقدامات',
+      active: 'فعال',
+      offline: 'آف لائن',
+      all: 'تمام',
+      joined: 'شامل ہوئے',
+      noDrivers: 'کوئی ڈرائیور نہیں ملا',
+      rating: 'ریٹنگ',
+      viewProfile: 'پروفائل دیکھیں',
+      gpsStatus: 'GPS حالت',
+      gpsConnected: 'GPS جڑا ہوا',
+      gpsNotConnected: 'کوئی GPS نہیں',
+      mobileApp: 'موبائل ایپ'
     }
   };
 
