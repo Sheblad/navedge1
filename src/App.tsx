@@ -13,7 +13,10 @@ import Login from './components/Login';
 import ErrorBoundary from './components/ErrorBoundary';
 import BackupManager from './components/BackupManager';
 import DataMigration from './components/DataMigration';
+import SystemAlerts from './components/SystemAlerts';
 import { useDrivers, useFines } from './hooks/useDatabase';
+import { useSystemAlerts } from './hooks/useSystemAlerts';
+import { useNotifications } from './hooks/useNotifications';
 import { DatabaseService } from './services/database';
 import type { Driver } from './data/mockData';
 
@@ -55,6 +58,20 @@ function App() {
   } = useDrivers();
 
   const { fines, loading: finesLoading } = useFines();
+
+  // Use system alerts hook
+  const { alerts, dismissAlert } = useSystemAlerts(language, fleetMode);
+
+  // Use notifications hook
+  const { 
+    notifications, 
+    addNotification, 
+    markAsRead, 
+    markAllAsRead, 
+    deleteNotification,
+    generateFineNotification,
+    generateIncidentNotification
+  } = useNotifications();
 
   // Load persisted settings on mount
   useEffect(() => {
@@ -312,6 +329,17 @@ function App() {
         />
         
         <main className="flex-1 p-4 lg:p-6">
+          {/* System Alerts */}
+          {alerts.length > 0 && (
+            <div className="mb-6">
+              <SystemAlerts 
+                alerts={alerts} 
+                onDismiss={dismissAlert} 
+                language={language} 
+              />
+            </div>
+          )}
+          
           {renderActivePage()}
         </main>
       </div>

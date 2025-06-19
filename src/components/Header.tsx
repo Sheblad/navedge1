@@ -1,5 +1,7 @@
 import React from 'react';
-import { Menu, Bell, User, Car, CarTaxiFront as Taxi, Brain, LogOut, Globe, Database } from 'lucide-react';
+import { Menu, User, Car, CarTaxiFront as Taxi, Brain, LogOut, Globe, Database } from 'lucide-react';
+import NotificationCenter from './NotificationCenter';
+import { useNotifications } from '../hooks/useNotifications';
 
 type FleetMode = 'rental' | 'taxi';
 type Language = 'en' | 'ar' | 'hi' | 'ur';
@@ -23,6 +25,13 @@ const Header: React.FC<HeaderProps> = ({
   onLogout,
   setShowNavEdgeAssistant 
 }) => {
+  const {
+    notifications,
+    markAsRead,
+    markAllAsRead,
+    deleteNotification
+  } = useNotifications();
+
   const texts = {
     en: {
       title: 'Fleet Dashboard',
@@ -171,10 +180,13 @@ const Header: React.FC<HeaderProps> = ({
           </button>
 
           {/* Notifications */}
-          <button className="relative p-2 rounded-lg hover:bg-gray-100">
-            <Bell className="w-5 h-5 text-gray-600" />
-            <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></span>
-          </button>
+          <NotificationCenter 
+            notifications={notifications}
+            onMarkAsRead={markAsRead}
+            onMarkAllAsRead={markAllAsRead}
+            onDeleteNotification={deleteNotification}
+            language={language}
+          />
 
           {/* Profile Dropdown */}
           <div className="relative group">
