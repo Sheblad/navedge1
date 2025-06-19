@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Navigation, Eye, EyeOff, Globe } from 'lucide-react';
-import { supabase } from '../services/database';
 
 type Language = 'en' | 'ar' | 'hi' | 'ur';
 
@@ -71,26 +70,7 @@ const Login: React.FC<LoginProps> = ({ onLogin, language, setLanguage }) => {
     setError('');
 
     try {
-      // Check if Supabase is configured
-      if (supabase && supabaseUrl) {
-        // Try to sign in with Supabase
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email: username,
-          password: password
-        });
-
-        if (error) {
-          console.error('Supabase auth error:', error);
-          throw error;
-        }
-
-        if (data?.session) {
-          onLogin(data.session.access_token);
-          return;
-        }
-      }
-
-      // Fallback to demo login if Supabase fails or isn't configured
+      // Fallback to demo login for development
       if (username === 'admin' && password === 'password123') {
         const token = 'demo_token_' + Date.now();
         onLogin(token);
