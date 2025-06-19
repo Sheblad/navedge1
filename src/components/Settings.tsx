@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 
 type FleetMode = 'rental' | 'taxi';
-type Language = 'en' | 'ar';
+type Language = 'en' | 'ar' | 'hi' | 'ur';
 
 interface SettingsProps {
   fleetMode: FleetMode;
@@ -74,6 +74,8 @@ const Settings: React.FC<SettingsProps> = ({ fleetMode, setFleetMode, language, 
       languageDesc: 'Choose your preferred language',
       english: 'English',
       arabic: 'العربية',
+      hindi: 'हिंदी',
+      urdu: 'اردو',
       saveChanges: 'Save Changes',
       billingTitle: 'Billing Settings',
       billingContent: 'Manage your subscription and payment methods',
@@ -122,11 +124,113 @@ const Settings: React.FC<SettingsProps> = ({ fleetMode, setFleetMode, language, 
       languageDesc: 'اختر لغتك المفضلة',
       english: 'English',
       arabic: 'العربية',
+      hindi: 'हिंदी',
+      urdu: 'اردو',
       saveChanges: 'حفظ التغييرات',
       billingTitle: 'إعدادات الفواتير',
       billingContent: 'إدارة اشتراكك وطرق الدفع',
       preferencesTitle: 'التفضيلات الإضافية',
       preferencesContent: 'تخصيص تجربتك'
+    },
+    hi: {
+      title: 'सेटिंग्स',
+      subtitle: 'अपने खाते की सेटिंग्स और प्राथमिकताएं प्रबंधित करें',
+      profile: 'प्रोफ़ाइल सेटिंग्स',
+      profileDesc: 'अपने खाते की जानकारी प्रबंधित करें',
+      notifications: 'सूचनाएं',
+      notificationsDesc: 'अपनी सूचना प्राथमिकताएं कॉन्फ़िगर करें',
+      security: 'सुरक्षा',
+      securityDesc: 'पासवर्ड और सुरक्षा सेटिंग्स',
+      billing: 'बिलिंग',
+      billingDesc: 'सदस्यता और भुगतान विधियां',
+      preferences: 'प्राथमिकताएं',
+      preferencesDesc: 'भाषा और क्षेत्रीय सेटिंग्स',
+      fleetSettings: 'फ्लीट सेटिंग्स',
+      fleetSettingsDesc: 'फ्लीट मोड और संचालन प्राथमिकताएं',
+      firstName: 'पहला नाम',
+      lastName: 'अंतिम नाम',
+      email: 'ईमेल पता',
+      phone: 'फोन नंबर',
+      company: 'कंपनी',
+      currentPassword: 'वर्तमान पासवर्ड',
+      newPassword: 'नया पासवर्ड',
+      confirmPassword: 'नए पासवर्ड की पुष्टि करें',
+      twoFactor: 'दो-कारक प्रमाणीकरण',
+      twoFactorDesc: 'अपने खाते में अतिरिक्त सुरक्षा परत जोड़ें',
+      enable2FA: '2FA सक्षम करें',
+      emailNotifications: 'ईमेल सूचनाएं',
+      emailNotificationsDesc: 'ईमेल के माध्यम से सूचनाएं प्राप्त करें',
+      pushNotifications: 'पुश सूचनाएं',
+      pushNotificationsDesc: 'ब्राउज़र में पुश सूचनाएं प्राप्त करें',
+      smsNotifications: 'एसएमएस सूचनाएं',
+      smsNotificationsDesc: 'एसएमएस के माध्यम से सूचनाएं प्राप्त करें',
+      fleetMode: 'फ्लीट मोड',
+      fleetModeDesc: 'अपना प्राथमिक फ्लीट संचालन मोड चुनें',
+      rental: 'रेंटल मोड',
+      taxi: 'टैक्सी मोड',
+      rentalDesc: 'वाहन किराये और अनुबंधों पर ध्यान केंद्रित करें',
+      taxiDesc: 'टैक्सी यात्राओं और शिफ्ट पर ध्यान केंद्रित करें',
+      languageSettings: 'भाषा',
+      languageDesc: 'अपनी पसंदीदा भाषा चुनें',
+      english: 'English',
+      arabic: 'العربية',
+      hindi: 'हिंदी',
+      urdu: 'اردو',
+      saveChanges: 'परिवर्तन सहेजें',
+      billingTitle: 'बिलिंग सेटिंग्स',
+      billingContent: 'अपनी सदस्यता और भुगतान विधियों का प्रबंधन करें',
+      preferencesTitle: 'अतिरिक्त प्राथमिकताएं',
+      preferencesContent: 'अपने अनुभव को अनुकूलित करें'
+    },
+    ur: {
+      title: 'سیٹنگز',
+      subtitle: 'اپنے اکاؤنٹ کی سیٹنگز اور ترجیحات کا انتظام کریں',
+      profile: 'پروفائل سیٹنگز',
+      profileDesc: 'اپنے اکاؤنٹ کی معلومات کا انتظام کریں',
+      notifications: 'نوٹیفیکیشنز',
+      notificationsDesc: 'اپنی نوٹیفیکیشن ترجیحات کو کنفیگر کریں',
+      security: 'سیکیورٹی',
+      securityDesc: 'پاس ورڈ اور سیکیورٹی سیٹنگز',
+      billing: 'بلنگ',
+      billingDesc: 'سبسکرپشن اور ادائیگی کے طریقے',
+      preferences: 'ترجیحات',
+      preferencesDesc: 'زبان اور علاقائی سیٹنگز',
+      fleetSettings: 'فلیٹ سیٹنگز',
+      fleetSettingsDesc: 'فلیٹ موڈ اور آپریشنل ترجیحات',
+      firstName: 'پہلا نام',
+      lastName: 'آخری نام',
+      email: 'ای میل ایڈریس',
+      phone: 'فون نمبر',
+      company: 'کمپنی',
+      currentPassword: 'موجودہ پاس ورڈ',
+      newPassword: 'نیا پاس ورڈ',
+      confirmPassword: 'نئے پاس ورڈ کی تصدیق کریں',
+      twoFactor: 'دو عنصری تصدیق',
+      twoFactorDesc: 'اپنے اکاؤنٹ میں اضافی سیکیورٹی لیئر شامل کریں',
+      enable2FA: '2FA فعال کریں',
+      emailNotifications: 'ای میل نوٹیفیکیشنز',
+      emailNotificationsDesc: 'ای میل کے ذریعے نوٹیفیکیشنز حاصل کریں',
+      pushNotifications: 'پش نوٹیفیکیشنز',
+      pushNotificationsDesc: 'براؤزر میں پش نوٹیفیکیشنز حاصل کریں',
+      smsNotifications: 'ایس ایم ایس نوٹیفیکیشنز',
+      smsNotificationsDesc: 'ایس ایم ایس کے ذریعے نوٹیفیکیشنز حاصل کریں',
+      fleetMode: 'فلیٹ موڈ',
+      fleetModeDesc: 'اپنا بنیادی فلیٹ آپریشن موڈ منتخب کریں',
+      rental: 'کرایہ موڈ',
+      taxi: 'ٹیکسی موڈ',
+      rentalDesc: 'گاڑیوں کے کرایہ اور کنٹریکٹس پر توجہ دیں',
+      taxiDesc: 'ٹیکسی سفر اور شفٹس پر توجہ دیں',
+      languageSettings: 'زبان',
+      languageDesc: 'اپنی پسندیدہ زبان منتخب کریں',
+      english: 'English',
+      arabic: 'العربية',
+      hindi: 'हिंदी',
+      urdu: 'اردو',
+      saveChanges: 'تبدیلیاں محفوظ کریں',
+      billingTitle: 'بلنگ سیٹنگز',
+      billingContent: 'اپنی سبسکرپشن اور ادائیگی کے طریقوں کا انتظام کریں',
+      preferencesTitle: 'اضافی ترجیحات',
+      preferencesContent: 'اپنے تجربے کو اپنی مرضی کے مطابق بنائیں'
     }
   };
 
@@ -313,6 +417,38 @@ const Settings: React.FC<SettingsProps> = ({ fleetMode, setFleetMode, language, 
               <Globe className={`w-5 h-5 ${language === 'ar' ? 'text-blue-600' : 'text-gray-500'}`} />
               <span className={`font-medium ${language === 'ar' ? 'text-blue-900' : 'text-gray-900'}`}>
                 {t.arabic}
+              </span>
+            </div>
+          </div>
+          
+          <div 
+            className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
+              language === 'hi' 
+                ? 'border-blue-500 bg-blue-50' 
+                : 'border-gray-200 hover:border-gray-300'
+            }`}
+            onClick={() => setLanguage('hi')}
+          >
+            <div className="flex items-center space-x-3">
+              <Globe className={`w-5 h-5 ${language === 'hi' ? 'text-blue-600' : 'text-gray-500'}`} />
+              <span className={`font-medium ${language === 'hi' ? 'text-blue-900' : 'text-gray-900'}`}>
+                {t.hindi}
+              </span>
+            </div>
+          </div>
+          
+          <div 
+            className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
+              language === 'ur' 
+                ? 'border-blue-500 bg-blue-50' 
+                : 'border-gray-200 hover:border-gray-300'
+            }`}
+            onClick={() => setLanguage('ur')}
+          >
+            <div className="flex items-center space-x-3">
+              <Globe className={`w-5 h-5 ${language === 'ur' ? 'text-blue-600' : 'text-gray-500'}`} />
+              <span className={`font-medium ${language === 'ur' ? 'text-blue-900' : 'text-gray-900'}`}>
+                {t.urdu}
               </span>
             </div>
           </div>

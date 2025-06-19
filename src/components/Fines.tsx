@@ -3,7 +3,7 @@ import { Search, Filter, AlertTriangle, Calendar, DollarSign, FileText } from 'l
 import { mockFinesData, mockDriversData } from '../data/mockData';
 
 type FleetMode = 'rental' | 'taxi';
-type Language = 'en' | 'ar';
+type Language = 'en' | 'ar' | 'hi' | 'ur';
 
 interface FinesProps {
   fleetMode: FleetMode;
@@ -62,6 +62,54 @@ const Fines: React.FC<FinesProps> = ({ fleetMode, language }) => {
       noFines: 'لا توجد مخالفات',
       markPaid: 'تحديد كمدفوع',
       viewDetails: 'عرض التفاصيل'
+    },
+    hi: {
+      title: 'जुर्माना प्रबंधन',
+      subtitle: 'ट्रैफिक उल्लंघन और दंड को ट्रैक और प्रबंधित करें',
+      totalFines: 'कुल जुर्माने',
+      pendingFines: 'लंबित जुर्माने',
+      paidFines: 'भुगतान किए गए जुर्माने',
+      searchPlaceholder: 'जुर्माने खोजें...',
+      filter: 'फ़िल्टर',
+      fineId: 'जुर्माना ID',
+      driver: 'ड्राइवर',
+      vehicle: 'वाहन',
+      violation: 'उल्लंघन',
+      amount: 'राशि',
+      date: 'तारीख',
+      status: 'स्थिति',
+      actions: 'कार्रवाई',
+      pending: 'लंबित',
+      paid: 'भुगतान किया',
+      deducted: 'कटौती की गई',
+      all: 'सभी',
+      noFines: 'कोई जुर्माना नहीं मिला',
+      markPaid: 'भुगतान के रूप में चिह्नित करें',
+      viewDetails: 'विवरण देखें'
+    },
+    ur: {
+      title: 'جرمانہ منیجمنٹ',
+      subtitle: 'ٹریفک خلاف ورزیوں اور جرمانوں کو ٹریک اور منظم کریں',
+      totalFines: 'کل جرمانے',
+      pendingFines: 'زیر التواء جرمانے',
+      paidFines: 'ادا شدہ جرمانے',
+      searchPlaceholder: 'جرمانے تلاش کریں...',
+      filter: 'فلٹر',
+      fineId: 'جرمانہ ID',
+      driver: 'ڈرائیور',
+      vehicle: 'گاڑی',
+      violation: 'خلاف ورزی',
+      amount: 'رقم',
+      date: 'تاریخ',
+      status: 'حالت',
+      actions: 'اقدامات',
+      pending: 'زیر التواء',
+      paid: 'ادا شدہ',
+      deducted: 'کٹوتی',
+      all: 'تمام',
+      noFines: 'کوئی جرمانہ نہیں ملا',
+      markPaid: 'ادا شدہ کے طور پر نشان زد کریں',
+      viewDetails: 'تفصیلات دیکھیں'
     }
   };
 

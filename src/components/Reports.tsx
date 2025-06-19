@@ -4,7 +4,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { mockDriversData, mockFinesData } from '../data/mockData';
 
 type FleetMode = 'rental' | 'taxi';
-type Language = 'en' | 'ar';
+type Language = 'en' | 'ar' | 'hi' | 'ur';
 
 interface ReportsProps {
   fleetMode: FleetMode;
@@ -60,6 +60,52 @@ const Reports: React.FC<ReportsProps> = ({ fleetMode, language }) => {
       amount: 'المبلغ',
       generatePDF: 'إنشاء تقرير PDF',
       exportData: 'تصدير البيانات'
+    },
+    hi: {
+      title: 'रिपोर्ट और एनालिटिक्स',
+      subtitle: 'व्यापक रिपोर्ट और अंतर्दृष्टि उत्पन्न करें',
+      downloadReport: 'रिपोर्ट डाउनलोड करें',
+      period: 'अवधि',
+      week: 'इस सप्ताह',
+      month: 'इस महीने',
+      year: 'इस साल',
+      driverPerformance: 'ड्राइवर प्रदर्शन',
+      earningsOverview: 'कमाई अवलोकन',
+      finesAnalysis: 'जुर्माना विश्लेषण',
+      fleetUtilization: 'फ्लीट उपयोग',
+      totalEarnings: 'कुल कमाई',
+      totalFines: 'कुल जुर्माने',
+      activeDrivers: 'सक्रिय ड्राइवर',
+      avgPerformance: 'औसत प्रदर्शन',
+      earnings: 'कमाई',
+      trips: 'यात्राएं',
+      driver: 'ड्राइवर',
+      amount: 'राशि',
+      generatePDF: 'PDF रिपोर्ट जेनरेट करें',
+      exportData: 'डेटा निर्यात करें'
+    },
+    ur: {
+      title: 'رپورٹس اور تجزیات',
+      subtitle: 'جامع رپورٹس اور بصیرت پیدا کریں',
+      downloadReport: 'رپورٹ ڈاؤن لوڈ کریں',
+      period: 'مدت',
+      week: 'اس ہفتے',
+      month: 'اس مہینے',
+      year: 'اس سال',
+      driverPerformance: 'ڈرائیور کارکردگی',
+      earningsOverview: 'کمائی کا جائزہ',
+      finesAnalysis: 'جرمانوں کا تجزیہ',
+      fleetUtilization: 'فلیٹ کا استعمال',
+      totalEarnings: 'کل کمائی',
+      totalFines: 'کل جرمانے',
+      activeDrivers: 'فعال ڈرائیورز',
+      avgPerformance: 'اوسط کارکردگی',
+      earnings: 'کمائی',
+      trips: 'سفر',
+      driver: 'ڈرائیور',
+      amount: 'رقم',
+      generatePDF: 'PDF رپورٹ جنریٹ کریں',
+      exportData: 'ڈیٹا ایکسپورٹ کریں'
     }
   };
 

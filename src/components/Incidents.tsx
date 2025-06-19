@@ -3,7 +3,7 @@ import { Search, Filter, Plus, AlertTriangle, Calendar, Clock, FileText, Eye, Ed
 import { mockDriversData } from '../data/mockData';
 
 type FleetMode = 'rental' | 'taxi';
-type Language = 'en' | 'ar';
+type Language = 'en' | 'ar' | 'hi' | 'ur';
 
 interface Incident {
   id: string;
@@ -78,34 +78,7 @@ const Incidents: React.FC<IncidentsProps> = ({ fleetMode, language }) => {
       editIncident: 'Edit Incident',
       deleteIncident: 'Delete Incident',
       exportReport: 'Export Report',
-      noIncidents: 'No incidents found',
-      // Add incident form
-      reportNewIncident: 'Report New Incident',
-      incidentType: 'Incident Type',
-      incidentSeverity: 'Severity Level',
-      incidentTitle: 'Incident Title',
-      incidentDescription: 'Description',
-      incidentLocation: 'Location',
-      selectDriver: 'Select Driver',
-      selectVehicle: 'Select Vehicle',
-      uploadPhotos: 'Upload Photos',
-      witnesses: 'Witnesses',
-      policeReportNumber: 'Police Report Number',
-      estimatedCost: 'Estimated Cost (AED)',
-      additionalNotes: 'Additional Notes',
-      submitReport: 'Submit Report',
-      cancel: 'Cancel',
-      // Incident details
-      incidentDetails: 'Incident Details',
-      reportedBy: 'Reported By',
-      createdAt: 'Created At',
-      lastUpdated: 'Last Updated',
-      photos: 'Photos',
-      witnessInfo: 'Witness Information',
-      costEstimate: 'Cost Estimate',
-      actualCost: 'Actual Cost',
-      updateStatus: 'Update Status',
-      addNote: 'Add Note'
+      noIncidents: 'No incidents found'
     },
     ar: {
       title: 'إدارة الحوادث',
@@ -143,34 +116,83 @@ const Incidents: React.FC<IncidentsProps> = ({ fleetMode, language }) => {
       editIncident: 'تعديل الحادث',
       deleteIncident: 'حذف الحادث',
       exportReport: 'تصدير التقرير',
-      noIncidents: 'لا توجد حوادث',
-      // Add incident form
-      reportNewIncident: 'الإبلاغ عن حادث جديد',
-      incidentType: 'نوع الحادث',
-      incidentSeverity: 'مستوى الخطورة',
-      incidentTitle: 'عنوان الحادث',
-      incidentDescription: 'الوصف',
-      incidentLocation: 'الموقع',
-      selectDriver: 'اختر السائق',
-      selectVehicle: 'اختر المركبة',
-      uploadPhotos: 'رفع الصور',
-      witnesses: 'الشهود',
-      policeReportNumber: 'رقم تقرير الشرطة',
-      estimatedCost: 'التكلفة المقدرة (درهم)',
-      additionalNotes: 'ملاحظات إضافية',
-      submitReport: 'إرسال التقرير',
-      cancel: 'إلغاء',
-      // Incident details
-      incidentDetails: 'تفاصيل الحادث',
-      reportedBy: 'أبلغ عنه',
-      createdAt: 'تم الإنشاء في',
-      lastUpdated: 'آخر تحديث',
-      photos: 'الصور',
-      witnessInfo: 'معلومات الشهود',
-      costEstimate: 'تقدير التكلفة',
-      actualCost: 'التكلفة الفعلية',
-      updateStatus: 'تحديث الحالة',
-      addNote: 'إضافة ملاحظة'
+      noIncidents: 'لا توجد حوادث'
+    },
+    hi: {
+      title: 'घटना प्रबंधन',
+      subtitle: 'फ्लीट घटनाओं, दुर्घटनाओं और सुरक्षा रिपोर्ट को ट्रैक और प्रबंधित करें',
+      addIncident: 'घटना की रिपोर्ट करें',
+      searchPlaceholder: 'घटनाएं खोजें...',
+      totalIncidents: 'कुल घटनाएं',
+      activeIncidents: 'सक्रिय मामले',
+      resolvedIncidents: 'इस महीने हल किए गए',
+      avgResolutionTime: 'औसत समाधान समय',
+      incidentId: 'घटना ID',
+      driver: 'ड्राइवर',
+      vehicle: 'वाहन',
+      type: 'प्रकार',
+      severity: 'गंभीरता',
+      location: 'स्थान',
+      dateTime: 'दिनांक और समय',
+      status: 'स्थिति',
+      actions: 'कार्रवाई',
+      all: 'सभी',
+      reported: 'रिपोर्ट किया गया',
+      investigating: 'जांच में',
+      resolved: 'हल किया गया',
+      closed: 'बंद',
+      crash: 'दुर्घटना',
+      breakdown: 'खराबी',
+      theft: 'चोरी',
+      damage: 'नुकसान',
+      other: 'अन्य',
+      low: 'कम',
+      medium: 'मध्यम',
+      high: 'उच्च',
+      critical: 'गंभीर',
+      viewDetails: 'विवरण देखें',
+      editIncident: 'घटना संपादित करें',
+      deleteIncident: 'घटना हटाएं',
+      exportReport: 'रिपोर्ट निर्यात करें',
+      noIncidents: 'कोई घटना नहीं मिली'
+    },
+    ur: {
+      title: 'واقعہ منیجمنٹ',
+      subtitle: 'فلیٹ واقعات، حادثات اور حفاظتی رپورٹس کو ٹریک اور منظم کریں',
+      addIncident: 'واقعہ کی رپورٹ کریں',
+      searchPlaceholder: 'واقعات تلاش کریں...',
+      totalIncidents: 'کل واقعات',
+      activeIncidents: 'فعال کیسز',
+      resolvedIncidents: 'اس مہینے حل شدہ',
+      avgResolutionTime: 'اوسط حل کا وقت',
+      incidentId: 'واقعہ ID',
+      driver: 'ڈرائیور',
+      vehicle: 'گاڑی',
+      type: 'قسم',
+      severity: 'شدت',
+      location: 'مقام',
+      dateTime: 'تاریخ اور وقت',
+      status: 'حالت',
+      actions: 'اقدامات',
+      all: 'تمام',
+      reported: 'رپورٹ شدہ',
+      investigating: 'تحقیق میں',
+      resolved: 'حل شدہ',
+      closed: 'بند',
+      crash: 'حادثہ',
+      breakdown: 'خرابی',
+      theft: 'چوری',
+      damage: 'نقصان',
+      other: 'دیگر',
+      low: 'کم',
+      medium: 'درمیانہ',
+      high: 'زیادہ',
+      critical: 'انتہائی اہم',
+      viewDetails: 'تفصیلات دیکھیں',
+      editIncident: 'واقعہ میں ترمیم کریں',
+      deleteIncident: 'واقعہ ہٹائیں',
+      exportReport: 'رپورٹ ایکسپورٹ کریں',
+      noIncidents: 'کوئی واقعہ نہیں ملا'
     }
   };
 
@@ -237,12 +259,6 @@ const Incidents: React.FC<IncidentsProps> = ({ fleetMode, language }) => {
   ];
 
   const [incidents, setIncidents] = useState<Incident[]>(mockIncidents);
-  const [newIncident, setNewIncident] = useState<Partial<Incident>>({
-    type: 'crash',
-    severity: 'medium',
-    reportedBy: 'admin',
-    status: 'reported'
-  });
 
   const getDriverName = (driverId: number) => {
     const driver = mockDriversData.find(d => d.id === driverId);
@@ -311,317 +327,6 @@ const Incidents: React.FC<IncidentsProps> = ({ fleetMode, language }) => {
     }
   };
 
-  const handleSubmitIncident = () => {
-    const incident: Incident = {
-      id: `INC-${String(incidents.length + 1).padStart(3, '0')}`,
-      driverId: newIncident.driverId || 1,
-      vehicleId: newIncident.vehicleId || 'DXB-A-12345',
-      type: newIncident.type || 'crash',
-      severity: newIncident.severity || 'medium',
-      title: newIncident.title || '',
-      description: newIncident.description || '',
-      location: newIncident.location || '',
-      dateTime: new Date().toISOString(),
-      reportedBy: newIncident.reportedBy || 'admin',
-      status: 'reported',
-      estimatedCost: newIncident.estimatedCost,
-      notes: newIncident.notes,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
-
-    setIncidents([incident, ...incidents]);
-    setNewIncident({
-      type: 'crash',
-      severity: 'medium',
-      reportedBy: 'admin',
-      status: 'reported'
-    });
-    setShowAddIncident(false);
-  };
-
-  const exportToPDF = () => {
-    // This would integrate with jsPDF to generate comprehensive incident reports
-    alert('PDF export functionality would be implemented here with detailed incident reports');
-  };
-
-  const renderAddIncidentForm = () => (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-        <div className="p-6 border-b border-gray-200">
-          <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold text-gray-900">{t.reportNewIncident}</h2>
-            <button
-              onClick={() => setShowAddIncident(false)}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              ×
-            </button>
-          </div>
-        </div>
-
-        <div className="p-6 space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">{t.incidentType}</label>
-              <select
-                value={newIncident.type}
-                onChange={(e) => setNewIncident({...newIncident, type: e.target.value as any})}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="crash">{t.crash}</option>
-                <option value="breakdown">{t.breakdown}</option>
-                <option value="theft">{t.theft}</option>
-                <option value="damage">{t.damage}</option>
-                <option value="other">{t.other}</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">{t.incidentSeverity}</label>
-              <select
-                value={newIncident.severity}
-                onChange={(e) => setNewIncident({...newIncident, severity: e.target.value as any})}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="low">{t.low}</option>
-                <option value="medium">{t.medium}</option>
-                <option value="high">{t.high}</option>
-                <option value="critical">{t.critical}</option>
-              </select>
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">{t.incidentTitle}</label>
-            <input
-              type="text"
-              value={newIncident.title || ''}
-              onChange={(e) => setNewIncident({...newIncident, title: e.target.value})}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-              placeholder="Brief description of the incident"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">{t.incidentDescription}</label>
-            <textarea
-              value={newIncident.description || ''}
-              onChange={(e) => setNewIncident({...newIncident, description: e.target.value})}
-              rows={4}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-              placeholder="Detailed description of what happened..."
-            />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">{t.selectDriver}</label>
-              <select
-                value={newIncident.driverId || ''}
-                onChange={(e) => setNewIncident({...newIncident, driverId: parseInt(e.target.value)})}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">Select a driver</option>
-                {mockDriversData.map(driver => (
-                  <option key={driver.id} value={driver.id}>{driver.name}</option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">{t.selectVehicle}</label>
-              <input
-                type="text"
-                value={newIncident.vehicleId || ''}
-                onChange={(e) => setNewIncident({...newIncident, vehicleId: e.target.value})}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                placeholder="DXB-A-12345"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">{t.incidentLocation}</label>
-            <input
-              type="text"
-              value={newIncident.location || ''}
-              onChange={(e) => setNewIncident({...newIncident, location: e.target.value})}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-              placeholder="Street address or landmark"
-            />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">{t.policeReportNumber}</label>
-              <input
-                type="text"
-                value={newIncident.policeReport || ''}
-                onChange={(e) => setNewIncident({...newIncident, policeReport: e.target.value})}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                placeholder="POL-2024-001234"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">{t.estimatedCost}</label>
-              <input
-                type="number"
-                value={newIncident.estimatedCost || ''}
-                onChange={(e) => setNewIncident({...newIncident, estimatedCost: parseInt(e.target.value)})}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                placeholder="0"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">{t.uploadPhotos}</label>
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-              <Camera className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-              <p className="text-gray-500">Click to upload photos or drag and drop</p>
-              <p className="text-xs text-gray-400 mt-1">PNG, JPG up to 10MB each</p>
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">{t.additionalNotes}</label>
-            <textarea
-              value={newIncident.notes || ''}
-              onChange={(e) => setNewIncident({...newIncident, notes: e.target.value})}
-              rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-              placeholder="Any additional information..."
-            />
-          </div>
-        </div>
-
-        <div className="p-6 border-t border-gray-200 flex justify-end space-x-3">
-          <button
-            onClick={() => setShowAddIncident(false)}
-            className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
-          >
-            {t.cancel}
-          </button>
-          <button
-            onClick={handleSubmitIncident}
-            className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
-          >
-            {t.submitReport}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderIncidentDetails = (incident: Incident) => (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-        <div className="p-6 border-b border-gray-200">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900">{t.incidentDetails}</h2>
-              <p className="text-gray-600">{incident.id} - {incident.title}</p>
-            </div>
-            <button
-              onClick={() => setSelectedIncident(null)}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              ×
-            </button>
-          </div>
-        </div>
-
-        <div className="p-6 space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-gray-50 rounded-lg p-4">
-              <h3 className="font-semibold text-gray-900 mb-2">Basic Information</h3>
-              <div className="space-y-2 text-sm">
-                <div><strong>Type:</strong> {getTypeIcon(incident.type)} {t[incident.type as keyof typeof t]}</div>
-                <div><strong>Severity:</strong> <span className={`px-2 py-1 rounded-full text-xs ${getSeverityColor(incident.severity)}`}>{t[incident.severity as keyof typeof t]}</span></div>
-                <div><strong>Status:</strong> <span className={`px-2 py-1 rounded-full text-xs ${getStatusColor(incident.status)}`}>{t[incident.status as keyof typeof t]}</span></div>
-                <div><strong>Driver:</strong> {getDriverName(incident.driverId)}</div>
-                <div><strong>Vehicle:</strong> {incident.vehicleId}</div>
-              </div>
-            </div>
-
-            <div className="bg-gray-50 rounded-lg p-4">
-              <h3 className="font-semibold text-gray-900 mb-2">Location & Time</h3>
-              <div className="space-y-2 text-sm">
-                <div><strong>Location:</strong> {incident.location}</div>
-                <div><strong>Date:</strong> {new Date(incident.dateTime).toLocaleDateString()}</div>
-                <div><strong>Time:</strong> {new Date(incident.dateTime).toLocaleTimeString()}</div>
-                <div><strong>Reported by:</strong> {incident.reportedBy}</div>
-              </div>
-            </div>
-
-            <div className="bg-gray-50 rounded-lg p-4">
-              <h3 className="font-semibold text-gray-900 mb-2">Cost Information</h3>
-              <div className="space-y-2 text-sm">
-                <div><strong>Estimated:</strong> AED {incident.estimatedCost?.toLocaleString() || 'N/A'}</div>
-                <div><strong>Actual:</strong> AED {incident.actualCost?.toLocaleString() || 'Pending'}</div>
-                {incident.policeReport && <div><strong>Police Report:</strong> {incident.policeReport}</div>}
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <h3 className="font-semibold text-gray-900 mb-2">Description</h3>
-            <p className="text-gray-700 bg-gray-50 rounded-lg p-4">{incident.description}</p>
-          </div>
-
-          {incident.photos && incident.photos.length > 0 && (
-            <div>
-              <h3 className="font-semibold text-gray-900 mb-2">{t.photos}</h3>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {incident.photos.map((photo, index) => (
-                  <div key={index} className="bg-gray-200 rounded-lg h-24 flex items-center justify-center">
-                    <Camera className="w-8 h-8 text-gray-400" />
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {incident.witnesses && incident.witnesses.length > 0 && (
-            <div>
-              <h3 className="font-semibold text-gray-900 mb-2">{t.witnessInfo}</h3>
-              <div className="bg-gray-50 rounded-lg p-4">
-                {incident.witnesses.map((witness, index) => (
-                  <div key={index} className="text-sm text-gray-700">{witness}</div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {incident.notes && (
-            <div>
-              <h3 className="font-semibold text-gray-900 mb-2">Notes</h3>
-              <p className="text-gray-700 bg-gray-50 rounded-lg p-4">{incident.notes}</p>
-            </div>
-          )}
-        </div>
-
-        <div className="p-6 border-t border-gray-200 flex justify-end space-x-3">
-          <button
-            onClick={exportToPDF}
-            className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 flex items-center space-x-2"
-          >
-            <Download className="w-4 h-4" />
-            <span>{t.exportReport}</span>
-          </button>
-          <button
-            onClick={() => setSelectedIncident(null)}
-            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-          >
-            Close
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -631,17 +336,7 @@ const Incidents: React.FC<IncidentsProps> = ({ fleetMode, language }) => {
           <p className="text-gray-600">{t.subtitle}</p>
         </div>
         <div className="flex space-x-3">
-          <button
-            onClick={exportToPDF}
-            className="flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-          >
-            <Download className="w-4 h-4" />
-            <span>{t.exportReport}</span>
-          </button>
-          <button
-            onClick={() => setShowAddIncident(true)}
-            className="flex items-center space-x-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-          >
+          <button className="flex items-center space-x-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
             <Plus className="w-4 h-4" />
             <span>{t.addIncident}</span>
           </button>
@@ -785,7 +480,6 @@ const Incidents: React.FC<IncidentsProps> = ({ fleetMode, language }) => {
                     <td className="py-4 px-4">
                       <div className="flex items-center space-x-2">
                         <button 
-                          onClick={() => setSelectedIncident(incident)}
                           className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                           title={t.viewDetails}
                         >
@@ -818,10 +512,6 @@ const Incidents: React.FC<IncidentsProps> = ({ fleetMode, language }) => {
           </table>
         </div>
       </div>
-
-      {/* Modals */}
-      {showAddIncident && renderAddIncidentForm()}
-      {selectedIncident && renderIncidentDetails(selectedIncident)}
     </div>
   );
 };
