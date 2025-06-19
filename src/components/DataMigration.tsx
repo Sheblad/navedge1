@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Upload, Download, Database, AlertTriangle, CheckCircle, RefreshCw } from 'lucide-react';
 import { DatabaseService } from '../services/database';
-import { mockDriversData, mockFinesData, mockContractsData } from '../data/mockData';
+import { mockDriversData } from '../data/mockData';
+import SQLDownloader from './SQLDownloader';
 import type { Driver } from '../data/mockData';
 
 interface DataMigrationProps {
@@ -9,7 +10,7 @@ interface DataMigrationProps {
 }
 
 const DataMigration: React.FC<DataMigrationProps> = ({ onMigrationComplete }) => {
-  const [migrationStep, setMigrationStep] = useState<'check' | 'migrate' | 'complete'>('check');
+  const [migrationStep, setMigrationStep] = useState<'check' | 'migrate' | 'complete' | 'sql-download'>('check');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [localData, setLocalData] = useState<{
@@ -68,8 +69,15 @@ const DataMigration: React.FC<DataMigrationProps> = ({ onMigrationComplete }) =>
 
     } catch (err) {
       console.error('Migration failed:', err);
-      setError('Migration failed. Please try again or contact support.');
-      setMigrationStep('check');
+      
+      // Check if it's a 404 error (table doesn't exist)
+      if (err instanceof Error && err.message.includes('404')) {
+        setError('Database tables not found. You need to create the database schema first.');
+        setMigrationStep('sql-download');
+      } else {
+        setError('Migration failed. Please try again or contact support.');
+        setMigrationStep('check');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -98,6 +106,10 @@ const DataMigration: React.FC<DataMigrationProps> = ({ onMigrationComplete }) =>
     localStorage.removeItem('navedge_language');
     onMigrationComplete();
   };
+
+  if (migrationStep === 'sql-download') {
+    return <SQLDownloader />;
+  }
 
   if (migrationStep === 'complete') {
     return (
@@ -151,7 +163,14 @@ const DataMigration: React.FC<DataMigrationProps> = ({ onMigrationComplete }) =>
           <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
             <div className="flex items-center">
               <AlertTriangle className="w-5 h-5 text-red-600 mr-2" />
-              <p className="text-red-800">{error}</p>
+              <div>
+                <p className="text-red-800 font-medium">{error}</p>
+                {error.includes('Database tables not found') && (
+                  <p className="text-red-700 text-sm mt-1">
+                    Click "Download SQL Schema" below to get the database setup file.
+                  </p>
+                )}
+              </div>
             </div>
           </div>
         )}
@@ -192,23 +211,33 @@ const DataMigration: React.FC<DataMigrationProps> = ({ onMigrationComplete }) =>
           </div>
 
           <div className="flex flex-col space-y-3">
-            <button
-              onClick={migrateToDatabase}
-              disabled={isLoading}
-              className="w-full py-3 px-4 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center justify-center"
-            >
-              {isLoading ? (
-                <>
-                  <RefreshCw className="w-5 h-5 mr-2 animate-spin" />
-                  Migrating Data...
-                </>
-              ) : (
-                <>
-                  <Database className="w-5 h-5 mr-2" />
-                  Migrate to Cloud Database
-                </>
-              )}
-            </button>
+            {error && error.includes('Database tables not found') ? (
+              <button
+                onClick={() => setMigrationStep('sql-download')}
+                className="w-full py-3 px-4 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-colors flex items-center justify-center"
+              >
+                <Database className="w-5 h-5 mr-2" />
+                Download SQL Schema
+              </button>
+            ) : (
+              <button
+                onClick={migrateToDatabase}
+                disabled={isLoading}
+                className="w-full py-3 px-4 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center justify-center"
+              >
+                {isLoading ? (
+                  <>
+                    <RefreshCw className="w-5 h-5 mr-2 animate-spin" />
+                    Migrating Data...
+                  </>
+                ) : (
+                  <>
+                    <Database className="w-5 h-5 mr-2" />
+                    Migrate to Cloud Database
+                  </>
+                )}
+              </button>
+            )}
             
             <button
               onClick={skipMigration}

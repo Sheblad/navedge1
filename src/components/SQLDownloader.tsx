@@ -1,123 +1,9 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Download NavEdge Database Migration</title>
-    <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            background: #f5f5f5;
-        }
-        .container {
-            background: white;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
-        .download-btn {
-            background: #2563eb;
-            color: white;
-            padding: 15px 30px;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            margin: 10px 0;
-            display: inline-block;
-            text-decoration: none;
-        }
-        .download-btn:hover {
-            background: #1d4ed8;
-        }
-        .code-block {
-            background: #f8f9fa;
-            border: 1px solid #e9ecef;
-            border-radius: 6px;
-            padding: 15px;
-            font-family: 'Monaco', 'Menlo', monospace;
-            font-size: 14px;
-            overflow-x: auto;
-            margin: 15px 0;
-        }
-        .step {
-            margin: 20px 0;
-            padding: 15px;
-            border-left: 4px solid #2563eb;
-            background: #f8fafc;
-        }
-        .warning {
-            background: #fef3c7;
-            border-left: 4px solid #f59e0b;
-            padding: 15px;
-            margin: 15px 0;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>📁 Download NavEdge Database Migration</h1>
-        
-        <p>Click the button below to download the complete SQL migration file for your NavEdge fleet management database:</p>
-        
-        <button class="download-btn" onclick="downloadSQL()">
-            📥 Download create_drivers_table.sql
-        </button>
-        
-        <div class="warning">
-            <strong>⚠️ Important:</strong> This file contains the complete database schema including drivers, vehicles, fines, contracts, incidents, and GPS tracking tables with sample data.
-        </div>
-        
-        <h2>🚀 Next Steps:</h2>
-        
-        <div class="step">
-            <h3>Step 1: Download the file</h3>
-            <p>Click the download button above to save the SQL file to your computer.</p>
-        </div>
-        
-        <div class="step">
-            <h3>Step 2: Open Supabase Dashboard</h3>
-            <p>Go to <a href="https://supabase.com/dashboard" target="_blank">https://supabase.com/dashboard</a></p>
-            <p>Navigate to your project: <strong>evvitqxojvdtyeswdkub</strong></p>
-        </div>
-        
-        <div class="step">
-            <h3>Step 3: Open SQL Editor</h3>
-            <p>Click on <strong>"SQL Editor"</strong> in the left sidebar of your Supabase dashboard.</p>
-        </div>
-        
-        <div class="step">
-            <h3>Step 4: Paste and Run</h3>
-            <p>Open the downloaded SQL file in a text editor, copy all contents, paste into the SQL Editor, and click <strong>"Run"</strong>.</p>
-        </div>
-        
-        <div class="step">
-            <h3>Step 5: Verify</h3>
-            <p>After running the SQL, go to the "Table Editor" to verify that all tables were created successfully.</p>
-        </div>
-        
-        <h2>📋 What's Included:</h2>
-        <ul>
-            <li>✅ <strong>drivers</strong> table with UUID primary key</li>
-            <li>✅ <strong>vehicles</strong> table for fleet management</li>
-            <li>✅ <strong>fines</strong> table for traffic violations</li>
-            <li>✅ <strong>contracts</strong> table for rental agreements</li>
-            <li>✅ <strong>incidents</strong> table for safety reports</li>
-            <li>✅ <strong>gps_locations</strong> table for real-time tracking</li>
-            <li>✅ <strong>organizations</strong> table for multi-tenant support</li>
-            <li>✅ Row Level Security (RLS) policies for anon access</li>
-            <li>✅ Performance indexes</li>
-            <li>✅ Sample data (5 drivers, 5 vehicles, etc.)</li>
-        </ul>
-    </div>
+import React from 'react';
+import { Download, ExternalLink, Database, CheckCircle } from 'lucide-react';
 
-    <script>
-        function downloadSQL() {
-            const sqlContent = `-- Enable necessary extensions
+const SQLDownloader: React.FC = () => {
+  const downloadSQL = () => {
+    const sqlContent = `-- Enable necessary extensions
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- ==================== ORGANIZATIONS TABLE ====================
@@ -478,18 +364,141 @@ BEGIN
     UPDATE drivers SET vehicle_id = vehicle_record.id WHERE email = 'khalid@example.com';
 END $$;`;
 
-            const blob = new Blob([sqlContent], { type: 'text/plain' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'create_drivers_table.sql';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
+    const blob = new Blob([sqlContent], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'create_drivers_table.sql';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    alert('✅ SQL file downloaded successfully! Now go to your Supabase dashboard and run this SQL in the SQL Editor.');
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+        <div className="p-8">
+          <div className="text-center mb-8">
+            <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Database className="w-8 h-8 text-blue-600" />
+            </div>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">📁 Download NavEdge Database Migration</h1>
+            <p className="text-gray-600">Click the button below to download the complete SQL migration file for your NavEdge fleet management database</p>
+          </div>
+          
+          <div className="text-center mb-8">
+            <button
+              onClick={downloadSQL}
+              className="inline-flex items-center space-x-3 px-8 py-4 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors shadow-lg hover:shadow-xl"
+            >
+              <Download className="w-6 h-6" />
+              <span>📥 Download create_drivers_table.sql</span>
+            </button>
+          </div>
+          
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-8">
+            <div className="flex items-start space-x-3">
+              <div className="text-yellow-600 mt-1">⚠️</div>
+              <div>
+                <h4 className="font-semibold text-yellow-900 mb-2">Important:</h4>
+                <p className="text-yellow-800 text-sm">This file contains the complete database schema including drivers, vehicles, fines, contracts, incidents, and GPS tracking tables with sample data.</p>
+              </div>
+            </div>
+          </div>
+          
+          <div className="space-y-6">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">🚀 Next Steps:</h2>
             
-            alert('✅ SQL file downloaded successfully! Now go to your Supabase dashboard and run this SQL in the SQL Editor.');
-        }
-    </script>
-</body>
-</html>
+            <div className="space-y-4">
+              <div className="flex items-start space-x-4 p-4 bg-blue-50 rounded-lg border-l-4 border-blue-500">
+                <div className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-sm">1</div>
+                <div>
+                  <h3 className="font-semibold text-gray-900 mb-1">Download the file</h3>
+                  <p className="text-gray-600 text-sm">Click the download button above to save the SQL file to your computer.</p>
+                </div>
+              </div>
+              
+              <div className="flex items-start space-x-4 p-4 bg-blue-50 rounded-lg border-l-4 border-blue-500">
+                <div className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-sm">2</div>
+                <div>
+                  <h3 className="font-semibold text-gray-900 mb-1">Open Supabase Dashboard</h3>
+                  <p className="text-gray-600 text-sm mb-2">Go to your Supabase dashboard and navigate to your project:</p>
+                  <a 
+                    href="https://supabase.com/dashboard/project/evvitqxojvdtyeswdkub" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center space-x-2 text-blue-600 hover:text-blue-800 font-medium"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                    <span>Open Supabase Project</span>
+                  </a>
+                </div>
+              </div>
+              
+              <div className="flex items-start space-x-4 p-4 bg-blue-50 rounded-lg border-l-4 border-blue-500">
+                <div className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-sm">3</div>
+                <div>
+                  <h3 className="font-semibold text-gray-900 mb-1">Open SQL Editor</h3>
+                  <p className="text-gray-600 text-sm">Click on <strong>"SQL Editor"</strong> in the left sidebar of your Supabase dashboard.</p>
+                </div>
+              </div>
+              
+              <div className="flex items-start space-x-4 p-4 bg-blue-50 rounded-lg border-l-4 border-blue-500">
+                <div className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-sm">4</div>
+                <div>
+                  <h3 className="font-semibold text-gray-900 mb-1">Paste and Run</h3>
+                  <p className="text-gray-600 text-sm">Open the downloaded SQL file in a text editor, copy all contents, paste into the SQL Editor, and click <strong>"Run"</strong>.</p>
+                </div>
+              </div>
+              
+              <div className="flex items-start space-x-4 p-4 bg-green-50 rounded-lg border-l-4 border-green-500">
+                <div className="w-8 h-8 bg-green-600 text-white rounded-full flex items-center justify-center font-bold text-sm">5</div>
+                <div>
+                  <h3 className="font-semibold text-gray-900 mb-1">Verify</h3>
+                  <p className="text-gray-600 text-sm">After running the SQL, go to the "Table Editor" to verify that all tables were created successfully.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div className="mt-8 bg-gray-50 rounded-lg p-6">
+            <h2 className="text-xl font-bold text-gray-900 mb-4">📋 What's Included:</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {[
+                'drivers table with UUID primary key',
+                'vehicles table for fleet management',
+                'fines table for traffic violations',
+                'contracts table for rental agreements',
+                'incidents table for safety reports',
+                'gps_locations table for real-time tracking',
+                'organizations table for multi-tenant support',
+                'Row Level Security (RLS) policies for anon access',
+                'Performance indexes',
+                'Sample data (5 drivers, 5 vehicles, etc.)'
+              ].map((item, index) => (
+                <div key={index} className="flex items-center space-x-2">
+                  <CheckCircle className="w-4 h-4 text-green-600" />
+                  <span className="text-sm text-gray-700">{item}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          
+          <div className="mt-8 text-center">
+            <button
+              onClick={() => window.location.reload()}
+              className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default SQLDownloader;
