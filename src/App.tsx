@@ -18,6 +18,7 @@ import { useDrivers, useFines } from './hooks/useDatabase';
 import { useSystemAlerts } from './hooks/useSystemAlerts';
 import { useNotifications } from './hooks/useNotifications';
 import { useEarningsTracking } from './hooks/useEarningsTracking';
+import { usePerformanceTracking } from './hooks/usePerformanceTracking';
 import { DatabaseService } from './services/database';
 import type { Driver } from './data/mockData';
 
@@ -80,6 +81,12 @@ function App() {
     recordTripCompletion,
     recordRentalPayment
   } = useEarningsTracking(fleetMode);
+
+  // Use performance tracking hook
+  const {
+    updateDriverPerformance,
+    resetDailyMetrics
+  } = usePerformanceTracking();
 
   // Load persisted settings on mount
   useEffect(() => {
@@ -144,6 +151,32 @@ function App() {
     
     return () => clearInterval(interval);
   }, [drivers, fleetMode, simulateAutomaticEarnings]);
+
+  // Set up midnight reset for daily metrics
+  useEffect(() => {
+    const setupMidnightReset = () => {
+      const now = new Date();
+      const night = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate() + 1, // tomorrow
+        0, 0, 0 // midnight
+      );
+      
+      const msUntilMidnight = night.getTime() - now.getTime();
+      
+      return setTimeout(() => {
+        // Reset daily metrics at midnight
+        resetDailyMetrics(drivers);
+        
+        // Set up the next day's reset
+        setupMidnightReset();
+      }, msUntilMidnight);
+    };
+    
+    const timerId = setupMidnightReset();
+    return () => clearTimeout(timerId);
+  }, [drivers, resetDailyMetrics]);
 
   // Check if auto backup is due
   const checkAutoBackup = () => {

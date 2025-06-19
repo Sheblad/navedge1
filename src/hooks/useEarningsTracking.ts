@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Driver } from '../data/mockData';
 import { useNotifications } from './useNotifications';
+import { usePerformanceTracking } from './usePerformanceTracking';
 
 interface EarningEvent {
   id: string;
@@ -23,6 +24,7 @@ export function useEarningsTracking(fleetMode: 'rental' | 'taxi') {
   const [earningEvents, setEarningEvents] = useState<EarningEvent[]>([]);
   const [isTracking, setIsTracking] = useState(true);
   const { addNotification } = useNotifications();
+  const { updateDriverPerformance } = usePerformanceTracking();
 
   // Load earning events from localStorage on mount
   useEffect(() => {
@@ -67,6 +69,12 @@ export function useEarningsTracking(fleetMode: 'rental' | 'taxi') {
     
     // Update driver's earnings
     driver.earnings += amount;
+    
+    // Update driver's daily earnings
+    driver.earnings_today = (driver.earnings_today || 0) + amount;
+    
+    // Update driver's performance score based on earnings and trips
+    updateDriverPerformance(driver);
 
     // Create notification for significant earnings
     if (amount > 100) {
@@ -80,7 +88,7 @@ export function useEarningsTracking(fleetMode: 'rental' | 'taxi') {
     }
 
     return newEvent;
-  }, [isTracking, addNotification, fleetMode]);
+  }, [isTracking, addNotification, fleetMode, updateDriverPerformance]);
 
   // Record a trip completion (taxi mode)
   const recordTripCompletion = useCallback((
@@ -116,6 +124,9 @@ export function useEarningsTracking(fleetMode: 'rental' | 'taxi') {
     
     // Increment trip count
     driver.trips += 1;
+    
+    // Increment daily trip count
+    driver.trips_today = (driver.trips_today || 0) + 1;
     
     return event;
   }, [fleetMode, recordEarning]);

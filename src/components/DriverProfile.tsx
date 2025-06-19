@@ -22,6 +22,7 @@ import {
 import { Driver, mockDriversData, mockFinesData, mockContractsData } from '../data/mockData';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 import EarningsTracker from './EarningsTracker';
+import DriverPerformanceCard from './DriverPerformanceCard';
 
 type FleetMode = 'rental' | 'taxi';
 type Language = 'en' | 'ar' | 'hi' | 'ur';
@@ -551,59 +552,8 @@ const DriverProfile: React.FC<DriverProfileProps> = ({ driverId, fleetMode, lang
         </div>
       )}
 
-      {/* Performance Summary */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">{t.totalTrips}</p>
-              <p className="text-2xl font-semibold text-gray-900">{driver.trips}</p>
-            </div>
-            <div className="p-3 bg-blue-50 rounded-lg">
-              <Navigation className="w-6 h-6 text-blue-700" />
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">{t.earningsToday}</p>
-              <p className="text-2xl font-semibold text-gray-900">${driver.earnings.toLocaleString()}</p>
-            </div>
-            <div className="p-3 bg-green-50 rounded-lg">
-              <DollarSign className="w-6 h-6 text-green-700" />
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">{t.performanceScore}</p>
-              <p className="text-2xl font-semibold text-gray-900">{driver.performanceScore}%</p>
-            </div>
-            <div className="p-3 bg-purple-50 rounded-lg">
-              <TrendingUp className="w-6 h-6 text-purple-700" />
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">{t.rating}</p>
-              <div className="flex items-center space-x-1">
-                <p className="text-2xl font-semibold text-gray-900">{(driver.performanceScore / 20).toFixed(1)}</p>
-                <Star className="w-5 h-5 text-yellow-400 fill-current" />
-              </div>
-            </div>
-            <div className="p-3 bg-yellow-50 rounded-lg">
-              <Star className="w-6 h-6 text-yellow-700" />
-            </div>
-          </div>
-        </div>
-      </div>
+      {/* Performance Card */}
+      <DriverPerformanceCard driver={driver} language={language} />
 
       {/* Current Location */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
@@ -626,6 +576,8 @@ const DriverProfile: React.FC<DriverProfileProps> = ({ driverId, fleetMode, lang
 
   const renderPerformance = () => (
     <div className="space-y-6">
+      <DriverPerformanceCard driver={driver} language={language} />
+
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">{t.last7Days}</h3>
         <ResponsiveContainer width="100%" height={300}>

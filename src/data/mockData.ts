@@ -12,6 +12,8 @@ export interface Driver {
   location: { lat: number; lng: number };
   vehicleId?: string;
   contractId?: string;
+  trips_today?: number;
+  earnings_today?: number;
 }
 
 export interface Fine {
@@ -52,7 +54,9 @@ export const mockDriversData: Driver[] = [
     joinDate: '2024-01-15',
     location: { lat: 25.2048, lng: 55.2708 },
     vehicleId: 'DXB-A-12345',
-    contractId: 'CNT-001'
+    contractId: 'CNT-001',
+    trips_today: 3,
+    earnings_today: 120
   },
   {
     id: 2,
@@ -67,7 +71,9 @@ export const mockDriversData: Driver[] = [
     joinDate: '2023-11-20',
     location: { lat: 25.1972, lng: 55.2744 },
     vehicleId: 'DXB-B-67890',
-    contractId: 'CNT-002'
+    contractId: 'CNT-002',
+    trips_today: 2,
+    earnings_today: 85
   },
   {
     id: 3,
@@ -82,7 +88,9 @@ export const mockDriversData: Driver[] = [
     joinDate: '2024-02-10',
     location: { lat: 25.2084, lng: 55.2719 },
     vehicleId: 'DXB-C-11111',
-    contractId: 'CNT-003'
+    contractId: 'CNT-003',
+    trips_today: 5,
+    earnings_today: 210
   },
   {
     id: 4,
@@ -97,7 +105,9 @@ export const mockDriversData: Driver[] = [
     joinDate: '2024-03-05',
     location: { lat: 25.2011, lng: 55.2762 },
     vehicleId: 'DXB-D-22222',
-    contractId: 'CNT-004'
+    contractId: 'CNT-004',
+    trips_today: 0,
+    earnings_today: 0
   },
   {
     id: 5,
@@ -112,7 +122,9 @@ export const mockDriversData: Driver[] = [
     joinDate: '2023-12-01',
     location: { lat: 25.2103, lng: 55.2681 },
     vehicleId: 'DXB-E-33333',
-    contractId: 'CNT-005'
+    contractId: 'CNT-005',
+    trips_today: 4,
+    earnings_today: 160
   },
   {
     id: 6,
@@ -127,7 +139,9 @@ export const mockDriversData: Driver[] = [
     joinDate: '2024-01-20',
     location: { lat: 25.1995, lng: 55.2790 },
     vehicleId: 'DXB-F-44444',
-    contractId: 'CNT-006'
+    contractId: 'CNT-006',
+    trips_today: 2,
+    earnings_today: 90
   }
 ];
 
