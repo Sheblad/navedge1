@@ -14,6 +14,7 @@ export class DatabaseService {
   
   static async getDrivers(): Promise<Driver[]> {
     try {
+      console.log('Fetching drivers from Supabase...');
       const { data, error } = await supabase
         .from('drivers')
         .select('*')
@@ -24,16 +25,19 @@ export class DatabaseService {
         throw error;
       }
 
+      console.log(`Successfully fetched ${data?.length || 0} drivers from database`);
       return data?.map(this.convertDriverFromDB) || [];
     } catch (error) {
       console.error('Database error:', error);
       // Fallback to mock data for demo purposes
+      console.log('Falling back to mock data');
       return mockDriversData;
     }
   }
 
   static async addDriver(driver: Omit<Driver, 'id'>): Promise<Driver> {
     try {
+      console.log('Adding driver to Supabase:', driver.name);
       const { data, error } = await supabase
         .from('drivers')
         .insert([{
@@ -59,6 +63,7 @@ export class DatabaseService {
         throw error;
       }
 
+      console.log('Driver added successfully:', data.id);
       return this.convertDriverFromDB(data);
     } catch (error) {
       console.error('Database error:', error);
@@ -68,6 +73,7 @@ export class DatabaseService {
 
   static async updateDriver(driver: Driver): Promise<Driver> {
     try {
+      console.log('Updating driver in Supabase:', driver.id);
       const { data, error } = await supabase
         .from('drivers')
         .update({
@@ -94,6 +100,7 @@ export class DatabaseService {
         throw error;
       }
 
+      console.log('Driver updated successfully');
       return this.convertDriverFromDB(data);
     } catch (error) {
       console.error('Database error:', error);
@@ -103,6 +110,7 @@ export class DatabaseService {
 
   static async deleteDriver(driverId: number): Promise<void> {
     try {
+      console.log('Deleting driver from Supabase:', driverId);
       const { error } = await supabase
         .from('drivers')
         .delete()
@@ -112,6 +120,8 @@ export class DatabaseService {
         console.error('Error deleting driver:', error);
         throw error;
       }
+
+      console.log('Driver deleted successfully');
     } catch (error) {
       console.error('Database error:', error);
       throw error;
@@ -122,6 +132,7 @@ export class DatabaseService {
   
   static async getFines(): Promise<Fine[]> {
     try {
+      console.log('Fetching fines from Supabase...');
       const { data, error } = await supabase
         .from('fines')
         .select('*')
@@ -132,6 +143,7 @@ export class DatabaseService {
         throw error;
       }
 
+      console.log(`Successfully fetched ${data?.length || 0} fines from database`);
       return data?.map(this.convertFineFromDB) || [];
     } catch (error) {
       console.error('Database error:', error);
@@ -141,6 +153,7 @@ export class DatabaseService {
 
   static async addFine(fine: Omit<Fine, 'id'>): Promise<Fine> {
     try {
+      console.log('Adding fine to Supabase');
       const { data, error } = await supabase
         .from('fines')
         .insert([{
@@ -160,6 +173,7 @@ export class DatabaseService {
         throw error;
       }
 
+      console.log('Fine added successfully:', data.id);
       return this.convertFineFromDB(data);
     } catch (error) {
       console.error('Database error:', error);
@@ -171,6 +185,7 @@ export class DatabaseService {
   
   static async getContracts(): Promise<Contract[]> {
     try {
+      console.log('Fetching contracts from Supabase...');
       const { data, error } = await supabase
         .from('contracts')
         .select('*')
@@ -181,6 +196,7 @@ export class DatabaseService {
         throw error;
       }
 
+      console.log(`Successfully fetched ${data?.length || 0} contracts from database`);
       return data?.map(this.convertContractFromDB) || [];
     } catch (error) {
       console.error('Database error:', error);
@@ -191,11 +207,13 @@ export class DatabaseService {
   // ==================== REAL-TIME SUBSCRIPTIONS ====================
   
   static subscribeToDrivers(callback: (drivers: Driver[]) => void) {
+    console.log('Setting up real-time subscription to drivers table');
     return supabase
       .channel('drivers_changes')
       .on('postgres_changes', 
         { event: '*', schema: 'public', table: 'drivers' },
         async () => {
+          console.log('Received real-time update for drivers');
           const drivers = await this.getDrivers();
           callback(drivers);
         }
@@ -204,11 +222,13 @@ export class DatabaseService {
   }
 
   static subscribeToFines(callback: (fines: Fine[]) => void) {
+    console.log('Setting up real-time subscription to fines table');
     return supabase
       .channel('fines_changes')
       .on('postgres_changes', 
         { event: '*', schema: 'public', table: 'fines' },
         async () => {
+          console.log('Received real-time update for fines');
           const fines = await this.getFines();
           callback(fines);
         }
@@ -220,34 +240,52 @@ export class DatabaseService {
   
   static async bulkImportDrivers(drivers: Driver[]): Promise<void> {
     try {
+      console.log(`Starting bulk import of ${drivers.length} drivers`);
+      
+      // Convert drivers to database format
       const driverData = drivers.map(driver => ({
         name: driver.name,
         email: driver.email,
         phone: driver.phone,
         avatar: driver.avatar,
-        trips: driver.trips,
-        earnings: driver.earnings,
-        status: driver.status,
-        performance_score: driver.performanceScore,
-        join_date: driver.joinDate,
-        location_lat: driver.location.lat,
-        location_lng: driver.location.lng,
-        vehicle_id: driver.vehicleId,
-        contract_id: driver.contractId
+        trips: driver.trips || 0,
+        earnings: driver.earnings || 0,
+        status: driver.status || 'active',
+        performance_score: driver.performanceScore || 85,
+        join_date: driver.joinDate || new Date().toISOString().split('T')[0],
+        location_lat: driver.location?.lat || 25.2048,
+        location_lng: driver.location?.lng || 55.2708,
+        vehicle_id: driver.vehicleId || null,
+        contract_id: driver.contractId || null
       }));
 
-      const { error } = await supabase
-        .from('drivers')
-        .insert(driverData);
+      // Process in batches to avoid request size limitations
+      const batchSize = 20;
+      for (let i = 0; i < driverData.length; i += batchSize) {
+        const batch = driverData.slice(i, i + batchSize);
+        console.log(`Processing batch ${Math.floor(i/batchSize) + 1}/${Math.ceil(driverData.length/batchSize)}, size: ${batch.length}`);
+        
+        const { error } = await supabase
+          .from('drivers')
+          .insert(batch);
 
-      if (error) {
-        console.error('Error bulk importing drivers:', error);
-        throw error;
+        if (error) {
+          console.error(`Error importing batch ${i/batchSize + 1}:`, error);
+          throw error;
+        }
+        
+        console.log(`Batch ${Math.floor(i/batchSize) + 1} imported successfully`);
       }
 
       console.log(`Successfully imported ${drivers.length} drivers`);
     } catch (error) {
       console.error('Bulk import error:', error);
+      
+      // If it's a 404 error (table doesn't exist), provide a more helpful message
+      if (error instanceof Error && error.message.includes('404')) {
+        throw new Error('Database tables not found. You need to create the database schema first.');
+      }
+      
       throw error;
     }
   }
@@ -258,12 +296,14 @@ export class DatabaseService {
     contracts: Contract[];
   }> {
     try {
+      console.log('Exporting all data');
       const [drivers, fines, contracts] = await Promise.all([
         this.getDrivers(),
         this.getFines(),
         this.getContracts()
       ]);
 
+      console.log(`Export complete: ${drivers.length} drivers, ${fines.length} fines, ${contracts.length} contracts`);
       return { drivers, fines, contracts };
     } catch (error) {
       console.error('Export error:', error);
@@ -335,6 +375,7 @@ export class DatabaseService {
     pendingFines: number;
   }> {
     try {
+      console.log('Fetching fleet analytics');
       const [drivers, fines] = await Promise.all([
         this.getDrivers(),
         this.getFines()
@@ -345,6 +386,7 @@ export class DatabaseService {
       const avgPerformance = drivers.reduce((sum, d) => sum + d.performanceScore, 0) / drivers.length;
       const pendingFines = fines.filter(f => f.status === 'pending').length;
 
+      console.log('Analytics calculated successfully');
       return {
         totalDrivers: drivers.length,
         activeDrivers,
@@ -371,9 +413,11 @@ export class OfflineSync {
     data: any;
     timestamp: number;
   }) {
+    console.log('Adding operation to sync queue:', operation.type, operation.table);
     const queue = this.getSyncQueue();
     queue.push(operation);
     localStorage.setItem(this.SYNC_QUEUE_KEY, JSON.stringify(queue));
+    console.log('Operation added to queue, new queue size:', queue.length);
   }
 
   static getSyncQueue(): any[] {
@@ -384,16 +428,21 @@ export class OfflineSync {
   static async syncPendingOperations(): Promise<void> {
     const queue = this.getSyncQueue();
     
-    if (queue.length === 0) return;
+    if (queue.length === 0) {
+      console.log('No pending operations to sync');
+      return;
+    }
 
+    console.log(`Starting sync of ${queue.length} pending operations`);
     try {
       for (const operation of queue) {
+        console.log(`Syncing operation: ${operation.type} on ${operation.table}`);
         await this.executeOperation(operation);
       }
       
       // Clear queue after successful sync
       localStorage.removeItem(this.SYNC_QUEUE_KEY);
-      console.log(`Synced ${queue.length} pending operations`);
+      console.log(`Synced ${queue.length} pending operations successfully`);
     } catch (error) {
       console.error('Sync failed:', error);
       throw error;
@@ -404,16 +453,22 @@ export class OfflineSync {
     switch (operation.table) {
       case 'drivers':
         if (operation.type === 'CREATE') {
+          console.log('Executing CREATE operation for driver');
           await DatabaseService.addDriver(operation.data);
         } else if (operation.type === 'UPDATE') {
+          console.log('Executing UPDATE operation for driver');
           await DatabaseService.updateDriver(operation.data);
         } else if (operation.type === 'DELETE') {
+          console.log('Executing DELETE operation for driver');
           await DatabaseService.deleteDriver(operation.data.id);
         } else if (operation.type === 'BULK_IMPORT') {
+          console.log('Executing BULK_IMPORT operation for drivers');
           await DatabaseService.bulkImportDrivers(operation.data);
         }
         break;
       // Add other tables as needed
+      default:
+        console.warn(`Unknown table in sync operation: ${operation.table}`);
     }
   }
 }

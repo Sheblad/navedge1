@@ -23,6 +23,8 @@ const BulkImportDrivers: React.FC<BulkImportDriversProps> = ({ onImportDrivers, 
   });
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [clipboardData, setClipboardData] = useState('');
+  const [importProgress, setImportProgress] = useState(0);
+  const [debugInfo, setDebugInfo] = useState<string | null>(null);
 
   const texts = {
     en: {
@@ -67,7 +69,14 @@ const BulkImportDrivers: React.FC<BulkImportDriversProps> = ({ onImportDrivers, 
       pasteData: 'Paste your data here',
       pasteDataDesc: 'Paste data from Excel or CSV (tab or comma separated)',
       pasteHere: 'Paste data here...',
-      parseData: 'Parse Data'
+      parseData: 'Parse Data',
+      debugInfo: 'Debug Information',
+      showDebugInfo: 'Show Debug Info',
+      hideDebugInfo: 'Hide Debug Info',
+      importingProgress: 'Importing... {progress}%',
+      requiredColumns: 'Required columns: Name, Email, Phone',
+      formatExample: 'Example format: Name, Email, Phone, Join Date, Vehicle ID',
+      formatExampleData: 'John Smith, john@example.com, +971501234567, 2024-01-15, DXB-G-12345'
     },
     ar: {
       title: 'استيراد السائقين بالجملة',
@@ -111,7 +120,14 @@ const BulkImportDrivers: React.FC<BulkImportDriversProps> = ({ onImportDrivers, 
       pasteData: 'الصق بياناتك هنا',
       pasteDataDesc: 'الصق البيانات من Excel أو CSV (مفصولة بعلامة تبويب أو فاصلة)',
       pasteHere: 'الصق البيانات هنا...',
-      parseData: 'تحليل البيانات'
+      parseData: 'تحليل البيانات',
+      debugInfo: 'معلومات التصحيح',
+      showDebugInfo: 'إظهار معلومات التصحيح',
+      hideDebugInfo: 'إخفاء معلومات التصحيح',
+      importingProgress: 'جاري الاستيراد... {progress}%',
+      requiredColumns: 'الأعمدة المطلوبة: الاسم، البريد الإلكتروني، الهاتف',
+      formatExample: 'مثال التنسيق: الاسم، البريد الإلكتروني، الهاتف، تاريخ الانضمام، معرف المركبة',
+      formatExampleData: 'جون سميث، john@example.com، +971501234567، 2024-01-15، DXB-G-12345'
     },
     hi: {
       title: 'बल्क ड्राइवर आयात',
@@ -155,7 +171,14 @@ const BulkImportDrivers: React.FC<BulkImportDriversProps> = ({ onImportDrivers, 
       pasteData: 'अपना डेटा यहां पेस्ट करें',
       pasteDataDesc: 'एक्सेल या CSV से डेटा पेस्ट करें (टैब या कॉमा से अलग किया गया)',
       pasteHere: 'यहां डेटा पेस्ट करें...',
-      parseData: 'डेटा पार्स करें'
+      parseData: 'डेटा पार्स करें',
+      debugInfo: 'डीबग जानकारी',
+      showDebugInfo: 'डीबग जानकारी दिखाएं',
+      hideDebugInfo: 'डीबग जानकारी छिपाएं',
+      importingProgress: 'आयात हो रहा है... {progress}%',
+      requiredColumns: 'आवश्यक कॉलम: नाम, ईमेल, फोन',
+      formatExample: 'उदाहरण प्रारूप: नाम, ईमेल, फोन, शामिल होने की तिथि, वाहन आईडी',
+      formatExampleData: 'जॉन स्मिथ, john@example.com, +971501234567, 2024-01-15, DXB-G-12345'
     },
     ur: {
       title: 'بلک ڈرائیور امپورٹ',
@@ -199,7 +222,14 @@ const BulkImportDrivers: React.FC<BulkImportDriversProps> = ({ onImportDrivers, 
       pasteData: 'اپنا ڈیٹا یہاں پیسٹ کریں',
       pasteDataDesc: 'ایکسل یا CSV سے ڈیٹا پیسٹ کریں (ٹیب یا کاما سے الگ کیا گیا)',
       pasteHere: 'یہاں ڈیٹا پیسٹ کریں...',
-      parseData: 'ڈیٹا پارس کریں'
+      parseData: 'ڈیٹا پارس کریں',
+      debugInfo: 'ڈیبگ معلومات',
+      showDebugInfo: 'ڈیبگ معلومات دکھائیں',
+      hideDebugInfo: 'ڈیبگ معلومات چھپائیں',
+      importingProgress: 'امپورٹ ہو رہا ہے... {progress}%',
+      requiredColumns: 'ضروری کالمز: نام، ای میل، فون',
+      formatExample: 'مثال فارمیٹ: نام، ای میل، فون، شمولیت کی تاریخ، گاڑی آئی ڈی',
+      formatExampleData: 'جان سمتھ، john@example.com، +971501234567، 2024-01-15، DXB-G-12345'
     }
   };
 
@@ -208,135 +238,210 @@ const BulkImportDrivers: React.FC<BulkImportDriversProps> = ({ onImportDrivers, 
   // Handle file selection
   const handleFileSelect = (selectedFile: File) => {
     setFile(selectedFile);
+    setDebugInfo(`File selected: ${selectedFile.name} (${selectedFile.size} bytes, type: ${selectedFile.type})`);
     parseFile(selectedFile);
   };
 
   // Parse the uploaded file
   const parseFile = async (selectedFile: File) => {
     setError(null);
+    setDebugInfo(`Starting to parse file: ${selectedFile.name}`);
     
     try {
-      // In a real implementation, you would use a library like xlsx or papaparse
-      // For this demo, we'll simulate parsing with a timeout
+      // Check file type
+      const fileType = selectedFile.name.split('.').pop()?.toLowerCase();
+      if (!fileType || !['csv', 'xlsx', 'xls', 'txt'].includes(fileType)) {
+        throw new Error(`Unsupported file type: ${fileType}. Please use CSV, XLSX, or XLS files.`);
+      }
       
-      // Simulate processing
-      setTimeout(() => {
-        // Mock data for demonstration
-        const mockParsedData = [
-          { Name: 'John Smith', Email: 'john@example.com', Phone: '+971501234567', 'Join Date': '2024-01-15', 'Vehicle ID': 'DXB-G-12345' },
-          { Name: 'Sarah Johnson', Email: 'sarah@example.com', Phone: '+971502345678', 'Join Date': '2024-02-20', 'Vehicle ID': 'DXB-G-23456' },
-          { Name: 'Mohammed Al-Farsi', Email: 'mohammed@example.com', Phone: '+971503456789', 'Join Date': '2024-03-10', 'Vehicle ID': 'DXB-G-34567' },
-          { Name: 'Fatima Al-Zahra', Email: 'fatima@example.com', Phone: '+971504567890', 'Join Date': '2024-04-05', 'Vehicle ID': 'DXB-G-45678' },
-          { Name: 'Raj Patel', Email: 'raj@example.com', Phone: '+971505678901', 'Join Date': '2024-05-12', 'Vehicle ID': 'DXB-G-56789' }
-        ];
+      setDebugInfo(prev => `${prev}\nFile type: ${fileType} is supported`);
+      
+      // For CSV files, read as text
+      if (fileType === 'csv' || fileType === 'txt') {
+        const text = await readFileAsText(selectedFile);
+        setDebugInfo(prev => `${prev}\nFile read as text, length: ${text.length} characters`);
         
-        setParsedData(mockParsedData);
+        // Parse CSV
+        const parsedData = parseCSV(text);
+        setDebugInfo(prev => `${prev}\nCSV parsed, found ${parsedData.length} rows`);
         
-        // Auto-detect column mapping
-        if (mockParsedData.length > 0) {
-          const firstRow = mockParsedData[0];
-          const headers = Object.keys(firstRow);
-          
-          const mapping: {[key: string]: string} = {
-            name: '',
-            email: '',
-            phone: '',
-            joinDate: '',
-            vehicleId: ''
-          };
-          
-          // Try to match headers to fields
-          headers.forEach(header => {
-            const lowerHeader = header.toLowerCase();
-            
-            if (lowerHeader.includes('name')) {
-              mapping.name = header;
-            } else if (lowerHeader.includes('email')) {
-              mapping.email = header;
-            } else if (lowerHeader.includes('phone') || lowerHeader.includes('mobile')) {
-              mapping.phone = header;
-            } else if (lowerHeader.includes('join') || lowerHeader.includes('date')) {
-              mapping.joinDate = header;
-            } else if (lowerHeader.includes('vehicle') || lowerHeader.includes('car')) {
-              mapping.vehicleId = header;
-            }
-          });
-          
-          setColumnMapping(mapping);
+        if (parsedData.length === 0) {
+          throw new Error('No data found in the file or invalid format');
         }
         
+        setParsedData(parsedData);
+        autoDetectColumnMapping(parsedData[0]);
         setStep('preview');
-      }, 1500);
+      } else {
+        // For Excel files, we would normally use a library like xlsx
+        // But for this demo, we'll simulate parsing
+        setDebugInfo(prev => `${prev}\nSimulating Excel parsing (in a real app, we would use xlsx library)`);
+        
+        // Simulate processing
+        setTimeout(() => {
+          // Mock data for demonstration
+          const mockParsedData = [
+            { Name: 'John Smith', Email: 'john@example.com', Phone: '+971501234567', 'Join Date': '2024-01-15', 'Vehicle ID': 'DXB-G-12345' },
+            { Name: 'Sarah Johnson', Email: 'sarah@example.com', Phone: '+971502345678', 'Join Date': '2024-02-20', 'Vehicle ID': 'DXB-G-23456' },
+            { Name: 'Mohammed Al-Farsi', Email: 'mohammed@example.com', Phone: '+971503456789', 'Join Date': '2024-03-10', 'Vehicle ID': 'DXB-G-34567' },
+            { Name: 'Fatima Al-Zahra', Email: 'fatima@example.com', Phone: '+971504567890', 'Join Date': '2024-04-05', 'Vehicle ID': 'DXB-G-45678' },
+            { Name: 'Raj Patel', Email: 'raj@example.com', Phone: '+971505678901', 'Join Date': '2024-05-12', 'Vehicle ID': 'DXB-G-56789' }
+          ];
+          
+          setDebugInfo(prev => `${prev}\nMock data created with ${mockParsedData.length} rows`);
+          setParsedData(mockParsedData);
+          autoDetectColumnMapping(mockParsedData[0]);
+          setStep('preview');
+        }, 1500);
+      }
     } catch (err) {
       console.error('Error parsing file:', err);
-      setError('Failed to parse file. Please check the file format and try again.');
+      setDebugInfo(prev => `${prev}\nERROR: ${err instanceof Error ? err.message : String(err)}`);
+      setError(err instanceof Error ? err.message : 'Failed to parse file. Please check the file format and try again.');
       setStep('error');
     }
+  };
+
+  // Read file as text
+  const readFileAsText = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        if (e.target?.result) {
+          resolve(e.target.result as string);
+        } else {
+          reject(new Error('Failed to read file'));
+        }
+      };
+      reader.onerror = () => reject(new Error('File read error'));
+      reader.readAsText(file);
+    });
+  };
+
+  // Parse CSV text
+  const parseCSV = (text: string): any[] => {
+    // Detect delimiter (comma or tab)
+    const delimiter = text.includes('\t') ? '\t' : ',';
+    setDebugInfo(prev => `${prev}\nDetected delimiter: ${delimiter === '\t' ? 'tab' : 'comma'}`);
+    
+    // Split by lines
+    const lines = text.trim().split(/\r?\n/);
+    if (lines.length < 2) {
+      throw new Error('File must contain at least a header row and one data row');
+    }
+    
+    // Parse header
+    const headers = lines[0].split(delimiter).map(h => h.trim());
+    setDebugInfo(prev => `${prev}\nHeaders found: ${headers.join(', ')}`);
+    
+    // Parse data rows
+    const data = [];
+    for (let i = 1; i < lines.length; i++) {
+      const line = lines[i].trim();
+      if (!line) continue; // Skip empty lines
+      
+      const values = line.split(delimiter).map(v => v.trim());
+      if (values.length !== headers.length) {
+        setDebugInfo(prev => `${prev}\nWarning: Line ${i+1} has ${values.length} values but header has ${headers.length} columns`);
+        continue; // Skip malformed lines
+      }
+      
+      const row: {[key: string]: string} = {};
+      headers.forEach((header, index) => {
+        row[header] = values[index];
+      });
+      data.push(row);
+    }
+    
+    return data;
   };
 
   // Parse clipboard data
   const parseClipboardData = (text: string) => {
     try {
+      setDebugInfo(`Parsing clipboard data, length: ${text.length} characters`);
+      
       // Split by newlines
       const rows = text.trim().split(/\r?\n/);
       
       // Detect delimiter (tab or comma)
       const firstRow = rows[0];
       const delimiter = firstRow.includes('\t') ? '\t' : ',';
+      setDebugInfo(prev => `${prev}\nDetected delimiter: ${delimiter === '\t' ? 'tab' : 'comma'}`);
       
       // Parse headers
       const headers = firstRow.split(delimiter).map(h => h.trim());
+      setDebugInfo(prev => `${prev}\nHeaders found: ${headers.join(', ')}`);
       
       // Parse data rows
-      const data = rows.slice(1).map(row => {
-        const values = row.split(delimiter).map(v => v.trim());
-        const rowData: {[key: string]: string} = {};
+      const data = [];
+      for (let i = 1; i < rows.length; i++) {
+        const row = rows[i].trim();
+        if (!row) continue; // Skip empty rows
         
+        const values = row.split(delimiter).map(v => v.trim());
+        if (values.length !== headers.length) {
+          setDebugInfo(prev => `${prev}\nWarning: Row ${i+1} has ${values.length} values but header has ${headers.length} columns`);
+          continue; // Skip malformed rows
+        }
+        
+        const rowData: {[key: string]: string} = {};
         headers.forEach((header, index) => {
           rowData[header] = values[index] || '';
         });
         
-        return rowData;
-      });
-      
-      setParsedData(data);
-      
-      // Auto-detect column mapping
-      if (data.length > 0) {
-        const mapping: {[key: string]: string} = {
-          name: '',
-          email: '',
-          phone: '',
-          joinDate: '',
-          vehicleId: ''
-        };
-        
-        // Try to match headers to fields
-        headers.forEach(header => {
-          const lowerHeader = header.toLowerCase();
-          
-          if (lowerHeader.includes('name')) {
-            mapping.name = header;
-          } else if (lowerHeader.includes('email')) {
-            mapping.email = header;
-          } else if (lowerHeader.includes('phone') || lowerHeader.includes('mobile')) {
-            mapping.phone = header;
-          } else if (lowerHeader.includes('join') || lowerHeader.includes('date')) {
-            mapping.joinDate = header;
-          } else if (lowerHeader.includes('vehicle') || lowerHeader.includes('car')) {
-            mapping.vehicleId = header;
-          }
-        });
-        
-        setColumnMapping(mapping);
+        data.push(rowData);
       }
       
-      setStep('preview');
+      setDebugInfo(prev => `${prev}\nParsed ${data.length} rows from clipboard`);
+      setParsedData(data);
+      
+      if (data.length > 0) {
+        autoDetectColumnMapping(data[0]);
+        setStep('preview');
+      } else {
+        throw new Error('No valid data rows found in clipboard');
+      }
     } catch (err) {
       console.error('Error parsing clipboard data:', err);
+      setDebugInfo(prev => `${prev}\nERROR: ${err instanceof Error ? err.message : String(err)}`);
       setError('Failed to parse data. Please check the format and try again.');
       setStep('error');
     }
+  };
+
+  // Auto-detect column mapping
+  const autoDetectColumnMapping = (firstRow: {[key: string]: string}) => {
+    const headers = Object.keys(firstRow);
+    setDebugInfo(prev => `${prev}\nAuto-detecting column mapping from headers: ${headers.join(', ')}`);
+    
+    const mapping: {[key: string]: string} = {
+      name: '',
+      email: '',
+      phone: '',
+      joinDate: '',
+      vehicleId: ''
+    };
+    
+    // Try to match headers to fields
+    headers.forEach(header => {
+      const lowerHeader = header.toLowerCase();
+      
+      if (lowerHeader.includes('name')) {
+        mapping.name = header;
+      } else if (lowerHeader.includes('email')) {
+        mapping.email = header;
+      } else if (lowerHeader.includes('phone') || lowerHeader.includes('mobile')) {
+        mapping.phone = header;
+      } else if (lowerHeader.includes('join') || lowerHeader.includes('date')) {
+        mapping.joinDate = header;
+      } else if (lowerHeader.includes('vehicle') || lowerHeader.includes('car')) {
+        mapping.vehicleId = header;
+      }
+    });
+    
+    setDebugInfo(prev => `${prev}\nAuto-detected mapping: ${JSON.stringify(mapping)}`);
+    setColumnMapping(mapping);
   };
 
   // Download template file
@@ -351,11 +456,14 @@ const BulkImportDrivers: React.FC<BulkImportDriversProps> = ({ onImportDrivers, 
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+    
+    setDebugInfo(`Template downloaded: driver_import_template.csv`);
   };
 
   // Map columns to driver fields
   const handleColumnMappingChange = (field: string, value: string) => {
     setColumnMapping(prev => ({ ...prev, [field]: value }));
+    setDebugInfo(prev => `${prev}\nColumn mapping updated: ${field} => ${value}`);
   };
 
   // Import drivers
@@ -363,42 +471,84 @@ const BulkImportDrivers: React.FC<BulkImportDriversProps> = ({ onImportDrivers, 
     // Validate required fields
     if (!columnMapping.name || !columnMapping.email || !columnMapping.phone) {
       setError('Name, Email, and Phone are required fields. Please map these columns.');
+      setDebugInfo(prev => `${prev}\nImport validation failed: missing required field mappings`);
       return;
     }
     
     setStep('importing');
+    setImportProgress(0);
+    setDebugInfo(prev => `${prev}\nStarting import process with ${parsedData.length} rows`);
     
     try {
       // Map parsed data to driver objects
-      const drivers = parsedData.map(row => {
-        const avatar = row[columnMapping.name]?.split(' ').map((n: string) => n[0]).join('').toUpperCase() || 'XX';
+      const drivers: Omit<Driver, 'id'>[] = [];
+      
+      // Process in batches to show progress
+      const batchSize = Math.max(1, Math.floor(parsedData.length / 10));
+      let processedCount = 0;
+      
+      const processNextBatch = () => {
+        const batch = parsedData.slice(processedCount, processedCount + batchSize);
         
-        return {
-          name: row[columnMapping.name] || '',
-          email: row[columnMapping.email] || '',
-          phone: row[columnMapping.phone] || '',
-          avatar,
-          trips: 0,
-          earnings: 0,
-          trips_today: 0,
-          earnings_today: 0,
-          status: 'active',
-          performanceScore: 85,
-          joinDate: row[columnMapping.joinDate] || new Date().toISOString().split('T')[0],
-          location: { lat: 25.2048, lng: 55.2708 },
-          vehicleId: row[columnMapping.vehicleId] || undefined
-        };
-      }).filter(driver => driver.name && driver.email && driver.phone);
+        batch.forEach(row => {
+          // Skip rows with missing required fields
+          if (!row[columnMapping.name] || !row[columnMapping.email] || !row[columnMapping.phone]) {
+            setDebugInfo(prev => `${prev}\nSkipping row with missing required fields: ${JSON.stringify(row)}`);
+            return;
+          }
+          
+          const avatar = row[columnMapping.name]?.split(' ').map((n: string) => n[0]).join('').toUpperCase() || 'XX';
+          
+          const driver: Omit<Driver, 'id'> = {
+            name: row[columnMapping.name] || '',
+            email: row[columnMapping.email] || '',
+            phone: row[columnMapping.phone] || '',
+            avatar,
+            trips: 0,
+            earnings: 0,
+            trips_today: 0,
+            earnings_today: 0,
+            status: 'active',
+            performanceScore: 85,
+            joinDate: row[columnMapping.joinDate] || new Date().toISOString().split('T')[0],
+            location: { lat: 25.2048, lng: 55.2708 },
+            vehicleId: row[columnMapping.vehicleId] || undefined
+          };
+          
+          drivers.push(driver);
+        });
+        
+        processedCount += batch.length;
+        const progress = Math.min(100, Math.round((processedCount / parsedData.length) * 100));
+        setImportProgress(progress);
+        setDebugInfo(prev => `${prev}\nProcessed ${processedCount}/${parsedData.length} rows (${progress}%)`);
+        
+        if (processedCount < parsedData.length) {
+          setTimeout(processNextBatch, 100); // Process next batch
+        } else {
+          // All batches processed
+          setMappedDrivers(drivers);
+          setDebugInfo(prev => `${prev}\nAll rows processed. Created ${drivers.length} driver objects.`);
+          
+          // Call the import function
+          try {
+            onImportDrivers(drivers);
+            setDebugInfo(prev => `${prev}\nImport function called successfully with ${drivers.length} drivers`);
+            setStep('complete');
+          } catch (err) {
+            console.error('Error in import callback:', err);
+            setDebugInfo(prev => `${prev}\nERROR in import callback: ${err instanceof Error ? err.message : String(err)}`);
+            setError(`Failed to import drivers: ${err instanceof Error ? err.message : 'Unknown error'}`);
+            setStep('error');
+          }
+        }
+      };
       
-      setMappedDrivers(drivers);
-      
-      // Simulate API call
-      setTimeout(() => {
-        onImportDrivers(drivers);
-        setStep('complete');
-      }, 2000);
+      // Start processing
+      processNextBatch();
     } catch (err) {
       console.error('Error importing drivers:', err);
+      setDebugInfo(prev => `${prev}\nERROR during import: ${err instanceof Error ? err.message : String(err)}`);
       setError('Failed to import drivers. Please check your data and try again.');
       setStep('error');
     }
@@ -411,6 +561,15 @@ const BulkImportDrivers: React.FC<BulkImportDriversProps> = ({ onImportDrivers, 
         <Upload className="w-16 h-16 text-blue-600 mx-auto mb-4" />
         <h3 className="text-xl font-semibold text-gray-900 mb-2">{t.uploadTitle}</h3>
         <p className="text-gray-600">{t.uploadSubtitle}</p>
+      </div>
+      
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+        <div className="flex items-center space-x-2 mb-2">
+          <AlertTriangle className="w-5 h-5 text-blue-600" />
+          <h4 className="font-semibold text-blue-900">{t.requiredColumns}</h4>
+        </div>
+        <p className="text-blue-800 text-sm mb-2">{t.formatExample}</p>
+        <p className="text-blue-700 text-sm font-mono bg-blue-100 p-2 rounded">{t.formatExampleData}</p>
       </div>
       
       <div 
@@ -427,7 +586,7 @@ const BulkImportDrivers: React.FC<BulkImportDriversProps> = ({ onImportDrivers, 
         <input
           ref={fileInputRef}
           type="file"
-          accept=".csv,.xlsx,.xls"
+          accept=".csv,.xlsx,.xls,.txt"
           onChange={(e) => e.target.files?.[0] && handleFileSelect(e.target.files[0])}
           className="hidden"
         />
@@ -617,6 +776,21 @@ const BulkImportDrivers: React.FC<BulkImportDriversProps> = ({ onImportDrivers, 
         </div>
       )}
       
+      {/* Debug Info */}
+      {debugInfo && (
+        <div className="mt-4">
+          <button
+            onClick={() => setDebugInfo(null)}
+            className="text-sm text-blue-600 hover:text-blue-800 flex items-center space-x-1"
+          >
+            <span>{t.hideDebugInfo}</span>
+          </button>
+          <div className="mt-2 p-3 bg-gray-800 text-green-400 rounded-lg overflow-x-auto">
+            <pre className="text-xs whitespace-pre-wrap">{debugInfo}</pre>
+          </div>
+        </div>
+      )}
+      
       {/* Actions */}
       <div className="flex justify-between pt-6 border-t border-gray-200">
         <button
@@ -626,12 +800,23 @@ const BulkImportDrivers: React.FC<BulkImportDriversProps> = ({ onImportDrivers, 
           {t.back}
         </button>
         
-        <button
-          onClick={handleImport}
-          className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-        >
-          {t.import}
-        </button>
+        <div className="flex space-x-3">
+          {!debugInfo && (
+            <button
+              onClick={() => setDebugInfo('Debug information will appear here')}
+              className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              {t.showDebugInfo}
+            </button>
+          )}
+          
+          <button
+            onClick={handleImport}
+            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            {t.import}
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -650,6 +835,31 @@ const BulkImportDrivers: React.FC<BulkImportDriversProps> = ({ onImportDrivers, 
         <h3 className="text-xl font-semibold text-gray-900 mb-2">{t.importingTitle}</h3>
         <p className="text-gray-600">{t.importingSubtitle}</p>
       </div>
+      
+      <div className="w-full bg-gray-200 rounded-full h-2.5 max-w-md mx-auto">
+        <div 
+          className="bg-blue-600 h-2.5 rounded-full transition-all duration-300" 
+          style={{ width: `${importProgress}%` }}
+        ></div>
+      </div>
+      <p className="text-sm text-gray-600">
+        {t.importingProgress.replace('{progress}', importProgress.toString())}
+      </p>
+      
+      {/* Debug Info */}
+      {debugInfo && (
+        <div className="mt-8 text-left max-w-md mx-auto">
+          <button
+            onClick={() => setDebugInfo(null)}
+            className="text-sm text-blue-600 hover:text-blue-800 flex items-center space-x-1"
+          >
+            <span>{t.hideDebugInfo}</span>
+          </button>
+          <div className="mt-2 p-3 bg-gray-800 text-green-400 rounded-lg overflow-x-auto">
+            <pre className="text-xs whitespace-pre-wrap">{debugInfo}</pre>
+          </div>
+        </div>
+      )}
     </div>
   );
 
@@ -684,6 +894,21 @@ const BulkImportDrivers: React.FC<BulkImportDriversProps> = ({ onImportDrivers, 
         </ul>
       </div>
       
+      {/* Debug Info */}
+      {debugInfo && (
+        <div className="mt-4 text-left max-w-md mx-auto">
+          <button
+            onClick={() => setDebugInfo(null)}
+            className="text-sm text-blue-600 hover:text-blue-800 flex items-center space-x-1"
+          >
+            <span>{t.hideDebugInfo}</span>
+          </button>
+          <div className="mt-2 p-3 bg-gray-800 text-green-400 rounded-lg overflow-x-auto">
+            <pre className="text-xs whitespace-pre-wrap">{debugInfo}</pre>
+          </div>
+        </div>
+      )}
+      
       <button
         onClick={onClose}
         className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
@@ -708,6 +933,21 @@ const BulkImportDrivers: React.FC<BulkImportDriversProps> = ({ onImportDrivers, 
       <div className="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md mx-auto">
         <p className="text-red-800">{error}</p>
       </div>
+      
+      {/* Debug Info */}
+      {debugInfo && (
+        <div className="mt-4 text-left max-w-md mx-auto">
+          <button
+            onClick={() => setDebugInfo(null)}
+            className="text-sm text-blue-600 hover:text-blue-800 flex items-center space-x-1"
+          >
+            <span>{t.hideDebugInfo}</span>
+          </button>
+          <div className="mt-2 p-3 bg-gray-800 text-green-400 rounded-lg overflow-x-auto">
+            <pre className="text-xs whitespace-pre-wrap">{debugInfo}</pre>
+          </div>
+        </div>
+      )}
       
       <div className="flex space-x-4 justify-center">
         <button

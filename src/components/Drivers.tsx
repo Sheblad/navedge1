@@ -32,6 +32,7 @@ const Drivers: React.FC<DriversProps> = ({
   const [showGPSWizard, setShowGPSWizard] = useState(false);
   const [showAddDriverForm, setShowAddDriverForm] = useState(false);
   const [showBulkImport, setShowBulkImport] = useState(false);
+  const [importError, setImportError] = useState<string | null>(null);
 
   const texts = {
     en: {
@@ -59,7 +60,9 @@ const Drivers: React.FC<DriversProps> = ({
       gpsStatus: 'GPS Status',
       gpsConnected: 'GPS Connected',
       gpsNotConnected: 'No GPS',
-      mobileApp: 'Mobile App'
+      mobileApp: 'Mobile App',
+      importError: 'Import Error',
+      tryAgain: 'Try Again'
     },
     ar: {
       title: 'السائقون',
@@ -86,7 +89,9 @@ const Drivers: React.FC<DriversProps> = ({
       gpsStatus: 'حالة GPS',
       gpsConnected: 'GPS متصل',
       gpsNotConnected: 'لا يوجد GPS',
-      mobileApp: 'تطبيق الهاتف'
+      mobileApp: 'تطبيق الهاتف',
+      importError: 'خطأ في الاستيراد',
+      tryAgain: 'حاول مرة أخرى'
     },
     hi: {
       title: 'ड्राइवर',
@@ -113,7 +118,9 @@ const Drivers: React.FC<DriversProps> = ({
       gpsStatus: 'GPS स्थिति',
       gpsConnected: 'GPS कनेक्टेड',
       gpsNotConnected: 'कोई GPS नहीं',
-      mobileApp: 'मोबाइल ऐप'
+      mobileApp: 'मोबाइल ऐप',
+      importError: 'आयात त्रुटि',
+      tryAgain: 'पुनः प्रयास करें'
     },
     ur: {
       title: 'ڈرائیورز',
@@ -140,7 +147,9 @@ const Drivers: React.FC<DriversProps> = ({
       gpsStatus: 'GPS حالت',
       gpsConnected: 'GPS جڑا ہوا',
       gpsNotConnected: 'کوئی GPS نہیں',
-      mobileApp: 'موبائل ایپ'
+      mobileApp: 'موبائل ایپ',
+      importError: 'امپورٹ میں خرابی',
+      tryAgain: 'دوبارہ کوشش کریں'
     }
   };
 
@@ -172,18 +181,27 @@ const Drivers: React.FC<DriversProps> = ({
   };
 
   const handleBulkImport = (driversToImport: Omit<Driver, 'id'>[]) => {
-    // Add IDs to the imported drivers
-    const newDrivers = driversToImport.map((driver, index) => ({
-      ...driver,
-      id: Math.max(...drivers.map(d => d.id), 0) + index + 1
-    }));
-    
-    // Add each driver
-    newDrivers.forEach(driver => {
-      onAddDriver(driver);
-    });
-    
-    setShowBulkImport(false);
+    try {
+      setImportError(null);
+      
+      // Add IDs to the imported drivers
+      const newDrivers = driversToImport.map((driver, index) => ({
+        ...driver,
+        id: Math.max(...drivers.map(d => d.id), 0) + index + 1
+      }));
+      
+      console.log(`Importing ${newDrivers.length} drivers`);
+      
+      // Add each driver
+      newDrivers.forEach(driver => {
+        onAddDriver(driver);
+      });
+      
+      setShowBulkImport(false);
+    } catch (error) {
+      console.error('Error during bulk import:', error);
+      setImportError(error instanceof Error ? error.message : 'Unknown error during import');
+    }
   };
 
   if (selectedDriverId) {
@@ -229,6 +247,33 @@ const Drivers: React.FC<DriversProps> = ({
           </button>
         </div>
       </div>
+
+      {/* Import Error Alert */}
+      {importError && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <div className="flex items-start space-x-3">
+            <AlertTriangle className="w-5 h-5 text-red-600 mt-0.5" />
+            <div className="flex-1">
+              <h3 className="font-semibold text-red-900">{t.importError}</h3>
+              <p className="text-red-700 text-sm mt-1">{importError}</p>
+            </div>
+            <button 
+              onClick={() => setImportError(null)}
+              className="p-1 hover:bg-red-100 rounded-full"
+            >
+              <X className="w-4 h-4 text-red-500" />
+            </button>
+          </div>
+          <div className="mt-3 ml-8">
+            <button
+              onClick={() => setShowBulkImport(true)}
+              className="px-3 py-1 bg-red-100 text-red-700 rounded-md text-sm hover:bg-red-200 transition-colors"
+            >
+              {t.tryAgain}
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* GPS Integration Notice */}
       <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg p-4">
