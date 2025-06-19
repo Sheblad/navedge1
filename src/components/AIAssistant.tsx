@@ -33,7 +33,12 @@ const NavEdgeAssistant: React.FC<NavEdgeAssistantProps> = ({
   const [inputValue, setInputValue] = useState('');
   const [isListening, setIsListening] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
-  const [conversationContext, setConversationContext] = useState<string>('');
+  const [conversationContext, setConversationContext] = useState<{
+    currentDriver?: number;
+    topic?: string;
+    lastQuery?: string;
+    followUpContext?: string;
+  }>({});
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const texts = {
@@ -44,7 +49,7 @@ const NavEdgeAssistant: React.FC<NavEdgeAssistantProps> = ({
       send: 'Send',
       listening: 'Listening...',
       typing: 'NavEdge is typing...',
-      welcomeMessage: `👋 **Welcome to NavEdge AI!**\n\nI'm your intelligent fleet management assistant. I can help you with:\n\n🚗 **Driver Management**\n• Check driver performance\n• View driver locations\n• Manage driver assignments\n\n📋 **Contract & Fine Management**\n• Review contract details\n• Track fine payments\n• Monitor compliance\n\n📊 **Analytics & Reports**\n• Performance insights\n• Revenue analysis\n• Fleet utilization\n\n💡 **Try asking:**\n• "How many trips did I complete today?"\n• "What's my total earnings this month?"\n• "How much do I owe in fines?"\n• "Do I have any warnings?"\n• "How's my performance score right now?"`
+      welcomeMessage: `👋 **Welcome to NavEdge AI!**\n\nI'm your intelligent fleet management assistant. I can help you with:\n\n🚗 **Driver Management**\n• Check driver performance\n• View driver locations\n• Manage driver assignments\n\n📋 **Contract & Fine Management**\n• Review contract details\n• Track fine payments\n• Monitor compliance\n\n📊 **Analytics & Reports**\n• Performance insights\n• Revenue analysis\n• Fleet utilization\n\n💡 **Try asking:**\n• "How many trips did Ahmed complete today?"\n• "What's my total earnings this month?"\n• "Who has pending fines?"\n• "Show me Ahmed's performance score"\n• "When does Omar's contract expire?"`
     },
     ar: {
       title: 'مساعد نافيدج الذكي',
@@ -53,7 +58,7 @@ const NavEdgeAssistant: React.FC<NavEdgeAssistantProps> = ({
       send: 'إرسال',
       listening: 'أستمع...',
       typing: 'نافيدج يكتب...',
-      welcomeMessage: `👋 **مرحباً بك في نافيدج الذكي!**\n\nأنا مساعدك الذكي لإدارة الأسطول. يمكنني مساعدتك في:\n\n🚗 **إدارة السائقين**\n• فحص أداء السائقين\n• عرض مواقع السائقين\n• إدارة تعيينات السائقين\n\n📋 **إدارة العقود والمخالفات**\n• مراجعة تفاصيل العقود\n• تتبع دفع المخالفات\n• مراقبة الامتثال\n\n📊 **التحليلات والتقارير**\n• رؤى الأداء\n• تحليل الإيرادات\n• استخدام الأسطول\n\n💡 **جرب السؤال:**\n• "كم عدد الرحلات التي أكملتها اليوم؟"\n• "ما هو إجمالي أرباحي هذا الشهر؟"\n• "كم أدين بالغرامات؟"\n• "هل لدي أي تحذيرات؟"\n• "كيف هي درجة أدائي الآن؟"`
+      welcomeMessage: `👋 **مرحباً بك في نافيدج الذكي!**\n\nأنا مساعدك الذكي لإدارة الأسطول. يمكنني مساعدتك في:\n\n🚗 **إدارة السائقين**\n• فحص أداء السائقين\n• عرض مواقع السائقين\n• إدارة تعيينات السائقين\n\n📋 **إدارة العقود والمخالفات**\n• مراجعة تفاصيل العقود\n• تتبع دفع المخالفات\n• مراقبة الامتثال\n\n📊 **التحليلات والتقارير**\n• رؤى الأداء\n• تحليل الإيرادات\n• استخدام الأسطول\n\n💡 **جرب السؤال:**\n• "كم عدد الرحلات التي أكملها أحمد اليوم؟"\n• "ما هي إجمالي أرباحي هذا الشهر؟"\n• "من لديه مخالفات معلقة؟"\n• "أظهر لي درجة أداء أحمد"\n• "متى ينتهي عقد عمر؟"`
     },
     hi: {
       title: 'नेवएज AI असिस्टेंट',
@@ -62,7 +67,7 @@ const NavEdgeAssistant: React.FC<NavEdgeAssistantProps> = ({
       send: 'भेजें',
       listening: 'सुन रहा हूं...',
       typing: 'नेवएज टाइप कर रहा है...',
-      welcomeMessage: `👋 **नेवएज AI में आपका स्वागत है!**\n\nमैं आपका बुद्धिमान फ्लीट प्रबंधन सहायक हूं। मैं आपकी मदद कर सकता हूं:\n\n🚗 **ड्राइवर प्रबंधन**\n• ड्राइवर प्रदर्शन जांचें\n• ड्राइवर स्थान देखें\n• ड्राइवर असाइनमेंट प्रबंधित करें\n\n📋 **अनुबंध और जुर्माना प्रबंधन**\n• अनुबंध विवरण समीक्षा करें\n• जुर्माना भुगतान ट्रैक करें\n• अनुपालन की निगरानी करें\n\n📊 **एनालिटिक्स और रिपोर्ट**\n• प्रदर्शन अंतर्दृष्टि\n• राजस्व विश्लेषण\n• फ्लीट उपयोग\n\n💡 **पूछने की कोशिश करें:**\n• "आज मैंने कितनी यात्राएं पूरी कीं?"\n• "इस महीने मेरी कुल कमाई क्या है?"\n• "मुझे जुर्माने में कितना देना है?"\n• "क्या मुझे कोई चेतावनी मिली है?"\n• "अभी मेरा प्रदर्शन स्कोर कैसा है?"`
+      welcomeMessage: `👋 **नेवएज AI में आपका स्वागत है!**\n\nमैं आपका बुद्धिमान फ्लीट प्रबंधन सहायक हूं। मैं आपकी मदद कर सकता हूं:\n\n🚗 **ड्राइवर प्रबंधन**\n• ड्राइवर प्रदर्शन जांचें\n• ड्राइवर स्थान देखें\n• ड्राइवर असाइनमेंट प्रबंधित करें\n\n📋 **अनुबंध और जुर्माना प्रबंधन**\n• अनुबंध विवरण समीक्षा करें\n• जुर्माना भुगतान ट्रैक करें\n• अनुपालन की निगरानी करें\n\n📊 **एनालिटिक्स और रिपोर्ट**\n• प्रदर्शन अंतर्दृष्टि\n• राजस्व विश्लेषण\n• फ्लीट उपयोग\n\n💡 **पूछने की कोशिश करें:**\n• "अहमद ने आज कितनी यात्राएं पूरी कीं?"\n• "इस महीने मेरी कुल कमाई क्या है?"\n• "किसके पास लंबित जुर्माना है?"\n• "मुझे अहमद का प्रदर्शन स्कोर दिखाएं"\n• "उमर का अनुबंध कब समाप्त होता है?"`
     },
     ur: {
       title: 'نیو ایج AI اسسٹنٹ',
@@ -71,7 +76,7 @@ const NavEdgeAssistant: React.FC<NavEdgeAssistantProps> = ({
       send: 'بھیجیں',
       listening: 'سن رہا ہوں...',
       typing: 'نیو ایج ٹائپ کر رہا ہے...',
-      welcomeMessage: `👋 **نیو ایج AI میں خوش آمدید!**\n\nمیں آپ کا ذہین فلیٹ منیجمنٹ اسسٹنٹ ہوں۔ میں آپ کی مدد کر سکتا ہوں:\n\n🚗 **ڈرائیور منیجمنٹ**\n• ڈرائیور کی کارکردگی چیک کریں\n• ڈرائیور کے مقامات دیکھیں\n• ڈرائیور اسائنمنٹس منظم کریں\n\n📋 **کنٹریکٹ اور جرمانہ منیجمنٹ**\n• کنٹریکٹ کی تفصیلات کا جائزہ لیں\n• جرمانے کی ادائیگی ٹریک کریں\n• تعمیل کی نگرانی کریں\n\n📊 **تجزیات اور رپورٹس**\n• کارکردگی کی بصیرت\n• آمدنی کا تجزیہ\n• فلیٹ کا استعمال\n\n💡 **پوچھنے کی کوشش کریں:**\n• "آج میں نے کتنے سفر مکمل کیے؟"\n• "اس مہینے میری کل کمائی کیا ہے؟"\n• "مجھے جرمانوں میں کتنا دینا ہے؟"\n• "کیا مجھے کوئی وارننگز ہیں؟"\n• "ابھی میری کارکردگی اسکور کیسی ہے؟"`
+      welcomeMessage: `👋 **نیو ایج AI میں خوش آمدید!**\n\nمیں آپ کا ذہین فلیٹ منیجمنٹ اسسٹنٹ ہوں۔ میں آپ کی مدد کر سکتا ہوں:\n\n🚗 **ڈرائیور منیجمنٹ**\n• ڈرائیور کی کارکردگی چیک کریں\n• ڈرائیور کے مقامات دیکھیں\n• ڈرائیور اسائنمنٹس منظم کریں\n\n📋 **کنٹریکٹ اور جرمانہ منیجمنٹ**\n• کنٹریکٹ کی تفصیلات کا جائزہ لیں\n• جرمانے کی ادائیگی ٹریک کریں\n• تعمیل کی نگرانی کریں\n\n📊 **تجزیات اور رپورٹس**\n• کارکردگی کی بصیرت\n• آمدنی کا تجزیہ\n• فلیٹ کا استعمال\n\n💡 **پوچھنے کی کوشش کریں:**\n• "احمد نے آج کتنے سفر مکمل کیے؟"\n• "اس مہینے میری کل کمائی کیا ہے؟"\n• "کس کے پاس زیر التواء جرمانے ہیں؟"\n• "مجھے احمد کا کارکردگی اسکور دکھائیں"\n• "عمر کا کنٹریکٹ کب ختم ہوتا ہے؟"`
     }
   };
 
@@ -99,6 +104,14 @@ const NavEdgeAssistant: React.FC<NavEdgeAssistantProps> = ({
     return driver ? driver.name : 'Unknown Driver';
   };
 
+  // Find driver by name (case insensitive partial match)
+  const findDriverByName = (name: string) => {
+    const lowerName = name.toLowerCase();
+    return mockDriversData.find(driver => 
+      driver.name.toLowerCase().includes(lowerName)
+    );
+  };
+
   // Calculate days remaining for contracts
   const getDaysRemaining = (endDate: string) => {
     const end = new Date(endDate);
@@ -108,686 +121,1007 @@ const NavEdgeAssistant: React.FC<NavEdgeAssistantProps> = ({
     return daysRemaining;
   };
 
-  // Get driver by name (case insensitive partial match)
-  const getDriverByName = (name: string) => {
-    const lowerName = name.toLowerCase();
-    return mockDriversData.find(d => 
-      d.name.toLowerCase().includes(lowerName)
-    );
-  };
-
-  // Get driver's fines
-  const getDriverFines = (driverId: number) => {
-    return mockFinesData.filter(f => f.driverId === driverId);
-  };
-
-  // Get driver's contracts
-  const getDriverContracts = (driverId: number) => {
-    return mockContractsData.filter(c => c.driverId === driverId);
-  };
-
-  // Get current driver (for driver-specific questions)
-  const getCurrentDriver = () => {
-    // In a real app, this would be based on the logged-in user
-    // For demo, we'll use the first driver
-    return mockDriversData[0];
-  };
-
-  // Format currency
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(amount);
-  };
-
-  // Process natural language queries about trips
-  const processTripsQuery = (input: string, driver: any) => {
-    const lowerInput = input.toLowerCase();
+  // Process trip-related queries
+  const processTripQuery = (query: string, driverId?: number) => {
+    const lowerQuery = query.toLowerCase();
     
-    // Today's trips
-    if (lowerInput.includes('today') && 
-        (lowerInput.includes('trip') || lowerInput.includes('ride'))) {
-      return `You have completed ${driver.trips_today || 0} trips today.`;
-    }
+    // If no specific driver is mentioned or in context, use the first active driver for demo
+    let targetDriver = driverId 
+      ? mockDriversData.find(d => d.id === driverId)
+      : mockDriversData.find(d => d.status === 'active');
     
-    // Total trips
-    if ((lowerInput.includes('total') || lowerInput.includes('all')) && 
-        (lowerInput.includes('trip') || lowerInput.includes('ride'))) {
-      return `You have completed a total of ${driver.trips} trips.`;
-    }
-    
-    // This week's trips
-    if (lowerInput.includes('week') && 
-        (lowerInput.includes('trip') || lowerInput.includes('ride'))) {
-      // In a real app, this would calculate weekly trips
-      const weeklyTrips = Math.round(driver.trips * 0.2);
-      return `You have completed ${weeklyTrips} trips this week.`;
-    }
-    
-    // This month's trips
-    if (lowerInput.includes('month') && 
-        (lowerInput.includes('trip') || lowerInput.includes('ride'))) {
-      // In a real app, this would calculate monthly trips
-      const monthlyTrips = Math.round(driver.trips * 0.8);
-      return `You have completed ${monthlyTrips} trips this month.`;
-    }
-    
-    // Longest trip
-    if (lowerInput.includes('longest') && 
-        (lowerInput.includes('trip') || lowerInput.includes('ride'))) {
-      return `Your longest trip today was 28.5 km from Dubai Mall to Dubai Airport, which took 42 minutes.`;
-    }
-    
-    // Default trips response
-    return `You have completed a total of ${driver.trips} trips, with ${driver.trips_today || 0} trips today.`;
-  };
-
-  // Process natural language queries about earnings
-  const processEarningsQuery = (input: string, driver: any) => {
-    const lowerInput = input.toLowerCase();
-    
-    // Today's earnings
-    if (lowerInput.includes('today') && 
-        (lowerInput.includes('earn') || lowerInput.includes('money') || lowerInput.includes('income'))) {
-      return `You have earned ${formatCurrency(driver.earnings_today || 0)} today.`;
-    }
-    
-    // Total earnings
-    if ((lowerInput.includes('total') || lowerInput.includes('all')) && 
-        (lowerInput.includes('earn') || lowerInput.includes('money') || lowerInput.includes('income'))) {
-      return `Your total earnings are ${formatCurrency(driver.earnings)}.`;
-    }
-    
-    // This week's earnings
-    if (lowerInput.includes('week') && 
-        (lowerInput.includes('earn') || lowerInput.includes('money') || lowerInput.includes('income'))) {
-      // In a real app, this would calculate weekly earnings
-      const weeklyEarnings = Math.round(driver.earnings * 0.2);
-      return `You have earned ${formatCurrency(weeklyEarnings)} this week.`;
-    }
-    
-    // This month's earnings
-    if (lowerInput.includes('month') && 
-        (lowerInput.includes('earn') || lowerInput.includes('money') || lowerInput.includes('income'))) {
-      // In a real app, this would calculate monthly earnings
-      const monthlyEarnings = Math.round(driver.earnings * 0.8);
-      return `You have earned ${formatCurrency(monthlyEarnings)} this month.`;
-    }
-    
-    // Default earnings response
-    return `Your total earnings are ${formatCurrency(driver.earnings)}, with ${formatCurrency(driver.earnings_today || 0)} earned today.`;
-  };
-
-  // Process natural language queries about fines
-  const processFinesQuery = (input: string, driver: any) => {
-    const lowerInput = input.toLowerCase();
-    const fines = getDriverFines(driver.id);
-    
-    // Pending fines
-    if ((lowerInput.includes('pending') || lowerInput.includes('unpaid') || lowerInput.includes('owe')) && 
-        lowerInput.includes('fine')) {
-      const pendingFines = fines.filter(f => f.status === 'pending');
-      const totalAmount = pendingFines.reduce((sum, f) => sum + f.amount, 0);
-      
-      if (pendingFines.length === 0) {
-        return `You don't have any pending fines. Great job!`;
-      } else {
-        return `You have ${pendingFines.length} pending fine${pendingFines.length > 1 ? 's' : ''} totaling AED ${totalAmount}. ${
-          pendingFines.map(f => `\n• ${f.violation} (AED ${f.amount})`).join('')
-        }`;
-      }
-    }
-    
-    // All fines
-    if (lowerInput.includes('fine')) {
-      if (fines.length === 0) {
-        return `You don't have any fines. Keep up the good work!`;
-      } else {
-        const totalAmount = fines.reduce((sum, f) => sum + f.amount, 0);
-        const pendingAmount = fines.filter(f => f.status === 'pending').reduce((sum, f) => sum + f.amount, 0);
-        
-        return `You have a total of ${fines.length} fine${fines.length > 1 ? 's' : ''} (AED ${totalAmount}), with AED ${pendingAmount} still pending payment.`;
-      }
-    }
-    
-    // Default fines response
-    return `You have ${fines.length} fine${fines.length > 1 ? 's' : ''} on record.`;
-  };
-
-  // Process natural language queries about performance
-  const processPerformanceQuery = (input: string, driver: any) => {
-    const lowerInput = input.toLowerCase();
-    
-    // Performance score
-    if ((lowerInput.includes('performance') || lowerInput.includes('score') || lowerInput.includes('rating')) && 
-        (lowerInput.includes('my') || lowerInput.includes('current'))) {
-      let performanceMessage = `Your current performance score is ${driver.performanceScore}%. `;
-      
-      if (driver.performanceScore >= 90) {
-        performanceMessage += `That's excellent! You're among our top performers.`;
-      } else if (driver.performanceScore >= 80) {
-        performanceMessage += `That's good! Keep up the good work.`;
-      } else if (driver.performanceScore >= 70) {
-        performanceMessage += `That's average. There's room for improvement.`;
-      } else {
-        performanceMessage += `This needs improvement. Let's work on bringing it up.`;
-      }
-      
-      return performanceMessage;
-    }
-    
-    // How to improve performance
-    if ((lowerInput.includes('improve') || lowerInput.includes('increase') || lowerInput.includes('better')) && 
-        (lowerInput.includes('performance') || lowerInput.includes('score') || lowerInput.includes('rating'))) {
-      return `To improve your performance score:\n\n• Complete more trips daily\n• Increase your earnings\n• Maintain a high customer rating\n• Avoid traffic violations\n• Keep your vehicle clean and well-maintained`;
-    }
-    
-    // Default performance response
-    return `Your current performance score is ${driver.performanceScore}%. This is calculated based on your trips, earnings, and customer ratings.`;
-  };
-
-  // Process natural language queries about contracts
-  const processContractQuery = (input: string, driver: any) => {
-    const lowerInput = input.toLowerCase();
-    const contracts = getDriverContracts(driver.id);
-    
-    if (contracts.length === 0) {
-      return `You don't have any active contracts in the system.`;
-    }
-    
-    // Active contract
-    const activeContract = contracts.find(c => c.status === 'active');
-    
-    if (!activeContract) {
-      return `You don't have any active contracts right now.`;
-    }
-    
-    // Contract details
-    if ((lowerInput.includes('contract') || lowerInput.includes('agreement')) && 
-        (lowerInput.includes('detail') || lowerInput.includes('info'))) {
-      const daysRemaining = getDaysRemaining(activeContract.endDate);
-      
-      return `Your current contract (${activeContract.id}):\n\n• Vehicle: ${activeContract.vehicleId}\n• Monthly rent: AED ${activeContract.monthlyRent}\n• Start date: ${activeContract.startDate}\n• End date: ${activeContract.endDate}\n• Days remaining: ${daysRemaining}\n• Daily KM limit: ${activeContract.dailyKmLimit} km\n• Security deposit: AED ${activeContract.depositAmount}`;
-    }
-    
-    // Contract expiry
-    if ((lowerInput.includes('contract') || lowerInput.includes('agreement')) && 
-        (lowerInput.includes('expir') || lowerInput.includes('end') || lowerInput.includes('renew'))) {
-      const daysRemaining = getDaysRemaining(activeContract.endDate);
-      
-      if (daysRemaining <= 0) {
-        return `Your contract has expired! Please contact the fleet manager to renew it.`;
-      } else if (daysRemaining <= 30) {
-        return `Your contract will expire in ${daysRemaining} days. Please contact the fleet manager to discuss renewal options.`;
-      } else {
-        return `Your contract will expire on ${activeContract.endDate}, which is ${daysRemaining} days from now.`;
-      }
-    }
-    
-    // Default contract response
-    return `You have an active contract for vehicle ${activeContract.vehicleId} with a monthly rent of AED ${activeContract.monthlyRent}.`;
-  };
-
-  // Process natural language queries about vehicles
-  const processVehicleQuery = (input: string, driver: any) => {
-    const lowerInput = input.toLowerCase();
-    
-    if (!driver.vehicleId) {
-      return `You don't have any vehicle assigned to you right now.`;
-    }
-    
-    // Vehicle details
-    if ((lowerInput.includes('vehicle') || lowerInput.includes('car')) && 
-        (lowerInput.includes('detail') || lowerInput.includes('info') || lowerInput.includes('which'))) {
-      return `You are currently assigned to vehicle ${driver.vehicleId}. This is a Toyota Camry (White) with license plate ${driver.vehicleId}.`;
-    }
-    
-    // Vehicle maintenance
-    if ((lowerInput.includes('vehicle') || lowerInput.includes('car')) && 
-        (lowerInput.includes('maintenance') || lowerInput.includes('service'))) {
-      return `Your vehicle ${driver.vehicleId} is due for maintenance in 15 days. Please ensure it's brought to the service center on time.`;
-    }
-    
-    // Default vehicle response
-    return `You are currently assigned to vehicle ${driver.vehicleId}.`;
-  };
-
-  // Process natural language queries about shifts
-  const processShiftQuery = (input: string, driver: any) => {
-    const lowerInput = input.toLowerCase();
-    
-    // Current shift
-    if ((lowerInput.includes('shift') || lowerInput.includes('duty')) && 
-        (lowerInput.includes('current') || lowerInput.includes('now') || lowerInput.includes('today'))) {
-      if (driver.status === 'active') {
-        return `You are currently on shift. Your shift started at 08:00 AM and will end at 06:00 PM.`;
-      } else {
-        return `You are not currently on shift. Your next scheduled shift is tomorrow from 08:00 AM to 06:00 PM.`;
-      }
-    }
-    
-    // Shift schedule
-    if ((lowerInput.includes('shift') || lowerInput.includes('duty') || lowerInput.includes('schedule')) && 
-        (lowerInput.includes('next') || lowerInput.includes('upcoming') || lowerInput.includes('tomorrow'))) {
-      return `Your upcoming shifts:\n\n• Tomorrow: 08:00 AM - 06:00 PM\n• Wednesday: 08:00 AM - 06:00 PM\n• Thursday: 08:00 AM - 06:00 PM\n• Friday: 10:00 AM - 08:00 PM\n• Saturday: 10:00 AM - 08:00 PM`;
-    }
-    
-    // Default shift response
-    return `Your regular shift hours are 08:00 AM to 06:00 PM, Sunday through Thursday.`;
-  };
-
-  // Process natural language queries about warnings
-  const processWarningsQuery = (input: string, driver: any) => {
-    const lowerInput = input.toLowerCase();
-    
-    if (lowerInput.includes('warning') || lowerInput.includes('alert')) {
-      // Check for performance warnings
-      if (driver.performanceScore < 80) {
-        return `You have a performance warning. Your current score is ${driver.performanceScore}%, which is below our minimum threshold of 80%. Please work on improving your performance.`;
-      }
-      
-      // Check for pending fines
-      const pendingFines = getDriverFines(driver.id).filter(f => f.status === 'pending');
-      if (pendingFines.length > 0) {
-        return `You have ${pendingFines.length} pending fine${pendingFines.length > 1 ? 's' : ''} that require attention. Please settle them as soon as possible.`;
-      }
-      
-      // Check for contract expiry
-      const activeContract = getDriverContracts(driver.id).find(c => c.status === 'active');
-      if (activeContract) {
-        const daysRemaining = getDaysRemaining(activeContract.endDate);
-        if (daysRemaining <= 30 && daysRemaining > 0) {
-          return `Your contract will expire in ${daysRemaining} days. Please contact the fleet manager to discuss renewal options.`;
+    // Try to extract driver name from query
+    if (!targetDriver) {
+      for (const driver of mockDriversData) {
+        if (lowerQuery.includes(driver.name.toLowerCase())) {
+          targetDriver = driver;
+          break;
         }
       }
+    }
+    
+    if (!targetDriver) {
+      targetDriver = mockDriversData[0]; // Fallback to first driver
+    }
+    
+    // Set context for follow-up questions
+    setConversationContext({
+      currentDriver: targetDriver.id,
+      topic: 'trips',
+      lastQuery: query
+    });
+    
+    // Check for specific trip queries
+    if (lowerQuery.includes('today') || lowerQuery.includes('complete today') || lowerQuery.includes('did today')) {
+      return {
+        en: `${targetDriver.name} has completed a total of ${targetDriver.trips_today || 3} trips today.`,
+        ar: `أكمل ${targetDriver.name} ما مجموعه ${targetDriver.trips_today || 3} رحلات اليوم.`,
+        hi: `${targetDriver.name} ने आज कुल ${targetDriver.trips_today || 3} यात्राएं पूरी की हैं।`,
+        ur: `${targetDriver.name} نے آج کل ${targetDriver.trips_today || 3} سفر مکمل کیے ہیں۔`
+      }[language];
+    }
+    
+    if (lowerQuery.includes('week') || lowerQuery.includes('this week')) {
+      const weeklyTrips = (targetDriver.trips_today || 3) * 5; // Simulate weekly data
+      return {
+        en: `${targetDriver.name} has completed ${weeklyTrips} trips this week.`,
+        ar: `أكمل ${targetDriver.name} ${weeklyTrips} رحلة هذا الأسبوع.`,
+        hi: `${targetDriver.name} ने इस सप्ताह ${weeklyTrips} यात्राएं पूरी की हैं।`,
+        ur: `${targetDriver.name} نے اس ہفتے ${weeklyTrips} سفر مکمل کیے ہیں۔`
+      }[language];
+    }
+    
+    if (lowerQuery.includes('month') || lowerQuery.includes('this month')) {
+      const monthlyTrips = targetDriver.trips;
+      return {
+        en: `${targetDriver.name} has completed ${monthlyTrips} trips this month.`,
+        ar: `أكمل ${targetDriver.name} ${monthlyTrips} رحلة هذا الشهر.`,
+        hi: `${targetDriver.name} ने इस महीने ${monthlyTrips} यात्राएं पूरी की हैं।`,
+        ur: `${targetDriver.name} نے اس مہینے ${monthlyTrips} سفر مکمل کیے ہیں۔`
+      }[language];
+    }
+    
+    if (lowerQuery.includes('total') || lowerQuery.includes('all time')) {
+      return {
+        en: `${targetDriver.name} has completed a total of ${targetDriver.trips} trips.`,
+        ar: `أكمل ${targetDriver.name} ما مجموعه ${targetDriver.trips} رحلة.`,
+        hi: `${targetDriver.name} ने कुल ${targetDriver.trips} यात्राएं पूरी की हैं।`,
+        ur: `${targetDriver.name} نے کل ${targetDriver.trips} سفر مکمل کیے ہیں۔`
+      }[language];
+    }
+    
+    // Default response for trip queries
+    return {
+      en: `${targetDriver.name} has completed a total of ${targetDriver.trips} trips, with ${targetDriver.trips_today || 3} trips today.`,
+      ar: `أكمل ${targetDriver.name} ما مجموعه ${targetDriver.trips} رحلة، مع ${targetDriver.trips_today || 3} رحلات اليوم.`,
+      hi: `${targetDriver.name} ने कुल ${targetDriver.trips} यात्राएं पूरी की हैं, आज ${targetDriver.trips_today || 3} यात्राएं।`,
+      ur: `${targetDriver.name} نے کل ${targetDriver.trips} سفر مکمل کیے ہیں، آج ${targetDriver.trips_today || 3} سفر۔`
+    }[language];
+  };
+
+  // Process earnings-related queries
+  const processEarningsQuery = (query: string, driverId?: number) => {
+    const lowerQuery = query.toLowerCase();
+    
+    // If no specific driver is mentioned or in context, use the first active driver for demo
+    let targetDriver = driverId 
+      ? mockDriversData.find(d => d.id === driverId)
+      : mockDriversData.find(d => d.status === 'active');
+    
+    // Try to extract driver name from query
+    if (!targetDriver) {
+      for (const driver of mockDriversData) {
+        if (lowerQuery.includes(driver.name.toLowerCase())) {
+          targetDriver = driver;
+          break;
+        }
+      }
+    }
+    
+    if (!targetDriver) {
+      targetDriver = mockDriversData[0]; // Fallback to first driver
+    }
+    
+    // Set context for follow-up questions
+    setConversationContext({
+      currentDriver: targetDriver.id,
+      topic: 'earnings',
+      lastQuery: query
+    });
+    
+    // Check for specific earnings queries
+    if (lowerQuery.includes('today') || lowerQuery.includes('earn today')) {
+      const todayEarnings = targetDriver.earnings_today || Math.round(targetDriver.earnings / 20);
+      return {
+        en: `${targetDriver.name} has earned $${todayEarnings} today.`,
+        ar: `كسب ${targetDriver.name} $${todayEarnings} اليوم.`,
+        hi: `${targetDriver.name} ने आज $${todayEarnings} कमाए हैं।`,
+        ur: `${targetDriver.name} نے آج $${todayEarnings} کمائے ہیں۔`
+      }[language];
+    }
+    
+    if (lowerQuery.includes('week') || lowerQuery.includes('this week')) {
+      const weeklyEarnings = Math.round(targetDriver.earnings / 4);
+      return {
+        en: `${targetDriver.name} has earned $${weeklyEarnings} this week.`,
+        ar: `كسب ${targetDriver.name} $${weeklyEarnings} هذا الأسبوع.`,
+        hi: `${targetDriver.name} ने इस सप्ताह $${weeklyEarnings} कमाए हैं।`,
+        ur: `${targetDriver.name} نے اس ہفتے $${weeklyEarnings} کمائے ہیں۔`
+      }[language];
+    }
+    
+    if (lowerQuery.includes('month') || lowerQuery.includes('this month')) {
+      return {
+        en: `${targetDriver.name} has earned $${targetDriver.earnings} this month.`,
+        ar: `كسب ${targetDriver.name} $${targetDriver.earnings} هذا الشهر.`,
+        hi: `${targetDriver.name} ने इस महीने $${targetDriver.earnings} कमाए हैं।`,
+        ur: `${targetDriver.name} نے اس مہینے $${targetDriver.earnings} کمائے ہیں۔`
+      }[language];
+    }
+    
+    if (lowerQuery.includes('total') || lowerQuery.includes('all time')) {
+      const totalEarnings = targetDriver.earnings * 3; // Simulate all-time earnings
+      return {
+        en: `${targetDriver.name} has earned a total of $${totalEarnings} all time.`,
+        ar: `كسب ${targetDriver.name} ما مجموعه $${totalEarnings} طوال الوقت.`,
+        hi: `${targetDriver.name} ने अब तक कुल $${totalEarnings} कमाए हैं।`,
+        ur: `${targetDriver.name} نے اب تک کل $${totalEarnings} کمائے ہیں۔`
+      }[language];
+    }
+    
+    // Default response for earnings queries
+    return {
+      en: `${targetDriver.name} has earned $${targetDriver.earnings} this month and $${targetDriver.earnings_today || Math.round(targetDriver.earnings / 20)} today.`,
+      ar: `كسب ${targetDriver.name} $${targetDriver.earnings} هذا الشهر و $${targetDriver.earnings_today || Math.round(targetDriver.earnings / 20)} اليوم.`,
+      hi: `${targetDriver.name} ने इस महीने $${targetDriver.earnings} और आज $${targetDriver.earnings_today || Math.round(targetDriver.earnings / 20)} कमाए हैं।`,
+      ur: `${targetDriver.name} نے اس مہینے $${targetDriver.earnings} اور آج $${targetDriver.earnings_today || Math.round(targetDriver.earnings / 20)} کمائے ہیں۔`
+    }[language];
+  };
+
+  // Process fine-related queries
+  const processFineQuery = (query: string, driverId?: number) => {
+    const lowerQuery = query.toLowerCase();
+    
+    // Check for general fine queries
+    if (lowerQuery.includes('all') || lowerQuery.includes('total')) {
+      const totalFines = mockFinesData.length;
+      const pendingFines = mockFinesData.filter(f => f.status === 'pending').length;
       
-      return `You don't have any warnings or alerts at this time. Keep up the good work!`;
+      return {
+        en: `There are ${totalFines} total fines in the system, with ${pendingFines} pending fines that require attention.`,
+        ar: `هناك ${totalFines} مخالفة إجمالية في النظام، مع ${pendingFines} مخالفات معلقة تتطلب الاهتمام.`,
+        hi: `सिस्टम में कुल ${totalFines} जुर्माने हैं, जिनमें से ${pendingFines} लंबित जुर्माने हैं जिन्हें ध्यान देने की आवश्यकता है।`,
+        ur: `سسٹم میں کل ${totalFines} جرمانے ہیں، جن میں سے ${pendingFines} زیر التواء جرمانے ہیں جن کو توجہ کی ضرورت ہے۔`
+      }[language];
     }
     
-    return null; // Not a warnings query
+    if (lowerQuery.includes('pending') || lowerQuery.includes('unpaid')) {
+      const pendingFines = mockFinesData.filter(f => f.status === 'pending');
+      
+      if (pendingFines.length === 0) {
+        return {
+          en: `There are no pending fines at the moment.`,
+          ar: `لا توجد مخالفات معلقة في الوقت الحالي.`,
+          hi: `इस समय कोई लंबित जुर्माना नहीं है।`,
+          ur: `اس وقت کوئی زیر التواء جرمانہ نہیں ہے۔`
+        }[language];
+      }
+      
+      let response = {
+        en: `There are ${pendingFines.length} pending fines:\n\n`,
+        ar: `هناك ${pendingFines.length} مخالفات معلقة:\n\n`,
+        hi: `${pendingFines.length} लंबित जुर्माने हैं:\n\n`,
+        ur: `${pendingFines.length} زیر التواء جرمانے ہیں:\n\n`
+      }[language];
+      
+      pendingFines.forEach((fine, index) => {
+        const driverName = getDriverName(fine.driverId);
+        
+        if (language === 'en') {
+          response += `${index + 1}. ${driverName}: ${fine.violation} - AED ${fine.amount}\n`;
+        } else if (language === 'ar') {
+          response += `${index + 1}. ${driverName}: ${fine.violation} - ${fine.amount} درهم\n`;
+        } else if (language === 'hi') {
+          response += `${index + 1}. ${driverName}: ${fine.violation} - AED ${fine.amount}\n`;
+        } else {
+          response += `${index + 1}. ${driverName}: ${fine.violation} - AED ${fine.amount}\n`;
+        }
+      });
+      
+      return response;
+    }
+    
+    // Check for driver-specific fine queries
+    let targetDriver = driverId 
+      ? mockDriversData.find(d => d.id === driverId)
+      : null;
+    
+    // Try to extract driver name from query
+    if (!targetDriver) {
+      for (const driver of mockDriversData) {
+        if (lowerQuery.includes(driver.name.toLowerCase())) {
+          targetDriver = driver;
+          break;
+        }
+      }
+    }
+    
+    if (targetDriver) {
+      // Set context for follow-up questions
+      setConversationContext({
+        currentDriver: targetDriver.id,
+        topic: 'fines',
+        lastQuery: query
+      });
+      
+      const driverFines = mockFinesData.filter(f => f.driverId === targetDriver!.id);
+      const pendingFines = driverFines.filter(f => f.status === 'pending');
+      
+      if (driverFines.length === 0) {
+        return {
+          en: `${targetDriver.name} has no fines on record.`,
+          ar: `ليس لدى ${targetDriver.name} أي مخالفات مسجلة.`,
+          hi: `${targetDriver.name} के पास कोई दर्ज जुर्माना नहीं है।`,
+          ur: `${targetDriver.name} کے پاس کوئی درج جرمانہ نہیں ہے۔`
+        }[language];
+      }
+      
+      if (pendingFines.length === 0) {
+        return {
+          en: `${targetDriver.name} has ${driverFines.length} fines on record, but none are pending payment.`,
+          ar: `لدى ${targetDriver.name} ${driverFines.length} مخالفات مسجلة، ولكن لا يوجد أي منها معلق الدفع.`,
+          hi: `${targetDriver.name} के पास ${driverFines.length} दर्ज जुर्माने हैं, लेकिन कोई भी भुगतान के लिए लंबित नहीं है।`,
+          ur: `${targetDriver.name} کے پاس ${driverFines.length} درج جرمانے ہیں، لیکن کوئی بھی ادائیگی کے لیے زیر التواء نہیں ہے۔`
+        }[language];
+      }
+      
+      let response = {
+        en: `${targetDriver.name} has ${driverFines.length} fines on record, with ${pendingFines.length} pending payment:\n\n`,
+        ar: `لدى ${targetDriver.name} ${driverFines.length} مخالفات مسجلة، مع ${pendingFines.length} معلقة الدفع:\n\n`,
+        hi: `${targetDriver.name} के पास ${driverFines.length} दर्ज जुर्माने हैं, जिनमें से ${pendingFines.length} भुगतान के लिए लंबित हैं:\n\n`,
+        ur: `${targetDriver.name} کے پاس ${driverFines.length} درج جرمانے ہیں، جن میں سے ${pendingFines.length} ادائیگی کے لیے زیر التواء ہیں:\n\n`
+      }[language];
+      
+      pendingFines.forEach((fine, index) => {
+        if (language === 'en') {
+          response += `${index + 1}. ${fine.violation} - AED ${fine.amount} (${fine.date})\n`;
+        } else if (language === 'ar') {
+          response += `${index + 1}. ${fine.violation} - ${fine.amount} درهم (${fine.date})\n`;
+        } else if (language === 'hi') {
+          response += `${index + 1}. ${fine.violation} - AED ${fine.amount} (${fine.date})\n`;
+        } else {
+          response += `${index + 1}. ${fine.violation} - AED ${fine.amount} (${fine.date})\n`;
+        }
+      });
+      
+      return response;
+    }
+    
+    // Default response for fine queries
+    const pendingFines = mockFinesData.filter(f => f.status === 'pending');
+    return {
+      en: `There are ${pendingFines.length} pending fines in the system. You can ask about specific drivers or say "Show all pending fines" for details.`,
+      ar: `هناك ${pendingFines.length} مخالفات معلقة في النظام. يمكنك السؤال عن سائقين محددين أو قول "أظهر جميع المخالفات المعلقة" للحصول على التفاصيل.`,
+      hi: `सिस्टम में ${pendingFines.length} लंबित जुर्माने हैं। आप विशिष्ट ड्राइवरों के बारे में पूछ सकते हैं या विवरण के लिए "सभी लंबित जुर्माने दिखाएं" कह सकते हैं।`,
+      ur: `سسٹم میں ${pendingFines.length} زیر التواء جرمانے ہیں۔ آپ مخصوص ڈرائیوروں کے بارے میں پوچھ سکتے ہیں یا تفصیلات کے لیے "تمام زیر التواء جرمانے دکھائیں" کہہ سکتے ہیں۔`
+    }[language];
   };
 
-  // Process natural language queries about location
-  const processLocationQuery = (input: string, driver: any) => {
-    const lowerInput = input.toLowerCase();
+  // Process performance-related queries
+  const processPerformanceQuery = (query: string, driverId?: number) => {
+    const lowerQuery = query.toLowerCase();
     
-    if ((lowerInput.includes('location') || lowerInput.includes('where') || lowerInput.includes('position')) && 
-        (lowerInput.includes('my') || lowerInput.includes('current'))) {
-      return `Your current location is near Dubai Marina (25.2048°N, 55.2708°E). This information is being tracked for fleet management purposes.`;
+    // Check for general performance queries
+    if (lowerQuery.includes('all') || lowerQuery.includes('overall') || lowerQuery.includes('average')) {
+      const avgPerformance = mockDriversData.reduce((sum, d) => sum + d.performanceScore, 0) / mockDriversData.length;
+      const topPerformer = [...mockDriversData].sort((a, b) => b.performanceScore - a.performanceScore)[0];
+      
+      return {
+        en: `The average performance score across all drivers is ${avgPerformance.toFixed(1)}%. ${topPerformer.name} has the highest score at ${topPerformer.performanceScore}%.`,
+        ar: `متوسط درجة الأداء عبر جميع السائقين هو ${avgPerformance.toFixed(1)}%. ${topPerformer.name} لديه أعلى درجة بنسبة ${topPerformer.performanceScore}%.`,
+        hi: `सभी ड्राइवरों का औसत प्रदर्शन स्कोर ${avgPerformance.toFixed(1)}% है। ${topPerformer.name} का सबसे अधिक स्कोर ${topPerformer.performanceScore}% है।`,
+        ur: `تمام ڈرائیوروں کا اوسط کارکردگی اسکور ${avgPerformance.toFixed(1)}% ہے۔ ${topPerformer.name} کا سب سے زیادہ اسکور ${topPerformer.performanceScore}% ہے۔`
+      }[language];
     }
     
-    return null; // Not a location query
+    // Check for driver-specific performance queries
+    let targetDriver = driverId 
+      ? mockDriversData.find(d => d.id === driverId)
+      : null;
+    
+    // Try to extract driver name from query
+    if (!targetDriver) {
+      for (const driver of mockDriversData) {
+        if (lowerQuery.includes(driver.name.toLowerCase())) {
+          targetDriver = driver;
+          break;
+        }
+      }
+    }
+    
+    if (targetDriver) {
+      // Set context for follow-up questions
+      setConversationContext({
+        currentDriver: targetDriver.id,
+        topic: 'performance',
+        lastQuery: query
+      });
+      
+      let performanceRating;
+      if (targetDriver.performanceScore >= 90) {
+        performanceRating = {
+          en: 'excellent',
+          ar: 'ممتاز',
+          hi: 'उत्कृष्ट',
+          ur: 'بہترین'
+        }[language];
+      } else if (targetDriver.performanceScore >= 80) {
+        performanceRating = {
+          en: 'good',
+          ar: 'جيد',
+          hi: 'अच्छा',
+          ur: 'اچھا'
+        }[language];
+      } else if (targetDriver.performanceScore >= 70) {
+        performanceRating = {
+          en: 'average',
+          ar: 'متوسط',
+          hi: 'औसत',
+          ur: 'اوسط'
+        }[language];
+      } else {
+        performanceRating = {
+          en: 'needs improvement',
+          ar: 'يحتاج إلى تحسين',
+          hi: 'सुधार की आवश्यकता है',
+          ur: 'بہتری کی ضرورت ہے'
+        }[language];
+      }
+      
+      return {
+        en: `${targetDriver.name}'s current performance score is ${targetDriver.performanceScore}%, which is ${performanceRating}. This is based on ${targetDriver.trips} completed trips and $${targetDriver.earnings} in earnings.`,
+        ar: `درجة أداء ${targetDriver.name} الحالية هي ${targetDriver.performanceScore}%، وهي ${performanceRating}. يستند هذا إلى ${targetDriver.trips} رحلة مكتملة و $${targetDriver.earnings} في الأرباح.`,
+        hi: `${targetDriver.name} का वर्तमान प्रदर्शन स्कोर ${targetDriver.performanceScore}% है, जो ${performanceRating} है। यह ${targetDriver.trips} पूर्ण यात्राओं और $${targetDriver.earnings} की कमाई पर आधारित है।`,
+        ur: `${targetDriver.name} کا موجودہ کارکردگی اسکور ${targetDriver.performanceScore}% ہے، جو ${performanceRating} ہے۔ یہ ${targetDriver.trips} مکمل سفر اور $${targetDriver.earnings} کی کمائی پر مبنی ہے۔`
+      }[language];
+    }
+    
+    // Default response for performance queries
+    return {
+      en: `The average performance score across all drivers is ${(mockDriversData.reduce((sum, d) => sum + d.performanceScore, 0) / mockDriversData.length).toFixed(1)}%. You can ask about specific drivers for more details.`,
+      ar: `متوسط درجة الأداء عبر جميع السائقين هو ${(mockDriversData.reduce((sum, d) => sum + d.performanceScore, 0) / mockDriversData.length).toFixed(1)}%. يمكنك السؤال عن سائقين محددين لمزيد من التفاصيل.`,
+      hi: `सभी ड्राइवरों का औसत प्रदर्शन स्कोर ${(mockDriversData.reduce((sum, d) => sum + d.performanceScore, 0) / mockDriversData.length).toFixed(1)}% है। अधिक जानकारी के लिए आप विशिष्ट ड्राइवरों के बारे में पूछ सकते हैं।`,
+      ur: `تمام ڈرائیوروں کا اوسط کارکردگی اسکور ${(mockDriversData.reduce((sum, d) => sum + d.performanceScore, 0) / mockDriversData.length).toFixed(1)}% ہے۔ مزید تفصیلات کے لیے آپ مخصوص ڈرائیوروں کے بارے میں پوچھ سکتے ہیں۔`
+    }[language];
   };
 
-  // Process natural language queries about driver status
-  const processStatusQuery = (input: string, driver: any) => {
-    const lowerInput = input.toLowerCase();
+  // Process contract-related queries
+  const processContractQuery = (query: string, driverId?: number) => {
+    const lowerQuery = query.toLowerCase();
     
-    if (lowerInput.includes('status') || 
-        (lowerInput.includes('am i') && (lowerInput.includes('active') || lowerInput.includes('online')))) {
-      return `Your current status is ${driver.status === 'active' ? 'ACTIVE' : 'OFFLINE'}. ${
-        driver.status === 'active' 
-          ? 'You are currently tracking your location and available for trips.' 
-          : 'You are not currently tracking your location or available for trips.'
-      }`;
+    // Check for general contract queries
+    if (lowerQuery.includes('all') || lowerQuery.includes('list')) {
+      const activeContracts = mockContractsData.filter(c => c.status === 'active');
+      
+      let response = {
+        en: `There are ${activeContracts.length} active contracts:\n\n`,
+        ar: `هناك ${activeContracts.length} عقود نشطة:\n\n`,
+        hi: `${activeContracts.length} सक्रिय अनुबंध हैं:\n\n`,
+        ur: `${activeContracts.length} فعال کنٹریکٹس ہیں:\n\n`
+      }[language];
+      
+      activeContracts.forEach((contract, index) => {
+        const driverName = getDriverName(contract.driverId);
+        const daysRemaining = getDaysRemaining(contract.endDate);
+        
+        if (language === 'en') {
+          response += `${index + 1}. ${driverName} (${contract.vehicleId}): ${daysRemaining} days remaining\n`;
+        } else if (language === 'ar') {
+          response += `${index + 1}. ${driverName} (${contract.vehicleId}): ${daysRemaining} يوم متبقي\n`;
+        } else if (language === 'hi') {
+          response += `${index + 1}. ${driverName} (${contract.vehicleId}): ${daysRemaining} दिन शेष\n`;
+        } else {
+          response += `${index + 1}. ${driverName} (${contract.vehicleId}): ${daysRemaining} دن باقی\n`;
+        }
+      });
+      
+      return response;
     }
     
-    return null; // Not a status query
+    if (lowerQuery.includes('expir') || lowerQuery.includes('end')) {
+      const expiringContracts = mockContractsData
+        .filter(c => c.status === 'active' && getDaysRemaining(c.endDate) <= 30)
+        .sort((a, b) => getDaysRemaining(a.endDate) - getDaysRemaining(b.endDate));
+      
+      if (expiringContracts.length === 0) {
+        return {
+          en: `No contracts are expiring in the next 30 days.`,
+          ar: `لا توجد عقود تنتهي في الثلاثين يومًا القادمة.`,
+          hi: `अगले 30 दिनों में कोई अनुबंध समाप्त नहीं हो रहा है।`,
+          ur: `اگلے 30 دنوں میں کوئی کنٹریکٹ ختم نہیں ہو رہا ہے۔`
+        }[language];
+      }
+      
+      let response = {
+        en: `${expiringContracts.length} contracts are expiring in the next 30 days:\n\n`,
+        ar: `${expiringContracts.length} عقود تنتهي في الثلاثين يومًا القادمة:\n\n`,
+        hi: `${expiringContracts.length} अनुबंध अगले 30 दिनों में समाप्त हो रहे हैं:\n\n`,
+        ur: `${expiringContracts.length} کنٹریکٹس اگلے 30 دنوں میں ختم ہو رہے ہیں:\n\n`
+      }[language];
+      
+      expiringContracts.forEach((contract, index) => {
+        const driverName = getDriverName(contract.driverId);
+        const daysRemaining = getDaysRemaining(contract.endDate);
+        
+        if (language === 'en') {
+          response += `${index + 1}. ${driverName} (${contract.vehicleId}): ${daysRemaining} days remaining (${contract.endDate})\n`;
+        } else if (language === 'ar') {
+          response += `${index + 1}. ${driverName} (${contract.vehicleId}): ${daysRemaining} يوم متبقي (${contract.endDate})\n`;
+        } else if (language === 'hi') {
+          response += `${index + 1}. ${driverName} (${contract.vehicleId}): ${daysRemaining} दिन शेष (${contract.endDate})\n`;
+        } else {
+          response += `${index + 1}. ${driverName} (${contract.vehicleId}): ${daysRemaining} دن باقی (${contract.endDate})\n`;
+        }
+      });
+      
+      return response;
+    }
+    
+    // Check for driver-specific contract queries
+    let targetDriver = driverId 
+      ? mockDriversData.find(d => d.id === driverId)
+      : null;
+    
+    // Try to extract driver name from query
+    if (!targetDriver) {
+      for (const driver of mockDriversData) {
+        if (lowerQuery.includes(driver.name.toLowerCase())) {
+          targetDriver = driver;
+          break;
+        }
+      }
+    }
+    
+    if (targetDriver) {
+      // Set context for follow-up questions
+      setConversationContext({
+        currentDriver: targetDriver.id,
+        topic: 'contracts',
+        lastQuery: query
+      });
+      
+      const driverContract = mockContractsData.find(c => c.driverId === targetDriver!.id && c.status === 'active');
+      
+      if (!driverContract) {
+        return {
+          en: `${targetDriver.name} does not have an active contract.`,
+          ar: `ليس لدى ${targetDriver.name} عقد نشط.`,
+          hi: `${targetDriver.name} का कोई सक्रिय अनुबंध नहीं है।`,
+          ur: `${targetDriver.name} کا کوئی فعال کنٹریکٹ نہیں ہے۔`
+        }[language];
+      }
+      
+      const daysRemaining = getDaysRemaining(driverContract.endDate);
+      
+      return {
+        en: `${targetDriver.name}'s contract (${driverContract.id}) expires in ${daysRemaining} days on ${driverContract.endDate}. Monthly rent: AED ${driverContract.monthlyRent}, Vehicle: ${driverContract.vehicleId}.`,
+        ar: `ينتهي عقد ${targetDriver.name} (${driverContract.id}) في غضون ${daysRemaining} يومًا في ${driverContract.endDate}. الإيجار الشهري: ${driverContract.monthlyRent} درهم، المركبة: ${driverContract.vehicleId}.`,
+        hi: `${targetDriver.name} का अनुबंध (${driverContract.id}) ${daysRemaining} दिनों में ${driverContract.endDate} को समाप्त होता है। मासिक किराया: AED ${driverContract.monthlyRent}, वाहन: ${driverContract.vehicleId}।`,
+        ur: `${targetDriver.name} کا کنٹریکٹ (${driverContract.id}) ${daysRemaining} دنوں میں ${driverContract.endDate} کو ختم ہوتا ہے۔ ماہانہ کرایہ: AED ${driverContract.monthlyRent}، گاڑی: ${driverContract.vehicleId}۔`
+      }[language];
+    }
+    
+    // Default response for contract queries
+    return {
+      en: `There are ${mockContractsData.filter(c => c.status === 'active').length} active contracts in the system. You can ask about specific drivers or say "Show all contracts" for details.`,
+      ar: `هناك ${mockContractsData.filter(c => c.status === 'active').length} عقود نشطة في النظام. يمكنك السؤال عن سائقين محددين أو قول "أظهر جميع العقود" للحصول على التفاصيل.`,
+      hi: `सिस्टम में ${mockContractsData.filter(c => c.status === 'active').length} सक्रिय अनुबंध हैं। आप विशिष्ट ड्राइवरों के बारे में पूछ सकते हैं या विवरण के लिए "सभी अनुबंध दिखाएं" कह सकते हैं।`,
+      ur: `سسٹم میں ${mockContractsData.filter(c => c.status === 'active').length} فعال کنٹریکٹس ہیں۔ آپ مخصوص ڈرائیوروں کے بارے میں پوچھ سکتے ہیں یا تفصیلات کے لیے "تمام کنٹریکٹس دکھائیں" کہہ سکتے ہیں۔`
+    }[language];
   };
 
-  // Process natural language queries about driver profile
-  const processProfileQuery = (input: string, driver: any) => {
-    const lowerInput = input.toLowerCase();
+  // Process driver-related queries
+  const processDriverQuery = (query: string, driverId?: number) => {
+    const lowerQuery = query.toLowerCase();
     
-    if (lowerInput.includes('profile') || lowerInput.includes('my info') || lowerInput.includes('my details')) {
-      return `**Your Profile Information:**\n\n• Name: ${driver.name}\n• Email: ${driver.email}\n• Phone: ${driver.phone}\n• Join Date: ${driver.joinDate}\n• Status: ${driver.status === 'active' ? 'Active' : 'Offline'}\n• Vehicle: ${driver.vehicleId || 'None assigned'}\n• Performance Score: ${driver.performanceScore}%`;
+    // Check for general driver queries
+    if (lowerQuery.includes('all') || lowerQuery.includes('list')) {
+      const activeDrivers = mockDriversData.filter(d => d.status === 'active');
+      
+      let response = {
+        en: `There are ${activeDrivers.length} active drivers:\n\n`,
+        ar: `هناك ${activeDrivers.length} سائقين نشطين:\n\n`,
+        hi: `${activeDrivers.length} सक्रिय ड्राइवर हैं:\n\n`,
+        ur: `${activeDrivers.length} فعال ڈرائیورز ہیں:\n\n`
+      }[language];
+      
+      activeDrivers.forEach((driver, index) => {
+        if (language === 'en') {
+          response += `${index + 1}. ${driver.name} (${driver.vehicleId || 'No vehicle'}) - ${driver.performanceScore}% performance\n`;
+        } else if (language === 'ar') {
+          response += `${index + 1}. ${driver.name} (${driver.vehicleId || 'لا توجد مركبة'}) - ${driver.performanceScore}% أداء\n`;
+        } else if (language === 'hi') {
+          response += `${index + 1}. ${driver.name} (${driver.vehicleId || 'कोई वाहन नहीं'}) - ${driver.performanceScore}% प्रदर्शन\n`;
+        } else {
+          response += `${index + 1}. ${driver.name} (${driver.vehicleId || 'کوئی گاڑی نہیں'}) - ${driver.performanceScore}% کارکردگی\n`;
+        }
+      });
+      
+      return response;
     }
     
-    return null; // Not a profile query
+    if (lowerQuery.includes('active') || lowerQuery.includes('on duty')) {
+      const activeDrivers = mockDriversData.filter(d => d.status === 'active');
+      
+      return {
+        en: `There are ${activeDrivers.length} active drivers out of ${mockDriversData.length} total drivers.`,
+        ar: `هناك ${activeDrivers.length} سائقين نشطين من أصل ${mockDriversData.length} سائق إجمالي.`,
+        hi: `कुल ${mockDriversData.length} ड्राइवरों में से ${activeDrivers.length} सक्रिय ड्राइवर हैं।`,
+        ur: `کل ${mockDriversData.length} ڈرائیوروں میں سے ${activeDrivers.length} فعال ڈرائیورز ہیں۔`
+      }[language];
+    }
+    
+    if (lowerQuery.includes('best') || lowerQuery.includes('top')) {
+      const sortedDrivers = [...mockDriversData].sort((a, b) => b.performanceScore - a.performanceScore);
+      const topDriver = sortedDrivers[0];
+      
+      return {
+        en: `${topDriver.name} is the top performing driver with a performance score of ${topDriver.performanceScore}%.`,
+        ar: `${topDriver.name} هو السائق الأفضل أداءً بدرجة أداء ${topDriver.performanceScore}%.`,
+        hi: `${topDriver.name} ${topDriver.performanceScore}% के प्रदर्शन स्कोर के साथ सर्वश्रेष्ठ प्रदर्शन करने वाला ड्राइवर है।`,
+        ur: `${topDriver.name} ${topDriver.performanceScore}% کے کارکردگی اسکور کے ساتھ سب سے بہتر کارکردگی والا ڈرائیور ہے۔`
+      }[language];
+    }
+    
+    // Check for specific driver queries
+    let targetDriver = driverId 
+      ? mockDriversData.find(d => d.id === driverId)
+      : null;
+    
+    // Try to extract driver name from query
+    if (!targetDriver) {
+      for (const driver of mockDriversData) {
+        if (lowerQuery.includes(driver.name.toLowerCase())) {
+          targetDriver = driver;
+          break;
+        }
+      }
+    }
+    
+    if (targetDriver) {
+      // Set context for follow-up questions
+      setConversationContext({
+        currentDriver: targetDriver.id,
+        topic: 'driver',
+        lastQuery: query
+      });
+      
+      return {
+        en: `${targetDriver.name} is a ${targetDriver.status} driver with ${targetDriver.trips} total trips and a performance score of ${targetDriver.performanceScore}%. Vehicle: ${targetDriver.vehicleId || 'None assigned'}.`,
+        ar: `${targetDriver.name} هو سائق ${targetDriver.status === 'active' ? 'نشط' : 'غير نشط'} مع ${targetDriver.trips} رحلة إجمالية ودرجة أداء ${targetDriver.performanceScore}%. المركبة: ${targetDriver.vehicleId || 'لم يتم تعيين'}.`,
+        hi: `${targetDriver.name} ${targetDriver.status === 'active' ? 'सक्रिय' : 'निष्क्रिय'} ड्राइवर है जिसने कुल ${targetDriver.trips} यात्राएं की हैं और प्रदर्शन स्कोर ${targetDriver.performanceScore}% है। वाहन: ${targetDriver.vehicleId || 'कोई असाइन नहीं'}।`,
+        ur: `${targetDriver.name} ${targetDriver.status === 'active' ? 'فعال' : 'غیر فعال'} ڈرائیور ہے جس نے کل ${targetDriver.trips} سفر کیے ہیں اور کارکردگی اسکور ${targetDriver.performanceScore}% ہے۔ گاڑی: ${targetDriver.vehicleId || 'کوئی تفویض نہیں'}۔`
+      }[language];
+    }
+    
+    // Default response for driver queries
+    return {
+      en: `There are ${mockDriversData.length} drivers in the system, with ${mockDriversData.filter(d => d.status === 'active').length} currently active. You can ask about specific drivers by name.`,
+      ar: `هناك ${mockDriversData.length} سائق في النظام، مع ${mockDriversData.filter(d => d.status === 'active').length} نشط حاليًا. يمكنك السؤال عن سائقين محددين بالاسم.`,
+      hi: `सिस्टम में ${mockDriversData.length} ड्राइवर हैं, जिनमें से ${mockDriversData.filter(d => d.status === 'active').length} वर्तमान में सक्रिय हैं। आप नाम से विशिष्ट ड्राइवरों के बारे में पूछ सकते हैं।`,
+      ur: `سسٹم میں ${mockDriversData.length} ڈرائیورز ہیں، جن میں سے ${mockDriversData.filter(d => d.status === 'active').length} فی الحال فعال ہیں۔ آپ نام سے مخصوص ڈرائیوروں کے بارے میں پوچھ سکتے ہیں۔`
+    }[language];
   };
 
-  // Process natural language queries about help
-  const processHelpQuery = (input: string) => {
-    const lowerInput = input.toLowerCase();
+  // Process vehicle-related queries
+  const processVehicleQuery = (query: string, driverId?: number) => {
+    const lowerQuery = query.toLowerCase();
     
-    if (lowerInput.includes('help') || lowerInput.includes('what can you do') || lowerInput.includes('how to use')) {
-      return `**I can help you with:**\n\n• **Trips & Earnings**: Ask about your trips and earnings for today, this week, or this month\n• **Performance**: Check your current performance score and get tips for improvement\n• **Fines**: View your pending fines and payment status\n• **Vehicle**: Get information about your assigned vehicle\n• **Contract/Shift**: Check your contract details or shift schedule\n• **Profile**: View your profile information\n\n**Try asking me questions like:**\n• "How many trips did I complete today?"\n• "What's my total earnings this month?"\n• "Do I have any pending fines?"\n• "When does my contract expire?"\n• "What's my current performance score?"\n• "What's my next shift?"`;
+    // Check for general vehicle queries
+    if (lowerQuery.includes('all') || lowerQuery.includes('list')) {
+      const assignedVehicles = mockDriversData.filter(d => d.vehicleId).length;
+      
+      return {
+        en: `There are ${assignedVehicles} vehicles currently assigned to drivers.`,
+        ar: `هناك ${assignedVehicles} مركبة مخصصة حاليًا للسائقين.`,
+        hi: `वर्तमान में ${assignedVehicles} वाहन ड्राइवरों को असाइन किए गए हैं।`,
+        ur: `فی الحال ${assignedVehicles} گاڑیاں ڈرائیوروں کو تفویض کی گئی ہیں۔`
+      }[language];
     }
     
-    return null; // Not a help query
+    // Check for driver-specific vehicle queries
+    let targetDriver = driverId 
+      ? mockDriversData.find(d => d.id === driverId)
+      : null;
+    
+    // Try to extract driver name from query
+    if (!targetDriver) {
+      for (const driver of mockDriversData) {
+        if (lowerQuery.includes(driver.name.toLowerCase())) {
+          targetDriver = driver;
+          break;
+        }
+      }
+    }
+    
+    if (targetDriver) {
+      // Set context for follow-up questions
+      setConversationContext({
+        currentDriver: targetDriver.id,
+        topic: 'vehicle',
+        lastQuery: query
+      });
+      
+      if (!targetDriver.vehicleId) {
+        return {
+          en: `${targetDriver.name} does not have a vehicle assigned.`,
+          ar: `${targetDriver.name} ليس لديه مركبة مخصصة.`,
+          hi: `${targetDriver.name} को कोई वाहन असाइन नहीं किया गया है।`,
+          ur: `${targetDriver.name} کو کوئی گاڑی تفویض نہیں کی گئی ہے۔`
+        }[language];
+      }
+      
+      return {
+        en: `${targetDriver.name} is assigned to vehicle ${targetDriver.vehicleId}.`,
+        ar: `${targetDriver.name} مخصص للمركبة ${targetDriver.vehicleId}.`,
+        hi: `${targetDriver.name} को वाहन ${targetDriver.vehicleId} असाइन किया गया है।`,
+        ur: `${targetDriver.name} کو گاڑی ${targetDriver.vehicleId} تفویض کی گئی ہے۔`
+      }[language];
+    }
+    
+    // Check for specific vehicle queries
+    const vehicleId = query.match(/DXB-[A-Z]-\d+/i)?.[0];
+    if (vehicleId) {
+      const driver = mockDriversData.find(d => d.vehicleId === vehicleId);
+      
+      if (!driver) {
+        return {
+          en: `Vehicle ${vehicleId} is not assigned to any driver.`,
+          ar: `المركبة ${vehicleId} غير مخصصة لأي سائق.`,
+          hi: `वाहन ${vehicleId} किसी भी ड्राइवर को असाइन नहीं किया गया है।`,
+          ur: `گاڑی ${vehicleId} کسی بھی ڈرائیور کو تفویض نہیں کی گئی ہے۔`
+        }[language];
+      }
+      
+      return {
+        en: `Vehicle ${vehicleId} is assigned to ${driver.name}.`,
+        ar: `المركبة ${vehicleId} مخصصة لـ ${driver.name}.`,
+        hi: `वाहन ${vehicleId} ${driver.name} को असाइन किया गया है।`,
+        ur: `گاڑی ${vehicleId} ${driver.name} کو تفویض کی گئی ہے۔`
+      }[language];
+    }
+    
+    // Default response for vehicle queries
+    return {
+      en: `There are ${mockDriversData.filter(d => d.vehicleId).length} vehicles currently assigned to drivers. You can ask about specific drivers or vehicles.`,
+      ar: `هناك ${mockDriversData.filter(d => d.vehicleId).length} مركبة مخصصة حاليًا للسائقين. يمكنك السؤال عن سائقين أو مركبات محددة.`,
+      hi: `वर्तमान में ${mockDriversData.filter(d => d.vehicleId).length} वाहन ड्राइवरों को असाइन किए गए हैं। आप विशिष्ट ड्राइवरों या वाहनों के बारे में पूछ सकते हैं।`,
+      ur: `فی الحال ${mockDriversData.filter(d => d.vehicleId).length} گاڑیاں ڈرائیوروں کو تفویض کی گئی ہیں۔ آپ مخصوص ڈرائیوروں یا گاڑیوں کے بارے میں پوچھ سکتے ہیں۔`
+    }[language];
   };
 
-  // Process natural language queries about bulk import
-  const processBulkImportQuery = (input: string) => {
-    const lowerInput = input.toLowerCase();
+  // Process location-related queries
+  const processLocationQuery = (query: string, driverId?: number) => {
+    const lowerQuery = query.toLowerCase();
     
-    if (lowerInput.includes('import') && 
-        (lowerInput.includes('driver') || lowerInput.includes('bulk') || lowerInput.includes('excel') || lowerInput.includes('csv'))) {
-      return `**Bulk Import Drivers**\n\nYou can import multiple drivers at once using our bulk import feature:\n\n1. Go to the Drivers page\n2. Click the "Bulk Import" button\n3. Upload a CSV or Excel file with your driver data\n4. Map the columns to the correct fields\n5. Click Import\n\nYou can also paste data directly from your spreadsheet into the import tool. Need a template? You can download one from the import screen.`;
+    // Check for driver-specific location queries
+    let targetDriver = driverId 
+      ? mockDriversData.find(d => d.id === driverId)
+      : null;
+    
+    // Try to extract driver name from query
+    if (!targetDriver) {
+      for (const driver of mockDriversData) {
+        if (lowerQuery.includes(driver.name.toLowerCase())) {
+          targetDriver = driver;
+          break;
+        }
+      }
     }
     
-    return null; // Not a bulk import query
+    if (targetDriver) {
+      // Set context for follow-up questions
+      setConversationContext({
+        currentDriver: targetDriver.id,
+        topic: 'location',
+        lastQuery: query
+      });
+      
+      // Simulate location names based on coordinates
+      const locations = [
+        'Dubai Marina', 'Downtown Dubai', 'Deira', 'Jumeirah', 'Business Bay',
+        'Al Quoz', 'Dubai Silicon Oasis', 'JBR', 'Palm Jumeirah', 'Dubai Hills'
+      ];
+      const randomLocation = locations[Math.floor(Math.random() * locations.length)];
+      
+      return {
+        en: `${targetDriver.name} is currently located in ${randomLocation}. Last updated: ${new Date().toLocaleTimeString()}.`,
+        ar: `${targetDriver.name} موجود حاليًا في ${randomLocation}. آخر تحديث: ${new Date().toLocaleTimeString()}.`,
+        hi: `${targetDriver.name} वर्तमान में ${randomLocation} में स्थित है। अंतिम अपडेट: ${new Date().toLocaleTimeString()}।`,
+        ur: `${targetDriver.name} فی الحال ${randomLocation} میں واقع ہے۔ آخری اپڈیٹ: ${new Date().toLocaleTimeString()}۔`
+      }[language];
+    }
+    
+    // Default response for location queries
+    return {
+      en: `You can check the location of any driver by asking "Where is [driver name]?" or view all drivers on the map in the Dashboard.`,
+      ar: `يمكنك التحقق من موقع أي سائق عن طريق السؤال "أين [اسم السائق]؟" أو عرض جميع السائقين على الخريطة في لوحة التحكم.`,
+      hi: `आप "[ड्राइवर का नाम] कहां है?" पूछकर किसी भी ड्राइवर का स्थान देख सकते हैं या डैशबोर्ड में मानचित्र पर सभी ड्राइवरों को देख सकते हैं।`,
+      ur: `آپ "[ڈرائیور کا نام] کہاں ہے؟" پوچھ کر کسی بھی ڈرائیور کا مقام چیک کر سکتے ہیں یا ڈیش بورڈ میں نقشے پر تمام ڈرائیوروں کو دیکھ سکتے ہیں۔`
+    }[language];
+  };
+
+  // Process bulk import queries
+  const processBulkImportQuery = (query: string) => {
+    const lowerQuery = query.toLowerCase();
+    
+    if (lowerQuery.includes('import') || lowerQuery.includes('bulk') || lowerQuery.includes('csv') || lowerQuery.includes('excel')) {
+      return {
+        en: `To import drivers in bulk, you can use the "Bulk Import" feature in the Drivers section. You can upload a CSV or Excel file, or paste data directly. The file should include columns for Name, Email, Phone, and optionally Vehicle ID and Join Date.`,
+        ar: `لاستيراد السائقين بالجملة، يمكنك استخدام ميزة "استيراد بالجملة" في قسم السائقين. يمكنك تحميل ملف CSV أو Excel، أو لصق البيانات مباشرة. يجب أن يتضمن الملف أعمدة للاسم والبريد الإلكتروني والهاتف، واختياريًا معرف المركبة وتاريخ الانضمام.`,
+        hi: `ड्राइवरों को बल्क में आयात करने के लिए, आप ड्राइवर्स सेक्शन में "बल्क इम्पोर्ट" फीचर का उपयोग कर सकते हैं। आप CSV या Excel फ़ाइल अपलोड कर सकते हैं, या डेटा सीधे पेस्ट कर सकते हैं। फ़ाइल में नाम, ईमेल, फोन के लिए कॉलम होने चाहिए, और वैकल्पिक रूप से वाहन आईडी और शामिल होने की तिथि।`,
+        ur: `ڈرائیوروں کو بلک میں درآمد کرنے کے لیے، آپ ڈرائیورز سیکشن میں "بلک امپورٹ" فیچر استعمال کر سکتے ہیں۔ آپ CSV یا Excel فائل اپلوڈ کر سکتے ہیں، یا ڈیٹا براہ راست پیسٹ کر سکتے ہیں۔ فائل میں نام، ای میل، فون کے لیے کالمز شامل ہونے چاہئیں، اور اختیاری طور پر گاڑی ID اور شمولیت کی تاریخ۔`
+      }[language];
+    }
+    
+    return null;
+  };
+
+  // Process follow-up questions based on context
+  const processFollowUpQuery = (query: string) => {
+    const lowerQuery = query.toLowerCase();
+    
+    // If we have a current driver in context
+    if (conversationContext.currentDriver) {
+      const driver = mockDriversData.find(d => d.id === conversationContext.currentDriver);
+      
+      if (!driver) return null;
+      
+      // Check for simple follow-up questions
+      if (lowerQuery.includes('how many') || lowerQuery.includes('trips')) {
+        return processTripQuery(query, driver.id);
+      }
+      
+      if (lowerQuery.includes('earn') || lowerQuery.includes('money') || lowerQuery.includes('revenue')) {
+        return processEarningsQuery(query, driver.id);
+      }
+      
+      if (lowerQuery.includes('fine') || lowerQuery.includes('penalty')) {
+        return processFineQuery(query, driver.id);
+      }
+      
+      if (lowerQuery.includes('performance') || lowerQuery.includes('score') || lowerQuery.includes('rating')) {
+        return processPerformanceQuery(query, driver.id);
+      }
+      
+      if (lowerQuery.includes('contract') || lowerQuery.includes('expir') || lowerQuery.includes('end')) {
+        return processContractQuery(query, driver.id);
+      }
+      
+      if (lowerQuery.includes('where') || lowerQuery.includes('location')) {
+        return processLocationQuery(query, driver.id);
+      }
+      
+      if (lowerQuery.includes('vehicle') || lowerQuery.includes('car')) {
+        return processVehicleQuery(query, driver.id);
+      }
+      
+      // Generic follow-up about the driver
+      return processDriverQuery(query, driver.id);
+    }
+    
+    // If we have a topic in context
+    if (conversationContext.topic) {
+      switch (conversationContext.topic) {
+        case 'trips':
+          return processTripQuery(query);
+        case 'earnings':
+          return processEarningsQuery(query);
+        case 'fines':
+          return processFineQuery(query);
+        case 'performance':
+          return processPerformanceQuery(query);
+        case 'contracts':
+          return processContractQuery(query);
+        case 'location':
+          return processLocationQuery(query);
+        case 'vehicle':
+          return processVehicleQuery(query);
+        case 'driver':
+          return processDriverQuery(query);
+        default:
+          return null;
+      }
+    }
+    
+    return null;
+  };
+
+  // Process bulk driver data import
+  const processBulkDriverImport = (input: string) => {
+    try {
+      // Check if this is a bulk import command
+      if (!input.toLowerCase().includes('import drivers')) {
+        return null;
+      }
+      
+      // Extract the data part (after "import drivers")
+      const dataText = input.substring(input.toLowerCase().indexOf('import drivers') + 'import drivers'.length).trim();
+      
+      if (!dataText) {
+        return {
+          en: `To import drivers, please provide the data in CSV format or tab-separated values. For example:\n\nName, Email, Phone, Vehicle ID\nJohn Smith, john@example.com, +971501234567, DXB-G-12345`,
+          ar: `لاستيراد السائقين، يرجى تقديم البيانات بتنسيق CSV أو قيم مفصولة بعلامات تبويب. على سبيل المثال:\n\nالاسم، البريد الإلكتروني، الهاتف، معرف المركبة\nJohn Smith, john@example.com, +971501234567, DXB-G-12345`,
+          hi: `ड्राइवरों को आयात करने के लिए, कृपया डेटा CSV प्रारूप या टैब-अलग मूल्यों में प्रदान करें। उदाहरण के लिए:\n\nName, Email, Phone, Vehicle ID\nJohn Smith, john@example.com, +971501234567, DXB-G-12345`,
+          ur: `ڈرائیوروں کو درآمد کرنے کے لیے، براہ کرم ڈیٹا CSV فارمیٹ یا ٹیب سے الگ کردہ اقدار میں فراہم کریں۔ مثال کے طور پر:\n\nName, Email, Phone, Vehicle ID\nJohn Smith, john@example.com, +971501234567, DXB-G-12345`
+        }[language];
+      }
+      
+      // Split by lines
+      const lines = dataText.split(/\r?\n/).filter(line => line.trim());
+      
+      if (lines.length < 2) {
+        return {
+          en: `Please provide at least a header row and one data row. For example:\n\nName, Email, Phone, Vehicle ID\nJohn Smith, john@example.com, +971501234567, DXB-G-12345`,
+          ar: `يرجى تقديم صف عنوان وصف بيانات واحد على الأقل. على سبيل المثال:\n\nالاسم، البريد الإلكتروني، الهاتف، معرف المركبة\nJohn Smith, john@example.com, +971501234567, DXB-G-12345`,
+          hi: `कृपया कम से कम एक हेडर पंक्ति और एक डेटा पंक्ति प्रदान करें। उदाहरण के लिए:\n\nName, Email, Phone, Vehicle ID\nJohn Smith, john@example.com, +971501234567, DXB-G-12345`,
+          ur: `براہ کرم کم از کم ایک ہیڈر قطار اور ایک ڈیٹا قطار فراہم کریں۔ مثال کے طور پر:\n\nName, Email, Phone, Vehicle ID\nJohn Smith, john@example.com, +971501234567, DXB-G-12345`
+        }[language];
+      }
+      
+      // Detect delimiter (comma or tab)
+      const delimiter = lines[0].includes('\t') ? '\t' : ',';
+      
+      // Parse header
+      const headers = lines[0].split(delimiter).map(h => h.trim());
+      
+      // Parse data rows
+      const drivers = [];
+      for (let i = 1; i < lines.length; i++) {
+        const values = lines[i].split(delimiter).map(v => v.trim());
+        const driver: any = {};
+        
+        headers.forEach((header, index) => {
+          if (index < values.length) {
+            driver[header] = values[index];
+          }
+        });
+        
+        drivers.push(driver);
+      }
+      
+      // Validate required fields
+      const missingFields = [];
+      for (const driver of drivers) {
+        if (!driver.Name && !driver.name) missingFields.push('Name');
+        if (!driver.Email && !driver.email) missingFields.push('Email');
+        if (!driver.Phone && !driver.phone) missingFields.push('Phone');
+      }
+      
+      if (missingFields.length > 0) {
+        return {
+          en: `Some required fields are missing: ${missingFields.join(', ')}. Please ensure all drivers have Name, Email, and Phone.`,
+          ar: `بعض الحقول المطلوبة مفقودة: ${missingFields.join(', ')}. يرجى التأكد من أن جميع السائقين لديهم اسم وبريد إلكتروني وهاتف.`,
+          hi: `कुछ आवश्यक फ़ील्ड गायब हैं: ${missingFields.join(', ')}। कृपया सुनिश्चित करें कि सभी ड्राइवरों के पास नाम, ईमेल और फोन हैं।`,
+          ur: `کچھ ضروری فیلڈز غائب ہیں: ${missingFields.join(', ')}۔ براہ کرم یقینی بنائیں کہ تمام ڈرائیوروں کے پاس نام، ای میل، اور فون ہیں۔`
+        }[language];
+      }
+      
+      // Success response
+      return {
+        en: `✅ Successfully parsed ${drivers.length} drivers from your data. You can now import them using the "Bulk Import" button in the Drivers section.\n\nPreview of first driver:\nName: ${drivers[0].Name || drivers[0].name}\nEmail: ${drivers[0].Email || drivers[0].email}\nPhone: ${drivers[0].Phone || drivers[0].phone}`,
+        ar: `✅ تم تحليل ${drivers.length} سائق من بياناتك بنجاح. يمكنك الآن استيرادهم باستخدام زر "استيراد بالجملة" في قسم السائقين.\n\nمعاينة أول سائق:\nالاسم: ${drivers[0].Name || drivers[0].name}\nالبريد الإلكتروني: ${drivers[0].Email || drivers[0].email}\nالهاتف: ${drivers[0].Phone || drivers[0].phone}`,
+        hi: `✅ आपके डेटा से ${drivers.length} ड्राइवरों को सफलतापूर्वक पार्स किया गया। अब आप ड्राइवर्स सेक्शन में "बल्क इम्पोर्ट" बटन का उपयोग करके उन्हें आयात कर सकते हैं।\n\nपहले ड्राइवर का प्रीव्यू:\nनाम: ${drivers[0].Name || drivers[0].name}\nईमेल: ${drivers[0].Email || drivers[0].email}\nफोन: ${drivers[0].Phone || drivers[0].phone}`,
+        ur: `✅ آپ کے ڈیٹا سے ${drivers.length} ڈرائیوروں کو کامیابی سے پارس کیا گیا۔ اب آپ ڈرائیورز سیکشن میں "بلک امپورٹ" بٹن استعمال کرکے انہیں درآمد کر سکتے ہیں۔\n\nپہلے ڈرائیور کا پیش نظارہ:\nنام: ${drivers[0].Name || drivers[0].name}\nای میل: ${drivers[0].Email || drivers[0].email}\nفون: ${drivers[0].Phone || drivers[0].phone}`
+      }[language];
+    } catch (error) {
+      return {
+        en: `There was an error processing your import data. Please check the format and try again.`,
+        ar: `حدث خطأ في معالجة بيانات الاستيراد الخاصة بك. يرجى التحقق من التنسيق والمحاولة مرة أخرى.`,
+        hi: `आपके आयात डेटा को संसाधित करने में एक त्रुटि हुई। कृपया प्रारूप की जांच करें और पुनः प्रयास करें।`,
+        ur: `آپ کے درآمد ڈیٹا کو پروسیس کرنے میں ایک خرابی ہوئی۔ براہ کرم فارمیٹ چیک کریں اور دوبارہ کوشش کریں۔`
+      }[language];
+    }
   };
 
   // Enhanced AI response logic with multilingual support
   const generateResponse = (input: string): string => {
+    // Check for bulk import command first
+    const bulkImportResponse = processBulkDriverImport(input);
+    if (bulkImportResponse) return bulkImportResponse;
+    
     const lowerInput = input.toLowerCase();
     
-    // Get the current driver (for driver-specific questions)
-    const currentDriver = getCurrentDriver();
+    // Check for follow-up questions based on context
+    const followUpResponse = processFollowUpQuery(input);
+    if (followUpResponse) return followUpResponse;
     
-    // Process contract creation flow (existing functionality)
-    if (conversationContext === 'creating_contract') {
-      // Existing contract creation logic
-      const details = extractContractDetails(input);
-      
-      // Check if we have enough details to create a contract
-      if (details.driverName && details.emiratesId && details.vehicle) {
-        setConversationContext(''); // Reset context
-        
-        const responses = {
-          en: `✅ **Contract Created Successfully!**\n\n**Contract Details:**\n• **Driver:** ${details.driverName}\n• **Emirates ID:** ${details.emiratesId}\n• **Vehicle:** ${details.vehicle}\n• **Duration:** ${details.duration || '12'} months\n• **Monthly Rent:** AED ${details.monthlyRent || '1,200'}\n• **Deposit:** AED ${details.deposit || '5,000'}\n• **Daily KM Limit:** ${details.kmLimit || '300'} km\n\n📋 **Next Steps:**\n• Contract has been generated\n• Driver will receive notification\n• Vehicle assignment confirmed\n• First payment due on contract start date\n\n💡 **The contract is now active in your system!**\n\nWould you like me to:\n• Show you all contracts\n• Create another contract\n• Check driver performance`,
-          ar: `✅ **تم إنشاء العقد بنجاح!**\n\n**تفاصيل العقد:**\n• **السائق:** ${details.driverName}\n• **الهوية الإماراتية:** ${details.emiratesId}\n• **المركبة:** ${details.vehicle}\n• **المدة:** ${details.duration || '12'} شهر\n• **الإيجار الشهري:** ${details.monthlyRent || '1,200'} درهم\n• **التأمين:** ${details.deposit || '5,000'} درهم\n• **الحد اليومي للكيلومترات:** ${details.kmLimit || '300'} كم\n\n📋 **الخطوات التالية:**\n• تم إنشاء العقد\n• سيتلقى السائق إشعاراً\n• تم تأكيد تخصيص المركبة\n• الدفعة الأولى مستحقة في تاريخ بداية العقد\n\n💡 **العقد نشط الآن في نظامك!**\n\nهل تريد مني:\n• عرض جميع العقود\n• إنشاء عقد آخر\n• فحص أداء السائق`,
-          hi: `✅ **अनुबंध सफलतापूर्वक बनाया गया!**\n\n**अनुबंध विवरण:**\n• **ड्राइवर:** ${details.driverName}\n• **एमिरेट्स ID:** ${details.emiratesId}\n• **वाहन:** ${details.vehicle}\n• **अवधि:** ${details.duration || '12'} महीने\n• **मासिक किराया:** AED ${details.monthlyRent || '1,200'}\n• **जमा:** AED ${details.deposit || '5,000'}\n• **दैनिक KM सीमा:** ${details.kmLimit || '300'} km\n\n📋 **अगले कदम:**\n• अनुबंध तैयार किया गया है\n• ड्राइवर को सूचना मिलेगी\n• वाहन असाइनमेंट की पुष्टि\n• पहला भुगतान अनुबंध शुरू की तारीख पर देय\n\n💡 **अनुबंध अब आपके सिस्टम में सक्रिय है!**\n\nक्या आप चाहते हैं कि मैं:\n• आपको सभी अनुबंध दिखाऊं\n• एक और अनुबंध बनाऊं\n• ड्राइवर प्रदर्शन जांचूं`,
-          ur: `✅ **کنٹریکٹ کامیابی سے بنایا گیا!**\n\n**کنٹریکٹ کی تفصیلات:**\n• **ڈرائیور:** ${details.driverName}\n• **ایمریٹس ID:** ${details.emiratesId}\n• **گاڑی:** ${details.vehicle}\n• **مدت:** ${details.duration || '12'} مہینے\n• **ماہانہ کرایہ:** AED ${details.monthlyRent || '1,200'}\n• **ڈپازٹ:** AED ${details.deposit || '5,000'}\n• **روزانہ KM حد:** ${details.kmLimit || '300'} km\n\n📋 **اگلے قدم:**\n• کنٹریکٹ تیار کر دیا گیا\n• ڈرائیور کو اطلاع ملے گی\n• گاڑی کی تفویض کی تصدیق\n• پہلی ادائیگی کنٹریکٹ شروع کی تاریخ پر واجب\n\n💡 **کنٹریکٹ اب آپ کے سسٹم میں فعال ہے!**\n\nکیا آپ چاہتے ہیں کہ میں:\n• آپ کو تمام کنٹریکٹس دکھاؤں\n• ایک اور کنٹریکٹ بناؤں\n• ڈرائیور کی کارکردگی چیک کروں`
-        };
-        
-        return responses[language];
-      } else {
-        // Ask for missing information
-        const missing = [];
-        if (!details.driverName) missing.push(language === 'ar' ? 'اسم السائق' : language === 'hi' ? 'ड्राइवर का नाम' : language === 'ur' ? 'ڈرائیور کا نام' : 'Driver name');
-        if (!details.emiratesId) missing.push(language === 'ar' ? 'الهوية الإماراتية' : language === 'hi' ? 'एमिरेट्स ID' : language === 'ur' ? 'ایمریٹس ID' : 'Emirates ID');
-        if (!details.vehicle) missing.push(language === 'ar' ? 'تخصيص المركبة' : language === 'hi' ? 'वाहन असाइनमेंट' : language === 'ur' ? 'گاڑی کی تفویض' : 'Vehicle assignment');
-        
-        const responses = {
-          en: `📋 **Contract Information Received**\n\nI've captured some details, but I need a bit more information:\n\n**Still needed:**\n${missing.map(item => `• ${item}`).join('\n')}\n\n**What I have so far:**\n${details.driverName ? `• Driver: ${details.driverName}` : ''}\n${details.emiratesId ? `• Emirates ID: ${details.emiratesId}` : ''}\n${details.vehicle ? `• Vehicle: ${details.vehicle}` : ''}\n${details.duration ? `• Duration: ${details.duration} months` : ''}\n${details.monthlyRent ? `• Monthly Rent: AED ${details.monthlyRent}` : ''}\n${details.deposit ? `• Deposit: AED ${details.deposit}` : ''}\n${details.kmLimit ? `• KM Limit: ${details.kmLimit} km` : ''}\n\nPlease provide the missing information to complete the contract.`,
-          ar: `📋 **تم استلام معلومات العقد**\n\nلقد التقطت بعض التفاصيل، لكنني أحتاج إلى مزيد من المعلومات:\n\n**ما زال مطلوباً:**\n${missing.map(item => `• ${item}`).join('\n')}\n\n**ما لدي حتى الآن:**\n${details.driverName ? `• السائق: ${details.driverName}` : ''}\n${details.emiratesId ? `• الهوية الإماراتية: ${details.emiratesId}` : ''}\n${details.vehicle ? `• المركبة: ${details.vehicle}` : ''}\n${details.duration ? `• المدة: ${details.duration} شهر` : ''}\n${details.monthlyRent ? `• الإيجار الشهري: ${details.monthlyRent} درهم` : ''}\n${details.deposit ? `• التأمين: ${details.deposit} درهم` : ''}\n${details.kmLimit ? `• حد الكيلومترات: ${details.kmLimit} كم` : ''}\n\nيرجى تقديم المعلومات المفقودة لإكمال العقد.`,
-          hi: `📋 **अनुबंध की जानकारी प्राप्त हुई**\n\nमैंने कुछ विवरण कैप्चर किए हैं, लेकिन मुझे थोड़ी और जानकारी चाहिए:\n\n**अभी भी आवश्यक:**\n${missing.map(item => `• ${item}`).join('\n')}\n\n**अब तक मेरे पास क्या है:**\n${details.driverName ? `• ड्राइवर: ${details.driverName}` : ''}\n${details.emiratesId ? `• एमिरेट्स ID: ${details.emiratesId}` : ''}\n${details.vehicle ? `• वाहन: ${details.vehicle}` : ''}\n${details.duration ? `• अवधि: ${details.duration} महीने` : ''}\n${details.monthlyRent ? `• मासिक किराया: AED ${details.monthlyRent}` : ''}\n${details.deposit ? `• जमा: AED ${details.deposit}` : ''}\n${details.kmLimit ? `• KM सीमा: ${details.kmLimit} km` : ''}\n\nकृपया अनुबंध पूरा करने के लिए लापता जानकारी प्रदान करें।`,
-          ur: `📋 **کنٹریکٹ کی معلومات موصول ہوئیں**\n\nمیں نے کچھ تفصیلات حاصل کی ہیں، لیکن مجھے تھوڑی اور معلومات درکار ہیں:\n\n**ابھی بھی ضروری:**\n${missing.map(item => `• ${item}`).join('\n')}\n\n**اب تک میرے پاس کیا ہے:**\n${details.driverName ? `• ڈرائیور: ${details.driverName}` : ''}\n${details.emiratesId ? `• ایمریٹس ID: ${details.emiratesId}` : ''}\n${details.vehicle ? `• گاڑی: ${details.vehicle}` : ''}\n${details.duration ? `• مدت: ${details.duration} مہینے` : ''}\n${details.monthlyRent ? `• ماہانہ کرایہ: AED ${details.monthlyRent}` : ''}\n${details.deposit ? `• ڈپازٹ: AED ${details.deposit}` : ''}\n${details.kmLimit ? `• KM حد: ${details.kmLimit} km` : ''}\n\nبراہ کرم کنٹریکٹ مکمل کرنے کے لیے لاپتہ معلومات فراہم کریں۔`
-        };
-        
-        return responses[language];
-      }
+    // Process trip-related queries
+    if (lowerInput.includes('trip') || 
+        lowerInput.includes('journey') || 
+        lowerInput.includes('ride') || 
+        lowerInput.includes('how many') ||
+        lowerInput.includes('complete')) {
+      return processTripQuery(input);
     }
-
-    // Process driver-specific queries
-    if (lowerInput.includes('my') || 
-        lowerInput.includes('i') || 
-        lowerInput.includes('me') || 
-        lowerInput.includes('mine')) {
-      
-      // Process trips queries
-      const tripsResponse = processTripsQuery(input, currentDriver);
-      if (tripsResponse) return tripsResponse;
-      
-      // Process earnings queries
-      const earningsResponse = processEarningsQuery(input, currentDriver);
-      if (earningsResponse) return earningsResponse;
-      
-      // Process fines queries
-      const finesResponse = processFinesQuery(input, currentDriver);
-      if (finesResponse) return finesResponse;
-      
-      // Process performance queries
-      const performanceResponse = processPerformanceQuery(input, currentDriver);
-      if (performanceResponse) return performanceResponse;
-      
-      // Process contract queries
-      const contractResponse = processContractQuery(input, currentDriver);
-      if (contractResponse) return contractResponse;
-      
-      // Process vehicle queries
-      const vehicleResponse = processVehicleQuery(input, currentDriver);
-      if (vehicleResponse) return vehicleResponse;
-      
-      // Process shift queries
-      const shiftResponse = processShiftQuery(input, currentDriver);
-      if (shiftResponse) return shiftResponse;
-      
-      // Process warnings queries
-      const warningsResponse = processWarningsQuery(input, currentDriver);
-      if (warningsResponse) return warningsResponse;
-      
-      // Process location queries
-      const locationResponse = processLocationQuery(input, currentDriver);
-      if (locationResponse) return locationResponse;
-      
-      // Process status queries
-      const statusResponse = processStatusQuery(input, currentDriver);
-      if (statusResponse) return statusResponse;
-      
-      // Process profile queries
-      const profileResponse = processProfileQuery(input, currentDriver);
-      if (profileResponse) return profileResponse;
+    
+    // Process earnings-related queries
+    if (lowerInput.includes('earn') || 
+        lowerInput.includes('money') || 
+        lowerInput.includes('revenue') || 
+        lowerInput.includes('income') ||
+        lowerInput.includes('profit')) {
+      return processEarningsQuery(input);
     }
-
-    // Process help queries
-    const helpResponse = processHelpQuery(input);
-    if (helpResponse) return helpResponse;
+    
+    // Process fine-related queries
+    if (lowerInput.includes('fine') || 
+        lowerInput.includes('penalty') || 
+        lowerInput.includes('ticket') || 
+        lowerInput.includes('violation')) {
+      return processFineQuery(input);
+    }
+    
+    // Process performance-related queries
+    if (lowerInput.includes('performance') || 
+        lowerInput.includes('score') || 
+        lowerInput.includes('rating') || 
+        lowerInput.includes('evaluation')) {
+      return processPerformanceQuery(input);
+    }
+    
+    // Process contract-related queries
+    if (lowerInput.includes('contract') || 
+        lowerInput.includes('agreement') || 
+        lowerInput.includes('expir') || 
+        lowerInput.includes('rental')) {
+      return processContractQuery(input);
+    }
+    
+    // Process location-related queries
+    if (lowerInput.includes('where') || 
+        lowerInput.includes('location') || 
+        lowerInput.includes('position') || 
+        lowerInput.includes('track')) {
+      return processLocationQuery(input);
+    }
+    
+    // Process vehicle-related queries
+    if (lowerInput.includes('vehicle') || 
+        lowerInput.includes('car') || 
+        lowerInput.includes('taxi') || 
+        lowerInput.includes('assign')) {
+      return processVehicleQuery(input);
+    }
+    
+    // Process driver-related queries
+    if (lowerInput.includes('driver') || 
+        lowerInput.includes('who') || 
+        lowerInput.includes('person') || 
+        lowerInput.includes('employee')) {
+      return processDriverQuery(input);
+    }
     
     // Process bulk import queries
-    const bulkImportResponse = processBulkImportQuery(input);
-    if (bulkImportResponse) return bulkImportResponse;
-
-    // Contract-related queries - ENHANCED LOGIC with multilingual support
-    if (lowerInput.includes('contract') || lowerInput.includes('make contract') || lowerInput.includes('create contract') || lowerInput.includes('new contract') || lowerInput.includes('generate contract') ||
-        lowerInput.includes('عقد') || lowerInput.includes('إنشاء عقد') || lowerInput.includes('عقد جديد') ||
-        lowerInput.includes('अनुबंध') || lowerInput.includes('नया अनुबंध') || lowerInput.includes('अनुबंध बनाएं') ||
-        lowerInput.includes('کنٹریکٹ') || lowerInput.includes('نیا کنٹریکٹ') || lowerInput.includes('کنٹریکٹ بنائیں')) {
-      
-      // Contract creation/generation
-      if (lowerInput.includes('make') || lowerInput.includes('create') || lowerInput.includes('new') || lowerInput.includes('generate') ||
-          lowerInput.includes('إنشاء') || lowerInput.includes('جديد') ||
-          lowerInput.includes('बनाएं') || lowerInput.includes('नया') ||
-          lowerInput.includes('بنائیں') || lowerInput.includes('نیا')) {
-        setConversationContext('creating_contract'); // Set context for next messages
-        
-        const responses = {
-          en: `📋 **Let's Create a New Contract!**\n\nI'll help you generate a rental contract. Please provide the following information:\n\n**Required Details:**\n• **Driver Name:** (e.g., "Ahmed Al-Rashid")\n• **Emirates ID:** (e.g., "784-1990-1234567-1")\n• **Vehicle Assignment:** (e.g., "DXB-A-12345")\n• **Contract Duration:** (e.g., "12 months")\n• **Monthly Rent:** (e.g., "AED 1,200")\n• **Deposit Amount:** (e.g., "AED 5,000")\n• **Daily KM Limit:** (e.g., "300 km")\n\n💡 **You can provide all details at once or one by one. For example:**\n\n"Driver: Fatima Al-Zahra, Emirates ID: 784-1992-7654321-8, Vehicle: DXB-G-55555, Duration: 18 months, Monthly rent: AED 1,350, Deposit: AED 5,200, Daily limit: 280 km"\n\n**Or use the Contract Generator:**\nGo to **Contracts** → **"Generate with OCR"** to automatically scan Emirates ID!`,
-          ar: `📋 **لننشئ عقداً جديداً!**\n\nسأساعدك في إنشاء عقد إيجار. يرجى تقديم المعلومات التالية:\n\n**التفاصيل المطلوبة:**\n• **اسم السائق:** (مثل "أحمد الراشد")\n• **الهوية الإماراتية:** (مثل "784-1990-1234567-1")\n• **تخصيص المركبة:** (مثل "DXB-A-12345")\n• **مدة العقد:** (مثل "12 شهر")\n• **الإيجار الشهري:** (مثل "1,200 درهم")\n• **مبلغ التأمين:** (مثل "5,000 درهم")\n• **الحد اليومي للكيلومترات:** (مثل "300 كم")\n\n💡 **يمكنك تقديم جميع التفاصيل دفعة واحدة أو واحداً تلو الآخر. على سبيل المثال:**\n\n"السائق: فاطمة الزهراء، الهوية الإماراتية: 784-1992-7654321-8، المركبة: DXB-G-55555، المدة: 18 شهر، الإيجار الشهري: 1,350 درهم، التأمين: 5,200 درهم، الحد اليومي: 280 كم"\n\n**أو استخدم مولد العقود:**\nاذهب إلى **العقود** → **"إنشاء مع OCR"** لمسح الهوية الإماراتية تلقائياً!`,
-          hi: `📋 **आइए एक नया अनुबंध बनाते हैं!**\n\nमैं आपको एक किराया अनुबंध बनाने में मदद करूंगा। कृपया निम्नलिखित जानकारी प्रदान करें:\n\n**आवश्यक विवरण:**\n• **ड्राइवर का नाम:** (जैसे "अहमद अल-राशिद")\n• **एमिरेट्स ID:** (जैसे "784-1990-1234567-1")\n• **वाहन असाइनमेंट:** (जैसे "DXB-A-12345")\n• **अनुबंध अवधि:** (जैसे "12 महीने")\n• **मासिक किराया:** (जैसे "AED 1,200")\n• **जमा राशि:** (जैसे "AED 5,000")\n• **दैनिक KM सीमा:** (जैसे "300 km")\n\n💡 **आप सभी विवरण एक साथ या एक-एक करके दे सकते हैं। उदाहरण के लिए:**\n\n"ड्राइवर: फातिमा अल-जहरा, एमिरेट्स ID: 784-1992-7654321-8, वाहन: DXB-G-55555, अवधि: 18 महीने, मासिक किराया: AED 1,350, जमा: AED 5,200, दैनिक सीमा: 280 km"\n\n**या अनुबंध जेनरेटर का उपयोग करें:**\n**अनुबंध** → **"OCR के साथ जेनरेट करें"** पर जाकर एमिरेट्स ID को स्वचालित रूप से स्कैन करें!`,
-          ur: `📋 **آئیے ایک نیا کنٹریکٹ بناتے ہیں!**\n\nمیں آپ کو کرایے کا کنٹریکٹ بنانے میں مدد کروں گا۔ براہ کرم درج ذیل معلومات فراہم کریں:\n\n**ضروری تفصیلات:**\n• **ڈرائیور کا نام:** (جیسے "احمد الراشد")\n• **ایمریٹس ID:** (جیسے "784-1990-1234567-1")\n• **گاڑی کی تفویض:** (جیسے "DXB-A-12345")\n• **کنٹریکٹ کی مدت:** (جیسے "12 مہینے")\n• **ماہانہ کرایہ:** (جیسے "AED 1,200")\n• **ڈپازٹ کی رقم:** (جیسے "AED 5,000")\n• **روزانہ KM حد:** (جیسے "300 km")\n\n💡 **آپ تمام تفصیلات ایک ساتھ یا ایک ایک کرکے دے سکتے ہیں۔ مثال کے طور پر:**\n\n"ڈرائیور: فاطمہ الزہرا، ایمریٹس ID: 784-1992-7654321-8، گاڑی: DXB-G-55555، مدت: 18 مہینے، ماہانہ کرایہ: AED 1,350، ڈپازٹ: AED 5,200، روزانہ حد: 280 km"\n\n**یا کنٹریکٹ جنریٹر استعمال کریں:**\n**کنٹریکٹس** → **"OCR کے ساتھ جنریٹ کریں"** پر جا کر ایمریٹس ID کو خودکار طور پر اسکین کریں!`
-        };
-        
-        return responses[language];
-      }
-
-      // Show contracts
-      if (lowerInput.includes('show') || lowerInput.includes('list') || lowerInput.includes('view') ||
-          lowerInput.includes('أظهر') || lowerInput.includes('عرض') ||
-          lowerInput.includes('दिखाएं') || lowerInput.includes('देखें') ||
-          lowerInput.includes('دکھائیں') || lowerInput.includes('دیکھیں')) {
-        const activeContracts = mockContractsData.filter(c => c.status === 'active');
-        const totalRevenue = activeContracts.reduce((sum, c) => sum + c.monthlyRent, 0);
-        
-        const responses = {
-          en: `📋 **Active Contracts Overview**\n\n**Summary:**\n• Total active contracts: ${activeContracts.length}\n• Monthly revenue: AED ${totalRevenue.toLocaleString()}\n• Average rent: AED ${Math.round(totalRevenue / activeContracts.length).toLocaleString()}\n\n**Contract Details:**\n\n`,
-          ar: `📋 **نظرة عامة على العقود النشطة**\n\n**الملخص:**\n• إجمالي العقود النشطة: ${activeContracts.length}\n• الإيرادات الشهرية: ${totalRevenue.toLocaleString()} درهم\n• متوسط الإيجار: ${Math.round(totalRevenue / activeContracts.length).toLocaleString()} درهم\n\n**تفاصيل العقود:**\n\n`,
-          hi: `📋 **सक्रिय अनुबंध अवलोकन**\n\n**सारांश:**\n• कुल सक्रिय अनुबंध: ${activeContracts.length}\n• मासिक राजस्व: AED ${totalRevenue.toLocaleString()}\n• औसत किराया: AED ${Math.round(totalRevenue / activeContracts.length).toLocaleString()}\n\n**अनुबंध विवरण:**\n\n`,
-          ur: `📋 **فعال کنٹریکٹس کا جائزہ**\n\n**خلاصہ:**\n• کل فعال کنٹریکٹس: ${activeContracts.length}\n• ماہانہ آمدنی: AED ${totalRevenue.toLocaleString()}\n• اوسط کرایہ: AED ${Math.round(totalRevenue / activeContracts.length).toLocaleString()}\n\n**کنٹریکٹ کی تفصیلات:**\n\n`
-        };
-        
-        let response = responses[language];
-        
-        activeContracts.forEach(contract => {
-          const driver = mockDriversData.find(d => d.id === contract.driverId);
-          const daysRemaining = getDaysRemaining(contract.endDate);
-          
-          if (language === 'ar') {
-            response += `**${driver?.name || 'سائق غير معروف'}** (${contract.id})\n`;
-            response += `• المركبة: ${contract.vehicleId}\n`;
-            response += `• الإيجار الشهري: ${contract.monthlyRent.toLocaleString()} درهم\n`;
-            response += `• الأيام المتبقية: ${daysRemaining > 0 ? daysRemaining + ' يوم' : 'منتهي الصلاحية'}\n`;
-            response += `• الحالة: ${daysRemaining < 30 && daysRemaining > 0 ? '⚠️ ينتهي قريباً' : daysRemaining <= 0 ? '🔴 منتهي الصلاحية' : '✅ نشط'}\n\n`;
-          } else if (language === 'hi') {
-            response += `**${driver?.name || 'अज्ञात ड्राइवर'}** (${contract.id})\n`;
-            response += `• वाहन: ${contract.vehicleId}\n`;
-            response += `• मासिक किराया: AED ${contract.monthlyRent.toLocaleString()}\n`;
-            response += `• शेष दिन: ${daysRemaining > 0 ? daysRemaining + ' दिन' : 'समाप्त'}\n`;
-            response += `• स्थिति: ${daysRemaining < 30 && daysRemaining > 0 ? '⚠️ जल्द समाप्त' : daysRemaining <= 0 ? '🔴 समाप्त' : '✅ सक्रिय'}\n\n`;
-          } else if (language === 'ur') {
-            response += `**${driver?.name || 'نامعلوم ڈرائیور'}** (${contract.id})\n`;
-            response += `• گاڑی: ${contract.vehicleId}\n`;
-            response += `• ماہانہ کرایہ: AED ${contract.monthlyRent.toLocaleString()}\n`;
-            response += `• باقی دن: ${daysRemaining > 0 ? daysRemaining + ' دن' : 'ختم'}\n`;
-            response += `• حالت: ${daysRemaining < 30 && daysRemaining > 0 ? '⚠️ جلد ختم' : daysRemaining <= 0 ? '🔴 ختم' : '✅ فعال'}\n\n`;
-          } else {
-            response += `**${driver?.name || 'Unknown Driver'}** (${contract.id})\n`;
-            response += `• Vehicle: ${contract.vehicleId}\n`;
-            response += `• Monthly rent: AED ${contract.monthlyRent.toLocaleString()}\n`;
-            response += `• Days remaining: ${daysRemaining > 0 ? daysRemaining + ' days' : 'Expired'}\n`;
-            response += `• Status: ${daysRemaining < 30 && daysRemaining > 0 ? '⚠️ Expiring soon' : daysRemaining <= 0 ? '🔴 Expired' : '✅ Active'}\n\n`;
-          }
-        });
-
-        return response;
-      }
-    }
-
-    // Process queries about specific drivers
+    const bulkImportQueryResponse = processBulkImportQuery(input);
+    if (bulkImportQueryResponse) return bulkImportQueryResponse;
+    
+    // Try to identify a driver name in the query
     for (const driver of mockDriversData) {
       if (lowerInput.includes(driver.name.toLowerCase())) {
-        // Driver performance query
-        if (lowerInput.includes('performance') || lowerInput.includes('score') || lowerInput.includes('rating')) {
-          return `${driver.name}'s current performance score is ${driver.performanceScore}%. ${
-            driver.performanceScore >= 90 ? 'This is excellent.' : 
-            driver.performanceScore >= 80 ? 'This is good.' : 
-            driver.performanceScore >= 70 ? 'This is average.' : 
-            'This needs improvement.'
-          }`;
-        }
-        
-        // Driver earnings query
-        if (lowerInput.includes('earn') || lowerInput.includes('money') || lowerInput.includes('income')) {
-          return `${driver.name} has earned a total of ${formatCurrency(driver.earnings)} to date, with ${formatCurrency(driver.earnings_today || 0)} earned today.`;
-        }
-        
-        // Driver trips query
-        if (lowerInput.includes('trip') || lowerInput.includes('ride')) {
-          return `${driver.name} has completed a total of ${driver.trips} trips, with ${driver.trips_today || 0} trips today.`;
-        }
-        
-        // Driver fines query
-        if (lowerInput.includes('fine') || lowerInput.includes('penalty')) {
-          const driverFines = getDriverFines(driver.id);
-          const pendingFines = driverFines.filter(f => f.status === 'pending');
-          
-          if (driverFines.length === 0) {
-            return `${driver.name} doesn't have any fines.`;
-          } else {
-            const totalAmount = driverFines.reduce((sum, f) => sum + f.amount, 0);
-            const pendingAmount = pendingFines.reduce((sum, f) => sum + f.amount, 0);
-            
-            return `${driver.name} has ${driverFines.length} fine${driverFines.length > 1 ? 's' : ''} totaling AED ${totalAmount}, with ${pendingFines.length} pending (AED ${pendingAmount}).`;
-          }
-        }
-        
-        // Driver contract query
-        if (lowerInput.includes('contract')) {
-          const driverContracts = getDriverContracts(driver.id);
-          const activeContract = driverContracts.find(c => c.status === 'active');
-          
-          if (!activeContract) {
-            return `${driver.name} doesn't have any active contracts.`;
-          } else {
-            const daysRemaining = getDaysRemaining(activeContract.endDate);
-            
-            return `${driver.name} has an active contract (${activeContract.id}) for vehicle ${activeContract.vehicleId} with a monthly rent of AED ${activeContract.monthlyRent}. The contract ${
-              daysRemaining <= 0 ? 'has expired' : `expires in ${daysRemaining} days`
-            }.`;
-          }
-        }
-        
-        // Driver vehicle query
-        if (lowerInput.includes('vehicle') || lowerInput.includes('car')) {
-          if (!driver.vehicleId) {
-            return `${driver.name} doesn't have any vehicle assigned.`;
-          } else {
-            return `${driver.name} is assigned to vehicle ${driver.vehicleId}.`;
-          }
-        }
-        
-        // Driver status query
-        if (lowerInput.includes('status') || lowerInput.includes('active') || lowerInput.includes('online')) {
-          return `${driver.name} is currently ${driver.status === 'active' ? 'ACTIVE' : 'OFFLINE'}.`;
-        }
-        
-        // General driver info
-        return `**Driver Information: ${driver.name}**\n\n• Status: ${driver.status === 'active' ? 'Active' : 'Offline'}\n• Email: ${driver.email}\n• Phone: ${driver.phone}\n• Join Date: ${driver.joinDate}\n• Performance Score: ${driver.performanceScore}%\n• Total Trips: ${driver.trips}\n• Total Earnings: ${formatCurrency(driver.earnings)}\n• Vehicle: ${driver.vehicleId || 'None assigned'}`;
+        return processDriverQuery(input, driver.id);
       }
     }
-
+    
     // Default response for unrecognized queries with multilingual support
     const defaultResponses = {
-      en: `I'm here to help with any questions about your fleet management. You can ask me about:\n\n• Your trips and earnings\n• Your performance score\n• Your fines and payments\n• Your vehicle and contract details\n• Your shift schedule\n• Specific drivers in your fleet\n\nFor example, try asking:\n• "How many trips did I complete today?"\n• "What's my total earnings this month?"\n• "Do I have any pending fines?"\n• "When does my contract expire?"\n• "What's my current performance score?"\n• "Show me Ahmed's contract details"`,
-      ar: `أنا هنا للمساعدة في أي أسئلة حول إدارة أسطولك. يمكنك أن تسألني عن:\n\n• رحلاتك وأرباحك\n• درجة أدائك\n• مخالفاتك ومدفوعاتك\n• تفاصيل مركبتك وعقدك\n• جدول مناوبتك\n• سائقين محددين في أسطولك\n\nعلى سبيل المثال، جرب أن تسأل:\n• "كم عدد الرحلات التي أكملتها اليوم؟"\n• "ما هو إجمالي أرباحي هذا الشهر؟"\n• "هل لدي أي مخالفات معلقة؟"\n• "متى ينتهي عقدي؟"\n• "ما هي درجة أدائي الحالية؟"\n• "أظهر لي تفاصيل عقد أحمد"`,
-      hi: `मैं आपके फ्लीट प्रबंधन के बारे में किसी भी प्रश्न में मदद करने के लिए यहां हूं। आप मुझसे इन चीजों के बारे में पूछ सकते हैं:\n\n• आपकी यात्राएं और कमाई\n• आपका प्रदर्शन स्कोर\n• आपके जुर्माने और भुगतान\n• आपके वाहन और अनुबंध विवरण\n• आपका शिफ्ट शेड्यूल\n• आपके फ्लीट में विशिष्ट ड्राइवर\n\nउदाहरण के लिए, यह पूछने का प्रयास करें:\n• "आज मैंने कितनी यात्राएं पूरी कीं?"\n• "इस महीने मेरी कुल कमाई क्या है?"\n• "क्या मेरे कोई लंबित जुर्माने हैं?"\n• "मेरा अनुबंध कब समाप्त होता है?"\n• "मेरा वर्तमान प्रदर्शन स्कोर क्या है?"\n• "मुझे अहमद के अनुबंध विवरण दिखाएं"`,
-      ur: `میں آپ کے فلیٹ منیجمنٹ کے بارے میں کسی بھی سوال میں مدد کرنے کے لیے یہاں ہوں۔ آپ مجھ سے ان چیزوں کے بارے میں پوچھ سکتے ہیں:\n\n• آپ کے سفر اور کمائی\n• آپ کا کارکردگی اسکور\n• آپ کے جرمانے اور ادائیگیاں\n• آپ کی گاڑی اور کنٹریکٹ کی تفصیلات\n• آپ کا شفٹ شیڈول\n• آپ کے فلیٹ میں مخصوص ڈرائیورز\n\nمثال کے طور پر، یہ پوچھنے کی کوشش کریں:\n• "آج میں نے کتنے سفر مکمل کیے؟"\n• "اس مہینے میری کل کمائی کیا ہے؟"\n• "کیا میرے کوئی زیر التواء جرمانے ہیں؟"\n• "میرا کنٹریکٹ کب ختم ہوتا ہے؟"\n• "میرا موجودہ کارکردگی اسکور کیا ہے؟"\n• "مجھے احمد کے کنٹریکٹ کی تفصیلات دکھائیں"`
+      en: `I'm here to help with your fleet management questions. You can ask me about:\n\n• Driver information and performance\n• Trip details and statistics\n• Earnings and revenue\n• Fines and penalties\n• Contracts and agreements\n• Vehicle assignments\n• Driver locations\n\nFor example, try asking "How many trips did Ahmed complete today?" or "Show me drivers with pending fines."`,
+      ar: `أنا هنا للمساعدة في أسئلة إدارة الأسطول. يمكنك أن تسألني عن:\n\n• معلومات وأداء السائق\n• تفاصيل وإحصاءات الرحلة\n• الأرباح والإيرادات\n• الغرامات والعقوبات\n• العقود والاتفاقيات\n• تخصيصات المركبات\n• مواقع السائقين\n\nعلى سبيل المثال، جرب أن تسأل "كم عدد الرحلات التي أكملها أحمد اليوم؟" أو "أظهر لي السائقين الذين لديهم غرامات معلقة."`,
+      hi: `मैं आपके फ्लीट प्रबंधन प्रश्नों में मदद करने के लिए यहां हूं। आप मुझसे इन बारे में पूछ सकते हैं:\n\n• ड्राइवर जानकारी और प्रदर्शन\n• यात्रा विवरण और आंकड़े\n• कमाई और राजस्व\n• जुर्माने और दंड\n• अनुबंध और समझौते\n• वाहन असाइनमेंट\n• ड्राइवर स्थान\n\nउदाहरण के लिए, "अहमद ने आज कितनी यात्राएं पूरी कीं?" या "मुझे लंबित जुर्माने वाले ड्राइवर दिखाएं।" पूछने का प्रयास करें।`,
+      ur: `میں آپ کے فلیٹ منیجمنٹ سوالات میں مدد کرنے کے لیے یہاں ہوں۔ آپ مجھ سے ان کے بارے میں پوچھ سکتے ہیں:\n\n• ڈرائیور کی معلومات اور کارکردگی\n• سفر کی تفصیلات اور اعداد و شمار\n• کمائی اور آمدنی\n• جرمانے اور سزائیں\n• کنٹریکٹس اور معاہدے\n• گاڑی کی تفویض\n• ڈرائیور کے مقامات\n\nمثال کے طور پر، "احمد نے آج کتنے سفر مکمل کیے؟" یا "مجھے زیر التواء جرمانے والے ڈرائیورز دکھائیں۔" پوچھنے کی کوشش کریں۔`
     };
 
     return defaultResponses[language];
-  };
-
-  // Extract contract details from user input
-  const extractContractDetails = (input: string) => {
-    const details: any = {};
-    
-    // Extract name patterns
-    const namePatterns = [
-      /name[:\s]+([A-Za-z\s]+)/i,
-      /driver[:\s]+([A-Za-z\s]+)/i,
-      /([A-Za-z]+\s+[A-Za-z-]+)/i // General name pattern
-    ];
-    
-    for (const pattern of namePatterns) {
-      const match = input.match(pattern);
-      if (match) {
-        details.driverName = match[1].trim();
-        break;
-      }
-    }
-
-    // Extract Emirates ID
-    const idMatch = input.match(/(\d{3}-\d{4}-\d{7}-\d{1})/);
-    if (idMatch) {
-      details.emiratesId = idMatch[1];
-    }
-
-    // Extract vehicle
-    const vehicleMatch = input.match(/(DXB-[A-Z]-\d+)/i);
-    if (vehicleMatch) {
-      details.vehicle = vehicleMatch[1].toUpperCase();
-    }
-
-    // Extract duration
-    const durationMatch = input.match(/(\d+)\s*months?/i);
-    if (durationMatch) {
-      details.duration = durationMatch[1];
-    }
-
-    // Extract rent amount
-    const rentMatch = input.match(/(?:rent|monthly)[:\s]*(?:AED\s*)?(\d+(?:,\d{3})*)/i);
-    if (rentMatch) {
-      details.monthlyRent = rentMatch[1].replace(/,/g, '');
-    }
-
-    // Extract deposit
-    const depositMatch = input.match(/(?:deposit|security)[:\s]*(?:AED\s*)?(\d+(?:,\d{3})*)/i);
-    if (depositMatch) {
-      details.deposit = depositMatch[1].replace(/,/g, '');
-    }
-
-    // Extract KM limit
-    const kmMatch = input.match(/(\d+)\s*km/i);
-    if (kmMatch) {
-      details.kmLimit = kmMatch[1];
-    }
-
-    return details;
   };
 
   const handleSendMessage = () => {
