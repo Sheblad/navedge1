@@ -17,8 +17,9 @@ const DataMigration: React.FC<DataMigrationProps> = ({ onMigrationComplete }) =>
     drivers: Driver[];
     hasData: boolean;
   }>({ drivers: [], hasData: false });
+  const [connectionStatus, setConnectionStatus] = useState<'checking' | 'connected' | 'disconnected'>('checking');
 
-  // Check for existing local data
+  // Check for existing local data and database connection
   React.useEffect(() => {
     const checkLocalData = () => {
       const savedDrivers = localStorage.getItem('navedge_drivers');
@@ -35,7 +36,18 @@ const DataMigration: React.FC<DataMigrationProps> = ({ onMigrationComplete }) =>
       }
     };
 
+    const checkDatabaseConnection = async () => {
+      try {
+        const isConnected = await DatabaseService.testConnection();
+        setConnectionStatus(isConnected ? 'connected' : 'disconnected');
+      } catch (error) {
+        console.error('Error checking database connection:', error);
+        setConnectionStatus('disconnected');
+      }
+    };
+
     checkLocalData();
+    checkDatabaseConnection();
   }, []);
 
   const migrateToDatabase = async () => {
@@ -44,6 +56,12 @@ const DataMigration: React.FC<DataMigrationProps> = ({ onMigrationComplete }) =>
 
     try {
       setMigrationStep('migrate');
+
+      // Check connection again
+      const isConnected = await DatabaseService.testConnection();
+      if (!isConnected) {
+        throw new Error('Cannot connect to database. Please check your Supabase configuration.');
+      }
 
       // Migrate drivers
       if (localData.hasData) {
@@ -151,11 +169,13 @@ const DataMigration: React.FC<DataMigrationProps> = ({ onMigrationComplete }) =>
           </div>
           
           <h2 className="text-2xl font-bold text-gray-900 mb-2">
-            Database Migration
+            Database Setup
           </h2>
           
           <p className="text-gray-600">
-            We're upgrading to a cloud database for better performance and multi-device access
+            {connectionStatus === 'checking' ? 'Checking database connection...' :
+             connectionStatus === 'connected' ? 'Connected to Supabase database' :
+             'Not connected to Supabase database'}
           </p>
         </div>
 
@@ -211,6 +231,21 @@ const DataMigration: React.FC<DataMigrationProps> = ({ onMigrationComplete }) =>
           </div>
 
           <div className="flex flex-col space-y-3">
+            {connectionStatus === 'disconnected' ? (
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+                <h4 className="font-semibold text-yellow-900 mb-2">Database Connection Required</h4>
+                <p className="text-yellow-800 text-sm mb-4">
+                  To use cloud database features, you need to connect to Supabase. Please follow these steps:
+                </p>
+                <ol className="text-yellow-800 text-sm space-y-2 list-decimal pl-5">
+                  <li>Click the "Connect to Supabase" button in the top right corner</li>
+                  <li>Create a new Supabase project or connect to an existing one</li>
+                  <li>Run the SQL schema to create the necessary tables</li>
+                  <li>Return to this page and click "Migrate to Cloud Database"</li>
+                </ol>
+              </div>
+            ) : null}
+            
             {error && error.includes('Database tables not found') ? (
               <button
                 onClick={() => setMigrationStep('sql-download')}
@@ -222,7 +257,7 @@ const DataMigration: React.FC<DataMigrationProps> = ({ onMigrationComplete }) =>
             ) : (
               <button
                 onClick={migrateToDatabase}
-                disabled={isLoading}
+                disabled={isLoading || connectionStatus !== 'connected'}
                 className="w-full py-3 px-4 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center justify-center"
               >
                 {isLoading ? (

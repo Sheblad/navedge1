@@ -10,6 +10,36 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // Database service for drivers
 export class DatabaseService {
+  // ==================== CONNECTION TESTING ====================
+  
+  static async testConnection(): Promise<boolean> {
+    try {
+      console.log('Testing connection to Supabase...');
+      if (!supabaseUrl || !supabaseAnonKey) {
+        console.log('Supabase URL or anon key not configured');
+        return false;
+      }
+      
+      // Try a simple query to test connection
+      const { data, error } = await supabase.from('drivers').select('count').limit(1);
+      
+      if (error) {
+        if (error.code === '42P01') {
+          console.log('Connection successful but drivers table does not exist');
+          return false;
+        }
+        console.error('Connection test error:', error);
+        return false;
+      }
+      
+      console.log('Successfully connected to Supabase');
+      return true;
+    } catch (error) {
+      console.error('Connection test failed:', error);
+      return false;
+    }
+  }
+  
   // ==================== DRIVERS ====================
   
   static async getDrivers(): Promise<Driver[]> {
