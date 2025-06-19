@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Search, Filter, Plus, MoreVertical, Phone, Mail, Star, Satellite, Upload, Database } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Search, Filter, Plus, MoreVertical, Phone, Mail, Star, Satellite, Upload, Database, AlertTriangle, X } from 'lucide-react';
 import { Driver } from '../data/mockData';
 import DriverProfile from './DriverProfile';
 import GPSIntegrationWizard from './GPSIntegrationWizard';
@@ -62,7 +62,9 @@ const Drivers: React.FC<DriversProps> = ({
       gpsNotConnected: 'No GPS',
       mobileApp: 'Mobile App',
       importError: 'Import Error',
-      tryAgain: 'Try Again'
+      tryAgain: 'Try Again',
+      removeDrivers: 'Remove 30 Drivers',
+      driversRemoved: 'Drivers removed successfully'
     },
     ar: {
       title: 'السائقون',
@@ -91,7 +93,9 @@ const Drivers: React.FC<DriversProps> = ({
       gpsNotConnected: 'لا يوجد GPS',
       mobileApp: 'تطبيق الهاتف',
       importError: 'خطأ في الاستيراد',
-      tryAgain: 'حاول مرة أخرى'
+      tryAgain: 'حاول مرة أخرى',
+      removeDrivers: 'إزالة 30 سائق',
+      driversRemoved: 'تمت إزالة السائقين بنجاح'
     },
     hi: {
       title: 'ड्राइवर',
@@ -120,7 +124,9 @@ const Drivers: React.FC<DriversProps> = ({
       gpsNotConnected: 'कोई GPS नहीं',
       mobileApp: 'मोबाइल ऐप',
       importError: 'आयात त्रुटि',
-      tryAgain: 'पुनः प्रयास करें'
+      tryAgain: 'पुनः प्रयास करें',
+      removeDrivers: '30 ड्राइवर हटाएं',
+      driversRemoved: 'ड्राइवर सफलतापूर्वक हटा दिए गए'
     },
     ur: {
       title: 'ڈرائیورز',
@@ -149,7 +155,9 @@ const Drivers: React.FC<DriversProps> = ({
       gpsNotConnected: 'کوئی GPS نہیں',
       mobileApp: 'موبائل ایپ',
       importError: 'امپورٹ میں خرابی',
-      tryAgain: 'دوبارہ کوشش کریں'
+      tryAgain: 'دوبارہ کوشش کریں',
+      removeDrivers: '30 ڈرائیورز ہٹائیں',
+      driversRemoved: 'ڈرائیورز کامیابی سے ہٹا دیئے گئے'
     }
   };
 
@@ -201,6 +209,25 @@ const Drivers: React.FC<DriversProps> = ({
     } catch (error) {
       console.error('Error during bulk import:', error);
       setImportError(error instanceof Error ? error.message : 'Unknown error during import');
+    }
+  };
+
+  const handleRemoveDrivers = async () => {
+    try {
+      // Get the useDrivers hook from App.tsx
+      const { removeMultipleDrivers } = require('../hooks/useDatabase').useDrivers();
+      
+      // Remove 30 random drivers
+      await removeMultipleDrivers(30);
+      
+      // Show success message
+      alert(t.driversRemoved);
+      
+      // Refresh the page to update the UI
+      window.location.reload();
+    } catch (error) {
+      console.error('Error removing drivers:', error);
+      alert('Error removing drivers: ' + (error instanceof Error ? error.message : 'Unknown error'));
     }
   };
 
@@ -293,6 +320,18 @@ const Drivers: React.FC<DriversProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Remove Drivers Button */}
+      {drivers.length > 20 && (
+        <div className="flex justify-end">
+          <button
+            onClick={handleRemoveDrivers}
+            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+          >
+            {t.removeDrivers}
+          </button>
+        </div>
+      )}
 
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-4">

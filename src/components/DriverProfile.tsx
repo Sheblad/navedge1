@@ -39,6 +39,7 @@ const DriverProfile: React.FC<DriverProfileProps> = ({ driverId, fleetMode, lang
   const [driver, setDriver] = useState<Driver | null>(null);
   const [showAddNote, setShowAddNote] = useState(false);
   const [newNote, setNewNote] = useState('');
+  const [loading, setLoading] = useState(true);
 
   const texts = {
     en: {
@@ -126,7 +127,9 @@ const DriverProfile: React.FC<DriverProfileProps> = ({ driverId, fleetMode, lang
       cancel: 'Cancel',
       lastUpdate: 'Last Update',
       liveTracking: 'Live Tracking',
-      exportPDF: 'Export as PDF'
+      exportPDF: 'Export as PDF',
+      driverNotFound: 'Driver not found',
+      loadingDriver: 'Loading driver information...'
     },
     ar: {
       back: 'العودة إلى لوحة التحكم',
@@ -213,7 +216,9 @@ const DriverProfile: React.FC<DriverProfileProps> = ({ driverId, fleetMode, lang
       cancel: 'إلغاء',
       lastUpdate: 'آخر تحديث',
       liveTracking: 'التتبع المباشر',
-      exportPDF: 'تصدير كـ PDF'
+      exportPDF: 'تصدير كـ PDF',
+      driverNotFound: 'لم يتم العثور على السائق',
+      loadingDriver: 'جاري تحميل معلومات السائق...'
     },
     hi: {
       back: 'डैशबोर्ड पर वापस जाएं',
@@ -300,7 +305,9 @@ const DriverProfile: React.FC<DriverProfileProps> = ({ driverId, fleetMode, lang
       cancel: 'रद्द करें',
       lastUpdate: 'अंतिम अपडेट',
       liveTracking: 'लाइव ट्रैकिंग',
-      exportPDF: 'PDF के रूप में निर्यात करें'
+      exportPDF: 'PDF के रूप में निर्यात करें',
+      driverNotFound: 'ड्राइवर नहीं मिला',
+      loadingDriver: 'ड्राइवर जानकारी लोड हो रही है...'
     },
     ur: {
       back: 'ڈیش بورڈ پر واپس جائیں',
@@ -387,23 +394,63 @@ const DriverProfile: React.FC<DriverProfileProps> = ({ driverId, fleetMode, lang
       cancel: 'منسوخ کریں',
       lastUpdate: 'آخری اپڈیٹ',
       liveTracking: 'لائیو ٹریکنگ',
-      exportPDF: 'PDF کے طور پر ایکسپورٹ کریں'
+      exportPDF: 'PDF کے طور پر ایکسپورٹ کریں',
+      driverNotFound: 'ڈرائیور نہیں ملا',
+      loadingDriver: 'ڈرائیور کی معلومات لوڈ ہو رہی ہیں...'
     }
   };
 
   const t = texts[language];
 
   useEffect(() => {
-    const foundDriver = mockDriversData.find(d => d.id === driverId);
-    setDriver(foundDriver || null);
+    setLoading(true);
+    
+    // Get driver from localStorage
+    const localDrivers = localStorage.getItem('navedge_drivers');
+    if (localDrivers) {
+      try {
+        const drivers = JSON.parse(localDrivers);
+        const foundDriver = drivers.find((d: Driver) => d.id === driverId);
+        setDriver(foundDriver || null);
+      } catch (error) {
+        console.error('Error parsing drivers from localStorage:', error);
+        // Fallback to mock data
+        const foundDriver = mockDriversData.find(d => d.id === driverId);
+        setDriver(foundDriver || null);
+      }
+    } else {
+      // Fallback to mock data
+      const foundDriver = mockDriversData.find(d => d.id === driverId);
+      setDriver(foundDriver || null);
+    }
+    
+    setLoading(false);
   }, [driverId]);
+
+  if (loading) {
+    return (
+      <div className="fixed inset-0 bg-gray-50 z-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">{t.loadingDriver}</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!driver) {
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
-        <div className="bg-white rounded-lg p-8">
-          <p className="text-gray-600">Driver not found</p>
-          <button onClick={onClose} className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg">
+      <div className="fixed inset-0 bg-gray-50 z-50 flex items-center justify-center">
+        <div className="bg-white rounded-lg p-8 shadow-lg text-center">
+          <AlertTriangle className="w-12 h-12 text-yellow-500 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">{t.driverNotFound}</h2>
+          <p className="text-gray-600 mb-6">
+            The driver you're looking for could not be found. They may have been removed from the system.
+          </p>
+          <button 
+            onClick={onClose} 
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
             {t.back}
           </button>
         </div>

@@ -118,6 +118,47 @@ export function useDrivers() {
     }
   };
 
+  // Remove multiple drivers
+  const removeMultipleDrivers = async (count: number) => {
+    try {
+      // Get current drivers
+      const localDrivers = localStorage.getItem('navedge_drivers');
+      if (!localDrivers) return;
+      
+      const allDrivers = JSON.parse(localDrivers) as Driver[];
+      if (allDrivers.length <= count) {
+        console.warn(`Cannot remove ${count} drivers, only ${allDrivers.length} exist`);
+        return;
+      }
+      
+      // Keep original drivers (first 6) and remove random ones from the rest
+      const originalDrivers = allDrivers.slice(0, 6); // Keep the original mock drivers
+      const importedDrivers = allDrivers.slice(6);
+      
+      // Shuffle imported drivers
+      for (let i = importedDrivers.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [importedDrivers[i], importedDrivers[j]] = [importedDrivers[j], importedDrivers[i]];
+      }
+      
+      // Keep only some of the imported drivers
+      const driversToKeep = importedDrivers.slice(0, Math.max(0, importedDrivers.length - count));
+      
+      // Combine original and kept drivers
+      const remainingDrivers = [...originalDrivers, ...driversToKeep];
+      
+      // Update localStorage and state
+      localStorage.setItem('navedge_drivers', JSON.stringify(remainingDrivers));
+      setDrivers(remainingDrivers);
+      
+      console.log(`Removed ${count} random drivers, ${remainingDrivers.length} drivers remaining`);
+      return remainingDrivers.length;
+    } catch (err) {
+      console.error('Error removing drivers:', err);
+      throw err;
+    }
+  };
+
   // Bulk import drivers
   const bulkImportDrivers = async (driversToImport: Omit<Driver, 'id'>[]) => {
     try {
@@ -166,6 +207,7 @@ export function useDrivers() {
     addDriver,
     updateDriver,
     deleteDriver,
+    removeMultipleDrivers,
     bulkImportDrivers,
     refreshDrivers: loadDrivers
   };
