@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="NavEdge Driver">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#2563eb">
+    
+    <title>NavEdge Driver - GPS Tracking</title>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1e3a8a 0%, #3730a3 100%);
+            min-height: 100vh;
+            color: white;
+            overflow-x: hidden;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-top: 40px;
+        }
+        
+        .logo {
+            width: 80px;
+            height: 80px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .title {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+        
+        .subtitle {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 16px;
+        }
+        
+        .login-form {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            margin-bottom: 30px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            font-size: 14px;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 16px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .form-input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: #60a5fa;
+            box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.3);
+        }
+        
+        .login-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #2563eb, #3730a3);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(37, 99, 235, 0.3);
+        }
+        
+        .login-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .demo-info {
+            text-align: center;
+            padding: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            margin-top: 20px;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 14px;
+        }
+        
+        .features {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 30px;
+        }
+        
+        .feature {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+        
+        .feature-icon {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+        
+        .feature-text {
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .error {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 20px;
+            color: #fecaca;
+            font-size: 14px;
+        }
+        
+        .tracking-interface {
+            display: none;
+            flex-direction: column;
+            height: 100vh;
+        }
+        
+        .tracking-interface.active {
+            display: flex;
+        }
+        
+        .tracking-header {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 0 0 20px 20px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .driver-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .driver-avatar {
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        
+        .tracking-status {
+            flex: 1;
+            text-align: center;
+            padding: 40px 20px;
+        }
+        
+        .status-icon {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            transition: all 0.3s ease;
+        }
+        
+        .status-icon.active {
+            background: rgba(34, 197, 94, 0.2);
+            animation: pulse 2s infinite;
+        }
+        
+        .status-icon.inactive {
+            background: rgba(107, 114, 128, 0.2);
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.05); opacity: 0.8; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        
+        .tracking-btn {
+            width: 100%;
+            padding: 20px;
+            border: none;
+            border-radius: 16px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 20px 0;
+        }
+        
+        .tracking-btn.start {
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            color: white;
+        }
+        
+        .tracking-btn.stop {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+        }
+        
+        .location-info {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 20px;
+            margin: 20px 0;
+            backdrop-filter: blur(10px);
+        }
+        
+        .location-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .location-item {
+            text-align: center;
+        }
+        
+        .location-label {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 4px;
+        }
+        
+        .location-value {
+            font-weight: 600;
+            font-family: monospace;
+        }
+        
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top: 2px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Interface -->
+    <div id="loginInterface" class="container">
+        <div class="header">
+            <div class="logo">🚗</div>
+            <h1 class="title">NavEdge Driver</h1>
+            <p class="subtitle">GPS Tracking & Fleet Management</p>
+        </div>
+
+        <div class="login-form">
+            <form id="loginForm">
+                <div class="form-group">
+                    <label class="form-label">Driver ID</label>
+                    <input type="text" id="driverId" class="form-input" placeholder="Enter your driver ID" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Password</label>
+                    <input type="password" id="password" class="form-input" placeholder="Enter your password" required>
+                </div>
+
+                <div id="errorMessage" class="error hidden"></div>
+
+                <button type="submit" id="loginBtn" class="login-btn">
+                    <span>📍</span>
+                    <span>Start Tracking</span>
+                </button>
+            </form>
+
+            <div class="demo-info">
+                Demo: driver1 / password
+            </div>
+        </div>
+
+        <div class="features">
+            <div class="feature">
+                <div class="feature-icon">📍</div>
+                <div class="feature-text">Real-time GPS</div>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">🚗</div>
+                <div class="feature-text">Fleet Tracking</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tracking Interface -->
+    <div id="trackingInterface" class="tracking-interface">
+        <div class="tracking-header">
+            <div class="driver-info">
+                <div class="driver-avatar" id="driverAvatar">AR</div>
+                <div>
+                    <div id="driverName" style="font-weight: 600;">Ahmed Al-Rashid</div>
+                    <div id="vehicleId" style="font-size: 14px; opacity: 0.8;">DXB-A-12345</div>
+                </div>
+                <div style="margin-left: auto; display: flex; gap: 10px; font-size: 12px;">
+                    <div>🔋 <span id="battery">100%</span></div>
+                    <div id="connectionStatus">📶 Online</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tracking-status">
+            <div id="statusIcon" class="status-icon inactive">📍</div>
+            <h2 id="statusText">Tracking Stopped</h2>
+            <p id="statusSubtext">Tap to start your shift</p>
+            
+            <button id="trackingBtn" class="tracking-btn start">
+                ▶️ Start Tracking
+            </button>
+        </div>
+
+        <div id="locationInfo" class="location-info hidden">
+            <h3 style="margin-bottom: 15px;">📍 Current Location</h3>
+            <div class="location-grid">
+                <div class="location-item">
+                    <div class="location-label">Latitude</div>
+                    <div id="latitude" class="location-value">--</div>
+                </div>
+                <div class="location-item">
+                    <div class="location-label">Longitude</div>
+                    <div id="longitude" class="location-value">--</div>
+                </div>
+                <div class="location-item">
+                    <div class="location-label">Speed</div>
+                    <div id="speed" class="location-value">-- km/h</div>
+                </div>
+                <div class="location-item">
+                    <div class="location-label">Accuracy</div>
+                    <div id="accuracy" class="location-value">-- m</div>
+                </div>
+            </div>
+            <div style="text-align: center; margin-top: 15px; font-size: 12px; opacity: 0.7;">
+                Last update: <span id="lastUpdate">--</span>
+            </div>
+        </div>
+
+        <div style="margin-top: auto; padding: 20px;">
+            <button onclick="logout()" style="width: 100%; padding: 12px; background: rgba(255,255,255,0.1); border: none; border-radius: 12px; color: white; cursor: pointer;">
+                🚪 Sign Out
+            </button>
+        </div>
+    </div>
+
+    <script>
+        let isTracking = false;
+        let watchId = null;
+        let currentDriver = null;
+
+        // Login functionality
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const driverId = document.getElementById('driverId').value;
+            const password = document.getElementById('password').value;
+            const errorDiv = document.getElementById('errorMessage');
+            const loginBtn = document.getElementById('loginBtn');
+            
+            // Show loading
+            loginBtn.innerHTML = '<div class="spinner"></div> Signing In...';
+            loginBtn.disabled = true;
+            errorDiv.classList.add('hidden');
+            
+            // Simulate login
+            setTimeout(() => {
+                if (driverId === 'driver1' && password === 'password') {
+                    currentDriver = {
+                        id: 1,
+                        name: 'Ahmed Al-Rashid',
+                        vehicleId: 'DXB-A-12345',
+                        avatar: 'AR'
+                    };
+                    showTrackingInterface();
+                } else {
+                    errorDiv.textContent = 'Invalid driver ID or password';
+                    errorDiv.classList.remove('hidden');
+                    loginBtn.innerHTML = '<span>📍</span><span>Start Tracking</span>';
+                    loginBtn.disabled = false;
+                }
+            }, 1000);
+        });
+
+        function showTrackingInterface() {
+            document.getElementById('loginInterface').style.display = 'none';
+            document.getElementById('trackingInterface').classList.add('active');
+            
+            // Update driver info
+            document.getElementById('driverName').textContent = currentDriver.name;
+            document.getElementById('vehicleId').textContent = currentDriver.vehicleId;
+            document.getElementById('driverAvatar').textContent = currentDriver.avatar;
+        }
+
+        function logout() {
+            if (isTracking) {
+                stopTracking();
+            }
+            document.getElementById('trackingInterface').classList.remove('active');
+            document.getElementById('loginInterface').style.display = 'block';
+            
+            // Reset form
+            document.getElementById('driverId').value = '';
+            document.getElementById('password').value = '';
+            document.getElementById('errorMessage').classList.add('hidden');
+        }
+
+        // Tracking functionality
+        document.getElementById('trackingBtn').addEventListener('click', function() {
+            if (isTracking) {
+                stopTracking();
+            } else {
+                startTracking();
+            }
+        });
+
+        function startTracking() {
+            if (!navigator.geolocation) {
+                alert('GPS not supported on this device');
+                return;
+            }
+
+            const options = {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 1000
+            };
+
+            watchId = navigator.geolocation.watchPosition(
+                updateLocation,
+                handleLocationError,
+                options
+            );
+
+            isTracking = true;
+            updateTrackingUI();
+        }
+
+        function stopTracking() {
+            if (watchId !== null) {
+                navigator.geolocation.clearWatch(watchId);
+                watchId = null;
+            }
+            
+            isTracking = false;
+            updateTrackingUI();
+            document.getElementById('locationInfo').classList.add('hidden');
+        }
+
+        function updateLocation(position) {
+            const location = {
+                lat: position.coords.latitude,
+                lng: position.coords.longitude,
+                accuracy: position.coords.accuracy,
+                speed: position.coords.speed,
+                timestamp: Date.now()
+            };
+
+            // Update UI
+            document.getElementById('latitude').textContent = location.lat.toFixed(6);
+            document.getElementById('longitude').textContent = location.lng.toFixed(6);
+            document.getElementById('speed').textContent = location.speed ? 
+                Math.round(location.speed * 3.6) + ' km/h' : '0 km/h';
+            document.getElementById('accuracy').textContent = '±' + Math.round(location.accuracy) + ' m';
+            document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString();
+            document.getElementById('locationInfo').classList.remove('hidden');
+
+            // Send to dashboard
+            sendLocationUpdate(location);
+        }
+
+        function handleLocationError(error) {
+            console.error('GPS Error:', error);
+            alert('GPS Error: ' + error.message);
+            stopTracking();
+        }
+
+        function updateTrackingUI() {
+            const statusIcon = document.getElementById('statusIcon');
+            const statusText = document.getElementById('statusText');
+            const statusSubtext = document.getElementById('statusSubtext');
+            const trackingBtn = document.getElementById('trackingBtn');
+
+            if (isTracking) {
+                statusIcon.className = 'status-icon active';
+                statusText.textContent = 'Tracking Active';
+                statusSubtext.textContent = 'Your location is being shared';
+                trackingBtn.className = 'tracking-btn stop';
+                trackingBtn.innerHTML = '⏸️ Stop Tracking';
+            } else {
+                statusIcon.className = 'status-icon inactive';
+                statusText.textContent = 'Tracking Stopped';
+                statusSubtext.textContent = 'Tap to start your shift';
+                trackingBtn.className = 'tracking-btn start';
+                trackingBtn.innerHTML = '▶️ Start Tracking';
+            }
+        }
+
+        function sendLocationUpdate(location) {
+            // Send to parent window (dashboard)
+            if (window.parent && window.parent !== window) {
+                window.parent.postMessage({
+                    type: 'DRIVER_LOCATION_UPDATE',
+                    data: {
+                        driverId: currentDriver.id,
+                        location: location,
+                        vehicleId: currentDriver.vehicleId,
+                        driverName: currentDriver.name
+                    }
+                }, '*');
+            }
+
+            // Log for debugging
+            console.log('Location update sent:', {
+                driver: currentDriver.name,
+                location: location
+            });
+        }
+
+        // Battery monitoring
+        async function updateBattery() {
+            if ('getBattery' in navigator) {
+                try {
+                    const battery = await navigator.getBattery();
+                    const level = Math.round(battery.level * 100);
+                    document.getElementById('battery').textContent = level + '%';
+                } catch (error) {
+                    document.getElementById('battery').textContent = '100%';
+                }
+            }
+        }
+
+        // Connection monitoring
+        function updateConnectionStatus() {
+            const status = navigator.onLine ? '📶 Online' : '📵 Offline';
+            document.getElementById('connectionStatus').textContent = status;
+        }
+
+        // Initialize
+        updateBattery();
+        updateConnectionStatus();
+        setInterval(updateBattery, 30000);
+        window.addEventListener('online', updateConnectionStatus);
+        window.addEventListener('offline', updateConnectionStatus);
+
+        // Prevent zoom on double tap
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', function (event) {
+            const now = (new Date()).getTime();
+            if (now - lastTouchEnd <= 300) {
+                event.preventDefault();
+            }
+            lastTouchEnd = now;
+        }, false);
+    </script>
+</body>
+</html>
