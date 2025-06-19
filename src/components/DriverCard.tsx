@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { AlertTriangle, MapPin, DollarSign, Clock, Star, Phone, Calendar, FileText, Navigation, Car } from 'lucide-react';
 import { Driver, mockContractsData } from '../data/mockData';
+import TripCompletionModal from './TripCompletionModal';
+import RentalPaymentModal from './RentalPaymentModal';
 
 type Language = 'en' | 'ar' | 'hi' | 'ur';
 
@@ -12,6 +14,9 @@ interface DriverCardProps {
 }
 
 const DriverCard: React.FC<DriverCardProps> = ({ driver, fleetMode, language, onDriverClick }) => {
+  const [showTripModal, setShowTripModal] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+
   const texts = {
     en: {
       // Rental mode
@@ -22,6 +27,7 @@ const DriverCard: React.FC<DriverCardProps> = ({ driver, fleetMode, language, on
       daysRemaining: 'Days Remaining',
       contractExpired: 'Contract Expired',
       contractExpiringSoon: 'Expires Soon',
+      recordPayment: 'Record Payment',
       // Taxi mode
       tripsToday: 'Trips Today',
       todayEarnings: 'Today\'s Earnings',
@@ -30,6 +36,7 @@ const DriverCard: React.FC<DriverCardProps> = ({ driver, fleetMode, language, on
       performance: 'Performance',
       contact: 'Contact',
       viewProfile: 'View Full Profile',
+      completeTrip: 'Complete Trip',
       // Status
       active: 'Active',
       onShift: 'On Shift',
@@ -44,6 +51,7 @@ const DriverCard: React.FC<DriverCardProps> = ({ driver, fleetMode, language, on
       daysRemaining: 'الأيام المتبقية',
       contractExpired: 'انتهى العقد',
       contractExpiringSoon: 'ينتهي قريباً',
+      recordPayment: 'تسجيل الدفع',
       // Taxi mode
       tripsToday: 'رحلات اليوم',
       todayEarnings: 'أرباح اليوم',
@@ -52,6 +60,7 @@ const DriverCard: React.FC<DriverCardProps> = ({ driver, fleetMode, language, on
       performance: 'الأداء',
       contact: 'اتصال',
       viewProfile: 'عرض الملف الكامل',
+      completeTrip: 'إكمال الرحلة',
       // Status
       active: 'نشط',
       onShift: 'في المناوبة',
@@ -66,6 +75,7 @@ const DriverCard: React.FC<DriverCardProps> = ({ driver, fleetMode, language, on
       daysRemaining: 'शेष दिन',
       contractExpired: 'अनुबंध समाप्त',
       contractExpiringSoon: 'जल्द समाप्त',
+      recordPayment: 'भुगतान दर्ज करें',
       // Taxi mode
       tripsToday: 'आज की यात्राएं',
       todayEarnings: 'आज की कमाई',
@@ -74,6 +84,7 @@ const DriverCard: React.FC<DriverCardProps> = ({ driver, fleetMode, language, on
       performance: 'प्रदर्शन',
       contact: 'संपर्क',
       viewProfile: 'पूरी प्रोफ़ाइल देखें',
+      completeTrip: 'यात्रा पूरी करें',
       // Status
       active: 'सक्रिय',
       onShift: 'शिफ्ट में',
@@ -88,6 +99,7 @@ const DriverCard: React.FC<DriverCardProps> = ({ driver, fleetMode, language, on
       daysRemaining: 'باقی دن',
       contractExpired: 'کنٹریکٹ ختم',
       contractExpiringSoon: 'جلد ختم',
+      recordPayment: 'ادائیگی ریکارڈ کریں',
       // Taxi mode
       tripsToday: 'آج کے سفر',
       todayEarnings: 'آج کی کمائی',
@@ -96,6 +108,7 @@ const DriverCard: React.FC<DriverCardProps> = ({ driver, fleetMode, language, on
       performance: 'کارکردگی',
       contact: 'رابطہ',
       viewProfile: 'مکمل پروفائل دیکھیں',
+      completeTrip: 'سفر مکمل کریں',
       // Status
       active: 'فعال',
       onShift: 'شفٹ میں',
@@ -140,11 +153,10 @@ const DriverCard: React.FC<DriverCardProps> = ({ driver, fleetMode, language, on
   return (
     <div 
       className={`bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-all duration-300 hover:scale-105 cursor-pointer group ${cardStyle}`}
-      onClick={handleCardClick}
     >
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center space-x-3" onClick={handleCardClick}>
           <div className="relative">
             <div className={`w-12 h-12 bg-gradient-to-r ${
               fleetMode === 'rental' 
@@ -297,13 +309,58 @@ const DriverCard: React.FC<DriverCardProps> = ({ driver, fleetMode, language, on
         </div>
       </div>
 
-      {/* Hover overlay */}
-      <div className={`absolute inset-0 bg-${accentColor}-600 bg-opacity-0 group-hover:bg-opacity-5 rounded-lg transition-all duration-300 pointer-events-none`} />
-      
-      {/* Click hint */}
-      <div className="mt-3 pt-3 border-t border-gray-100 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-        <p className={`text-xs text-${accentColor}-600 text-center font-medium`}>{t.viewProfile}</p>
+      {/* Action Buttons */}
+      <div className="mt-4 pt-4 border-t border-gray-100 flex space-x-2">
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            handleCardClick();
+          }}
+          className={`flex-1 px-3 py-2 text-xs font-medium rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors text-gray-700`}
+        >
+          {t.viewProfile}
+        </button>
+        
+        {fleetMode === 'taxi' ? (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowTripModal(true);
+            }}
+            className={`flex-1 px-3 py-2 text-xs font-medium rounded-lg bg-orange-600 hover:bg-orange-700 transition-colors text-white`}
+          >
+            {t.completeTrip}
+          </button>
+        ) : (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowPaymentModal(true);
+            }}
+            className={`flex-1 px-3 py-2 text-xs font-medium rounded-lg bg-emerald-600 hover:bg-emerald-700 transition-colors text-white`}
+          >
+            {t.recordPayment}
+          </button>
+        )}
       </div>
+
+      {/* Trip Completion Modal */}
+      {showTripModal && (
+        <TripCompletionModal 
+          driver={driver}
+          onClose={() => setShowTripModal(false)}
+          language={language}
+        />
+      )}
+
+      {/* Rental Payment Modal */}
+      {showPaymentModal && (
+        <RentalPaymentModal
+          driver={driver}
+          onClose={() => setShowPaymentModal(false)}
+          language={language}
+        />
+      )}
     </div>
   );
 };

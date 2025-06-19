@@ -17,6 +17,7 @@ import SystemAlerts from './components/SystemAlerts';
 import { useDrivers, useFines } from './hooks/useDatabase';
 import { useSystemAlerts } from './hooks/useSystemAlerts';
 import { useNotifications } from './hooks/useNotifications';
+import { useEarningsTracking } from './hooks/useEarningsTracking';
 import { DatabaseService } from './services/database';
 import type { Driver } from './data/mockData';
 
@@ -73,6 +74,13 @@ function App() {
     generateIncidentNotification
   } = useNotifications();
 
+  // Use earnings tracking hook
+  const { 
+    simulateAutomaticEarnings,
+    recordTripCompletion,
+    recordRentalPayment
+  } = useEarningsTracking(fleetMode);
+
   // Load persisted settings on mount
   useEffect(() => {
     const initializeApp = async () => {
@@ -124,6 +132,18 @@ function App() {
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.LANGUAGE, language);
   }, [language]);
+
+  // Simulate automatic earnings for active drivers
+  useEffect(() => {
+    if (!drivers.length) return;
+    
+    // Simulate earnings every minute for taxi mode, every hour for rental mode
+    const interval = setInterval(() => {
+      simulateAutomaticEarnings(drivers);
+    }, fleetMode === 'taxi' ? 60000 : 3600000);
+    
+    return () => clearInterval(interval);
+  }, [drivers, fleetMode, simulateAutomaticEarnings]);
 
   // Check if auto backup is due
   const checkAutoBackup = () => {

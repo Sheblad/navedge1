@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { Driver, mockDriversData, mockFinesData, mockContractsData } from '../data/mockData';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
+import EarningsTracker from './EarningsTracker';
 
 type FleetMode = 'rental' | 'taxi';
 type Language = 'en' | 'ar' | 'hi' | 'ur';
@@ -33,7 +34,7 @@ interface DriverProfileProps {
 }
 
 const DriverProfile: React.FC<DriverProfileProps> = ({ driverId, fleetMode, language, onClose }) => {
-  const [activeTab, setActiveTab] = useState<'overview' | 'performance' | 'fines' | 'contracts' | 'trips' | 'notes'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'performance' | 'fines' | 'contracts' | 'trips' | 'notes' | 'earnings'>('overview');
   const [driver, setDriver] = useState<Driver | null>(null);
   const [showAddNote, setShowAddNote] = useState(false);
   const [newNote, setNewNote] = useState('');
@@ -47,6 +48,7 @@ const DriverProfile: React.FC<DriverProfileProps> = ({ driverId, fleetMode, lang
       contracts: fleetMode === 'rental' ? 'Contracts' : 'Shifts',
       trips: 'Trip History',
       notes: 'Notes & Warnings',
+      earnings: 'Earnings',
       driverInfo: 'Driver Information',
       assignedVehicle: 'Assigned Vehicle',
       performanceSummary: 'Performance Summary',
@@ -133,6 +135,7 @@ const DriverProfile: React.FC<DriverProfileProps> = ({ driverId, fleetMode, lang
       contracts: fleetMode === 'rental' ? 'العقود' : 'المناوبات',
       trips: 'تاريخ الرحلات',
       notes: 'الملاحظات والتحذيرات',
+      earnings: 'الأرباح',
       driverInfo: 'معلومات السائق',
       assignedVehicle: 'المركبة المخصصة',
       performanceSummary: 'ملخص الأداء',
@@ -219,6 +222,7 @@ const DriverProfile: React.FC<DriverProfileProps> = ({ driverId, fleetMode, lang
       contracts: fleetMode === 'rental' ? 'अनुबंध' : 'शिफ्ट',
       trips: 'यात्रा इतिहास',
       notes: 'नोट्स और चेतावनियां',
+      earnings: 'कमाई',
       driverInfo: 'ड्राइवर जानकारी',
       assignedVehicle: 'आवंटित वाहन',
       performanceSummary: 'प्रदर्शन सारांश',
@@ -305,6 +309,7 @@ const DriverProfile: React.FC<DriverProfileProps> = ({ driverId, fleetMode, lang
       contracts: fleetMode === 'rental' ? 'کنٹریکٹس' : 'شفٹس',
       trips: 'سفر کی تاریخ',
       notes: 'نوٹس اور وارننگز',
+      earnings: 'کمائی',
       driverInfo: 'ڈرائیور کی معلومات',
       assignedVehicle: 'تفویض کردہ گاڑی',
       performanceSummary: 'کارکردگی کا خلاصہ',
@@ -437,6 +442,7 @@ const DriverProfile: React.FC<DriverProfileProps> = ({ driverId, fleetMode, lang
 
   const tabs = [
     { id: 'overview', label: t.overview, icon: Eye },
+    { id: 'earnings', label: t.earnings, icon: DollarSign },
     { id: 'performance', label: t.performance, icon: TrendingUp },
     { id: 'fines', label: t.fines, icon: AlertTriangle },
     { id: 'contracts', label: t.contracts, icon: FileText },
@@ -954,6 +960,15 @@ const DriverProfile: React.FC<DriverProfileProps> = ({ driverId, fleetMode, lang
     </div>
   );
 
+  const renderEarnings = () => (
+    <EarningsTracker 
+      driver={driver}
+      drivers={mockDriversData}
+      fleetMode={fleetMode}
+      language={language}
+    />
+  );
+
   return (
     <div className="fixed inset-0 bg-gray-50 z-50 overflow-y-auto">
       {/* Header */}
@@ -1023,9 +1038,11 @@ const DriverProfile: React.FC<DriverProfileProps> = ({ driverId, fleetMode, lang
         {activeTab === 'contracts' && renderContracts()}
         {activeTab === 'trips' && renderTrips()}
         {activeTab === 'notes' && renderNotes()}
+        {activeTab === 'earnings' && renderEarnings()}
       </div>
     </div>
   );
 };
 
 export default DriverProfile;
+```
