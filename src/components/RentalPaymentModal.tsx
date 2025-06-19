@@ -135,7 +135,7 @@ const RentalPaymentModal: React.FC<RentalPaymentModalProps> = ({ driver, onClose
     setIsSubmitting(true);
     
     // Record the rental payment
-    const contractId = driver.contractId || `CNT-${Date.now().toString().substr(-6)}`;
+    const contractId = driver.contractId || `CNT-${Date.now().toString().substring(-6)}`;
     recordRentalPayment(
       driver,
       contractId,
@@ -304,4 +304,3 @@ const RentalPaymentModal: React.FC<RentalPaymentModalProps> = ({ driver, onClose
 };
 
 export default RentalPaymentModal;
-```

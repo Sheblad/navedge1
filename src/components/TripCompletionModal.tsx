@@ -399,4 +399,3 @@ const TripCompletionModal: React.FC<TripCompletionModalProps> = ({ driver, onClo
 };
 
 export default TripCompletionModal;
-```

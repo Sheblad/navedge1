@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Driver } from '../data/mockData';
 import { useNotifications } from './useNotifications';
 
@@ -55,7 +55,7 @@ export function useEarningsTracking(fleetMode: 'rental' | 'taxi') {
     if (!isTracking) return;
 
     const newEvent: EarningEvent = {
-      id: `earn-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      id: `earn-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
       driverId: driver.id,
       amount,
       timestamp: new Date(),
@@ -111,7 +111,7 @@ export function useEarningsTracking(fleetMode: 'rental' | 'taxi') {
       duration,
       startLocation,
       endLocation,
-      tripId: `T-${Date.now().toString().substr(-6)}`
+      tripId: `T-${Date.now().toString().substring(-6)}`
     });
     
     // Increment trip count
@@ -186,7 +186,7 @@ export function useEarningsTracking(fleetMode: 'rental' | 'taxi') {
   };
 
   // Simulate automatic earnings for active drivers
-  const simulateAutomaticEarnings = (drivers: Driver[]) => {
+  const simulateAutomaticEarnings = useCallback((drivers: Driver[]) => {
     const activeDrivers = drivers.filter(d => d.status === 'active');
     
     if (fleetMode === 'taxi') {
@@ -222,7 +222,7 @@ export function useEarningsTracking(fleetMode: 'rental' | 'taxi') {
         });
       }
     }
-  };
+  }, [fleetMode, addNotification]);
 
   return {
     earningEvents,
@@ -238,4 +238,3 @@ export function useEarningsTracking(fleetMode: 'rental' | 'taxi') {
     setIsTracking
   };
 }
-```
