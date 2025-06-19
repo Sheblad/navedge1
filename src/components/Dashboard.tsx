@@ -5,7 +5,7 @@ import FleetMap from './FleetMap';
 import StatsCards from './StatsCards';
 import { mockFinesData } from '../data/mockData';
 import type { Driver } from '../data/mockData';
-import { TrendingUp, AlertCircle, Users, DollarSign, Clock, MapPin, Car, Navigation, Calendar, FileText } from 'lucide-react';
+import { TrendingUp, AlertCircle, Users, DollarSign, Clock, MapPin, Car, Navigation, Calendar, FileText, AlertTriangle } from 'lucide-react';
 
 type FleetMode = 'rental' | 'taxi';
 type Language = 'en' | 'ar' | 'hi' | 'ur';
