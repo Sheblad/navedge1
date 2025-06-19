@@ -11,6 +11,7 @@ import Settings from './components/Settings';
 import Reports from './components/Reports';
 import Login from './components/Login';
 import ErrorBoundary from './components/ErrorBoundary';
+import BackupManager from './components/BackupManager';
 import { mockDriversData } from './data/mockData';
 import type { Driver } from './data/mockData';
 
@@ -22,7 +23,11 @@ type Language = 'en' | 'ar' | 'hi' | 'ur';
 const STORAGE_KEYS = {
   DRIVERS: 'navedge_drivers',
   FLEET_MODE: 'navedge_fleet_mode',
-  LANGUAGE: 'navedge_language'
+  LANGUAGE: 'navedge_language',
+  LAST_BACKUP: 'navedge_last_backup',
+  AUTO_BACKUP: 'navedge_auto_backup',
+  AUTO_BACKUP_INTERVAL: 'navedge_auto_backup_interval',
+  NEXT_AUTO_BACKUP: 'navedge_next_auto_backup'
 };
 
 function App() {
@@ -34,6 +39,7 @@ function App() {
   const [showNavEdgeAssistant, setShowNavEdgeAssistant] = useState(false);
   const [drivers, setDrivers] = useState<Driver[]>(mockDriversData);
   const [loading, setLoading] = useState(false);
+  const [showBackupManager, setShowBackupManager] = useState(false);
   
   // Load persisted data on mount
   useEffect(() => {
@@ -64,6 +70,9 @@ function App() {
         console.error('Error parsing drivers from localStorage:', e);
       }
     }
+
+    // Check for auto backup
+    checkAutoBackup();
   }, []);
 
   // Save fleet mode to localStorage whenever it changes
@@ -80,6 +89,23 @@ function App() {
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.DRIVERS, JSON.stringify(drivers));
   }, [drivers]);
+
+  // Check if auto backup is due
+  const checkAutoBackup = () => {
+    const autoBackupEnabled = localStorage.getItem(STORAGE_KEYS.AUTO_BACKUP) === 'enabled';
+    if (!autoBackupEnabled) return;
+
+    const nextBackupDate = localStorage.getItem(STORAGE_KEYS.NEXT_AUTO_BACKUP);
+    if (!nextBackupDate) return;
+
+    const now = new Date();
+    const nextBackup = new Date(nextBackupDate);
+
+    if (now >= nextBackup) {
+      // Auto backup is due
+      setShowBackupManager(true);
+    }
+  };
 
   // Handle login - expects a token string
   const handleLogin = (token: string) => {
@@ -111,6 +137,11 @@ function App() {
 
   const handleDeleteDriver = (driverId: number) => {
     setDrivers(prev => prev.filter(driver => driver.id !== driverId));
+  };
+
+  // Backup and restore functions
+  const handleRestoreData = (restoredDrivers: Driver[]) => {
+    setDrivers(restoredDrivers);
   };
 
   const renderActivePage = () => {
@@ -235,6 +266,15 @@ function App() {
           fleetMode={fleetMode}
           language={language}
           onFleetModeChange={handleFleetModeChange}
+        />
+      )}
+
+      {/* Backup Manager */}
+      {showBackupManager && (
+        <BackupManager 
+          drivers={drivers}
+          onRestoreData={handleRestoreData}
+          onClose={() => setShowBackupManager(false)}
         />
       )}
     </div>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Menu, Bell, User, Car, CarTaxiFront as Taxi, Brain, LogOut, Globe } from 'lucide-react';
+import { Menu, Bell, User, Car, CarTaxiFront as Taxi, Brain, LogOut, Globe, Database } from 'lucide-react';
 
 type FleetMode = 'rental' | 'taxi';
 type Language = 'en' | 'ar' | 'hi' | 'ur';
@@ -31,6 +31,7 @@ const Header: React.FC<HeaderProps> = ({
       taxi: 'Taxi',
       admin: 'Admin',
       navEdgeAssistant: 'NavEdge Assistant',
+      backup: 'Backup & Restore',
       logout: 'Logout'
     },
     ar: {
@@ -40,6 +41,7 @@ const Header: React.FC<HeaderProps> = ({
       taxi: 'تاكسي',
       admin: 'المدير',
       navEdgeAssistant: 'مساعد نافيدج',
+      backup: 'النسخ الاحتياطي والاستعادة',
       logout: 'تسجيل الخروج'
     },
     hi: {
@@ -49,6 +51,7 @@ const Header: React.FC<HeaderProps> = ({
       taxi: 'टैक्सी',
       admin: 'एडमिन',
       navEdgeAssistant: 'नेवएज असिस्टेंट',
+      backup: 'बैकअप और रिस्टोर',
       logout: 'लॉग आउट'
     },
     ur: {
@@ -58,6 +61,7 @@ const Header: React.FC<HeaderProps> = ({
       taxi: 'ٹیکسی',
       admin: 'ایڈمن',
       navEdgeAssistant: 'نیو ایج اسسٹنٹ',
+      backup: 'بیک اپ اور بحالی',
       logout: 'لاگ آؤٹ'
     }
   };
@@ -147,6 +151,15 @@ const Header: React.FC<HeaderProps> = ({
               ))}
             </div>
           </div>
+
+          {/* Backup Button */}
+          <button 
+            onClick={() => window.location.href = '#/settings/backup'}
+            className="p-2 rounded-lg hover:bg-gray-100"
+            title={t.backup}
+          >
+            <Database className="w-5 h-5 text-gray-600" />
+          </button>
 
           {/* NavEdge Assistant */}
           <button 

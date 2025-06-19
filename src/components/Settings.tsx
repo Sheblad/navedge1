@@ -10,8 +10,12 @@ import {
   Eye,
   EyeOff,
   Car,
-  CarTaxiFront as Taxi
+  CarTaxiFront as Taxi,
+  Download,
+  Upload,
+  Database
 } from 'lucide-react';
+import BackupManager from './BackupManager';
 
 type FleetMode = 'rental' | 'taxi';
 type Language = 'en' | 'ar' | 'hi' | 'ur';
@@ -30,6 +34,7 @@ const Settings: React.FC<SettingsProps> = ({ fleetMode, setFleetMode, language, 
     push: true,
     sms: false
   });
+  const [showBackupManager, setShowBackupManager] = useState(false);
 
   const texts = {
     en: {
@@ -47,6 +52,8 @@ const Settings: React.FC<SettingsProps> = ({ fleetMode, setFleetMode, language, 
       preferencesDesc: 'Language and regional settings',
       fleetSettings: 'Fleet Settings',
       fleetSettingsDesc: 'Fleet mode and operational preferences',
+      backupRestore: 'Backup & Restore',
+      backupRestoreDesc: 'Manage data backups and restoration',
       firstName: 'First Name',
       lastName: 'Last Name',
       email: 'Email Address',
@@ -80,7 +87,11 @@ const Settings: React.FC<SettingsProps> = ({ fleetMode, setFleetMode, language, 
       billingTitle: 'Billing Settings',
       billingContent: 'Manage your subscription and payment methods',
       preferencesTitle: 'Additional Preferences',
-      preferencesContent: 'Customize your experience'
+      preferencesContent: 'Customize your experience',
+      createBackup: 'Create Backup',
+      restoreBackup: 'Restore Backup',
+      manageBackups: 'Manage Backups & Restore',
+      backupDesc: 'Create and manage backups of your fleet data'
     },
     ar: {
       title: 'الإعدادات',
@@ -97,6 +108,8 @@ const Settings: React.FC<SettingsProps> = ({ fleetMode, setFleetMode, language, 
       preferencesDesc: 'إعدادات اللغة والمنطقة',
       fleetSettings: 'إعدادات الأسطول',
       fleetSettingsDesc: 'وضع الأسطول والتفضيلات التشغيلية',
+      backupRestore: 'النسخ الاحتياطي والاستعادة',
+      backupRestoreDesc: 'إدارة النسخ الاحتياطي واستعادة البيانات',
       firstName: 'الاسم الأول',
       lastName: 'اسم العائلة',
       email: 'عنوان البريد الإلكتروني',
@@ -130,7 +143,11 @@ const Settings: React.FC<SettingsProps> = ({ fleetMode, setFleetMode, language, 
       billingTitle: 'إعدادات الفواتير',
       billingContent: 'إدارة اشتراكك وطرق الدفع',
       preferencesTitle: 'التفضيلات الإضافية',
-      preferencesContent: 'تخصيص تجربتك'
+      preferencesContent: 'تخصيص تجربتك',
+      createBackup: 'إنشاء نسخة احتياطية',
+      restoreBackup: 'استعادة النسخة الاحتياطية',
+      manageBackups: 'إدارة النسخ الاحتياطية والاستعادة',
+      backupDesc: 'إنشاء وإدارة النسخ الاحتياطية لبيانات أسطولك'
     },
     hi: {
       title: 'सेटिंग्स',
@@ -147,6 +164,8 @@ const Settings: React.FC<SettingsProps> = ({ fleetMode, setFleetMode, language, 
       preferencesDesc: 'भाषा और क्षेत्रीय सेटिंग्स',
       fleetSettings: 'फ्लीट सेटिंग्स',
       fleetSettingsDesc: 'फ्लीट मोड और संचालन प्राथमिकताएं',
+      backupRestore: 'बैकअप और रिस्टोर',
+      backupRestoreDesc: 'डेटा बैकअप और रिस्टोरेशन प्रबंधित करें',
       firstName: 'पहला नाम',
       lastName: 'अंतिम नाम',
       email: 'ईमेल पता',
@@ -180,7 +199,11 @@ const Settings: React.FC<SettingsProps> = ({ fleetMode, setFleetMode, language, 
       billingTitle: 'बिलिंग सेटिंग्स',
       billingContent: 'अपनी सदस्यता और भुगतान विधियों का प्रबंधन करें',
       preferencesTitle: 'अतिरिक्त प्राथमिकताएं',
-      preferencesContent: 'अपने अनुभव को अनुकूलित करें'
+      preferencesContent: 'अपने अनुभव को अनुकूलित करें',
+      createBackup: 'बैकअप बनाएं',
+      restoreBackup: 'बैकअप रिस्टोर करें',
+      manageBackups: 'बैकअप और रिस्टोर प्रबंधित करें',
+      backupDesc: 'अपने फ्लीट डेटा के बैकअप बनाएं और प्रबंधित करें'
     },
     ur: {
       title: 'سیٹنگز',
@@ -197,6 +220,8 @@ const Settings: React.FC<SettingsProps> = ({ fleetMode, setFleetMode, language, 
       preferencesDesc: 'زبان اور علاقائی سیٹنگز',
       fleetSettings: 'فلیٹ سیٹنگز',
       fleetSettingsDesc: 'فلیٹ موڈ اور آپریشنل ترجیحات',
+      backupRestore: 'بیک اپ اور بحالی',
+      backupRestoreDesc: 'ڈیٹا بیک اپ اور بحالی کا انتظام کریں',
       firstName: 'پہلا نام',
       lastName: 'آخری نام',
       email: 'ای میل ایڈریس',
@@ -230,7 +255,11 @@ const Settings: React.FC<SettingsProps> = ({ fleetMode, setFleetMode, language, 
       billingTitle: 'بلنگ سیٹنگز',
       billingContent: 'اپنی سبسکرپشن اور ادائیگی کے طریقوں کا انتظام کریں',
       preferencesTitle: 'اضافی ترجیحات',
-      preferencesContent: 'اپنے تجربے کو اپنی مرضی کے مطابق بنائیں'
+      preferencesContent: 'اپنے تجربے کو اپنی مرضی کے مطابق بنائیں',
+      createBackup: 'بیک اپ بنائیں',
+      restoreBackup: 'بیک اپ بحال کریں',
+      manageBackups: 'بیک اپ اور بحالی کا انتظام کریں',
+      backupDesc: 'اپنے فلیٹ ڈیٹا کے بیک اپ بنائیں اور انتظام کریں'
     }
   };
 
@@ -248,6 +277,12 @@ const Settings: React.FC<SettingsProps> = ({ fleetMode, setFleetMode, language, 
       title: t.fleetSettings,
       icon: fleetMode === 'rental' ? Car : Taxi,
       description: t.fleetSettingsDesc
+    },
+    {
+      id: 'backup',
+      title: t.backupRestore,
+      icon: Database,
+      description: t.backupRestoreDesc
     },
     {
       id: 'notifications',
@@ -457,6 +492,106 @@ const Settings: React.FC<SettingsProps> = ({ fleetMode, setFleetMode, language, 
     </div>
   );
 
+  const renderBackupSettings = () => (
+    <div className="space-y-6">
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+        <h3 className="font-semibold text-blue-900 mb-4">Data Backup & Restore</h3>
+        <p className="text-blue-800 text-sm mb-4">
+          Protect your fleet data by creating regular backups. You can restore your data from these backups if needed.
+        </p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="bg-white rounded-lg p-6 border border-blue-100">
+            <div className="flex items-center space-x-3 mb-4">
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <Download className="w-5 h-5 text-blue-600" />
+              </div>
+              <h4 className="font-medium text-gray-900">{t.createBackup}</h4>
+            </div>
+            <p className="text-sm text-gray-600 mb-4">
+              Create a backup file of all your fleet data that you can download and store safely.
+            </p>
+            <button
+              onClick={() => setShowBackupManager(true)}
+              className="w-full py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              {t.createBackup}
+            </button>
+          </div>
+          
+          <div className="bg-white rounded-lg p-6 border border-blue-100">
+            <div className="flex items-center space-x-3 mb-4">
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <Upload className="w-5 h-5 text-blue-600" />
+              </div>
+              <h4 className="font-medium text-gray-900">{t.restoreBackup}</h4>
+            </div>
+            <p className="text-sm text-gray-600 mb-4">
+              Restore your fleet data from a previously created backup file.
+            </p>
+            <button
+              onClick={() => setShowBackupManager(true)}
+              className="w-full py-2 px-4 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 transition-colors"
+            >
+              {t.restoreBackup}
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <div className="bg-white rounded-lg p-6 border border-gray-200">
+        <div className="flex items-center justify-between mb-4">
+          <h4 className="font-medium text-gray-900">Advanced Backup Options</h4>
+          <button
+            onClick={() => setShowBackupManager(true)}
+            className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+          >
+            {t.manageBackups}
+          </button>
+        </div>
+        <div className="space-y-4">
+          <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+            <div>
+              <p className="font-medium text-gray-900">Automatic Backups</p>
+              <p className="text-sm text-gray-600">Schedule regular backups of your data</p>
+            </div>
+            <button
+              onClick={() => setShowBackupManager(true)}
+              className="px-3 py-1 bg-gray-200 text-gray-700 rounded-lg text-sm hover:bg-gray-300"
+            >
+              Configure
+            </button>
+          </div>
+          
+          <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+            <div>
+              <p className="font-medium text-gray-900">Export All Data</p>
+              <p className="text-sm text-gray-600">Export all your data in JSON format</p>
+            </div>
+            <button
+              onClick={() => setShowBackupManager(true)}
+              className="px-3 py-1 bg-gray-200 text-gray-700 rounded-lg text-sm hover:bg-gray-300"
+            >
+              Export
+            </button>
+          </div>
+          
+          <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+            <div>
+              <p className="font-medium text-gray-900">Reset All Data</p>
+              <p className="text-sm text-gray-600">Reset to default sample data</p>
+            </div>
+            <button
+              onClick={() => setShowBackupManager(true)}
+              className="px-3 py-1 bg-red-100 text-red-700 rounded-lg text-sm hover:bg-red-200"
+            >
+              Reset
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   const renderNotificationSettings = () => (
     <div className="space-y-6">
       <div className="space-y-4">
@@ -574,6 +709,8 @@ const Settings: React.FC<SettingsProps> = ({ fleetMode, setFleetMode, language, 
         return renderProfileSettings();
       case 'fleet':
         return renderFleetSettings();
+      case 'backup':
+        return renderBackupSettings();
       case 'notifications':
         return renderNotificationSettings();
       case 'security':
@@ -662,6 +799,15 @@ const Settings: React.FC<SettingsProps> = ({ fleetMode, setFleetMode, language, 
           </div>
         </div>
       </div>
+
+      {/* Backup Manager Modal */}
+      {showBackupManager && (
+        <BackupManager 
+          drivers={[]}  // This will be populated from App.tsx
+          onRestoreData={() => {}}  // This will be implemented in App.tsx
+          onClose={() => setShowBackupManager(false)}
+        />
+      )}
     </div>
   );
 };
