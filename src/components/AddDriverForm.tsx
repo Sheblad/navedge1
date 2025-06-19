@@ -343,6 +343,10 @@ const AddDriverForm: React.FC<AddDriverFormProps> = ({ onAddDriver, onClose, lan
   // Handle form submission
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    e.stopPropagation(); // Prevent any parent form submission
+    
+    if (step !== 'contract') return;
+    
     setIsSubmitting(true);
     
     // Create driver object from form data
@@ -368,6 +372,28 @@ const AddDriverForm: React.FC<AddDriverFormProps> = ({ onAddDriver, onClose, lan
       setIsSubmitting(false);
       setStep('complete');
     }, 1000);
+  };
+
+  // Handle next step
+  const handleNextStep = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const currentIndex = steps.findIndex(s => s.key === step);
+    if (currentIndex < steps.length - 1) {
+      setStep(steps[currentIndex + 1].key as any);
+    }
+  };
+
+  // Handle previous step
+  const handlePreviousStep = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const currentIndex = steps.findIndex(s => s.key === step);
+    if (currentIndex > 0) {
+      setStep(steps[currentIndex - 1].key as any);
+    }
   };
 
   // Render step content
@@ -936,6 +962,7 @@ const AddDriverForm: React.FC<AddDriverFormProps> = ({ onAddDriver, onClose, lan
           <div className="flex items-center justify-between">
             <h2 className="text-2xl font-bold text-gray-900">{t.title}</h2>
             <button
+              type="button"
               onClick={onClose}
               className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
             >
@@ -969,78 +996,62 @@ const AddDriverForm: React.FC<AddDriverFormProps> = ({ onAddDriver, onClose, lan
         </div>
 
         {/* Form Content */}
-        <form onSubmit={(e) => {
-          e.preventDefault();
-          if (step === 'contract') {
-            handleSubmit(e);
-          }
-        }}>
-          <div className="p-6">
-            {renderStepContent()}
-          </div>
-          
-          {/* Footer with navigation buttons - Only show if not on complete step */}
-          {step !== 'complete' && (
-            <div className="p-6 border-t border-gray-200 bg-gray-50 flex justify-between">
-              <div>
-                {step !== 'personal' && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const currentIndex = steps.findIndex(s => s.key === step);
-                      if (currentIndex > 0) {
-                        setStep(steps[currentIndex - 1].key as any);
-                      }
-                    }}
-                    className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-                  >
-                    {t.back}
-                  </button>
-                )}
-              </div>
-              
-              <div className="flex space-x-3">
+        <div className="p-6">
+          {renderStepContent()}
+        </div>
+        
+        {/* Footer with navigation buttons - Only show if not on complete step */}
+        {step !== 'complete' && (
+          <div className="p-6 border-t border-gray-200 bg-gray-50 flex justify-between">
+            <div>
+              {step !== 'personal' && (
                 <button
                   type="button"
-                  onClick={onClose}
+                  onClick={handlePreviousStep}
                   className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
                 >
-                  {t.cancel}
+                  {t.back}
                 </button>
-                
-                {step !== 'contract' ? (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const currentIndex = steps.findIndex(s => s.key === step);
-                      if (currentIndex < steps.length - 1) {
-                        setStep(steps[currentIndex + 1].key as any);
-                      }
-                    }}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                  >
-                    {t.next}
-                  </button>
-                ) : (
-                  <button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center space-x-2"
-                  >
-                    {isSubmitting ? (
-                      <>
-                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                        <span>{t.save}...</span>
-                      </>
-                    ) : (
-                      <span>{t.save}</span>
-                    )}
-                  </button>
-                )}
-              </div>
+              )}
             </div>
-          )}
-        </form>
+            
+            <div className="flex space-x-3">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                {t.cancel}
+              </button>
+              
+              {step !== 'contract' ? (
+                <button
+                  type="button"
+                  onClick={handleNextStep}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  {t.next}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleSubmit}
+                  disabled={isSubmitting}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center space-x-2"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      <span>{t.save}...</span>
+                    </>
+                  ) : (
+                    <span>{t.save}</span>
+                  )}
+                </button>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
