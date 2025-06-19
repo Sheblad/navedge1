@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { DatabaseService, OfflineSync } from '../services/database';
 import type { Driver, Fine, Contract } from '../data/mockData';
-import { mockDriversData } from '../data/mockData';
+import { mockDriversData, mockFinesData } from '../data/mockData';
 
 // Custom hook for managing drivers with database integration
 export function useDrivers() {
@@ -10,43 +10,39 @@ export function useDrivers() {
   const [error, setError] = useState<string | null>(null);
   const [isConnected, setIsConnected] = useState(false);
 
-  // Load drivers from database
+  // Load drivers from database or localStorage
   const loadDrivers = async () => {
     try {
       setLoading(true);
       
       // First check if we have a connection to Supabase
-      const hasConnection = await DatabaseService.testConnection();
+      const hasConnection = false; // Always use localStorage
       setIsConnected(hasConnection);
       
-      if (hasConnection) {
-        console.log('Connected to Supabase, fetching drivers...');
-        const data = await DatabaseService.getDrivers();
-        setDrivers(data);
-        setError(null);
+      // Always use localStorage
+      console.log('Using localStorage for drivers');
+      const localDrivers = localStorage.getItem('navedge_drivers');
+      if (localDrivers) {
+        const parsedDrivers = JSON.parse(localDrivers);
+        console.log(`Loaded ${parsedDrivers.length} drivers from localStorage`);
+        setDrivers(parsedDrivers);
       } else {
-        console.log('No Supabase connection, using localStorage');
-        // Fallback to localStorage
-        const localDrivers = localStorage.getItem('navedge_drivers');
-        if (localDrivers) {
-          setDrivers(JSON.parse(localDrivers));
-        } else {
-          // If no local data, use mock data
-          setDrivers(mockDriversData);
-          localStorage.setItem('navedge_drivers', JSON.stringify(mockDriversData));
-        }
-        setError('Not connected to database. Using local storage instead.');
+        // If no local data, use mock data
+        console.log('No drivers in localStorage, using mock data');
+        setDrivers(mockDriversData);
+        localStorage.setItem('navedge_drivers', JSON.stringify(mockDriversData));
       }
+      
+      setError(null);
     } catch (err) {
       console.error('Error loading drivers:', err);
-      setError('Failed to load drivers from database');
+      setError('Failed to load drivers');
       
-      // Fallback to localStorage
+      // Fallback to mock data
       const localDrivers = localStorage.getItem('navedge_drivers');
       if (localDrivers) {
         setDrivers(JSON.parse(localDrivers));
       } else {
-        // If no local data, use mock data
         setDrivers(mockDriversData);
         localStorage.setItem('navedge_drivers', JSON.stringify(mockDriversData));
       }
@@ -58,40 +54,8 @@ export function useDrivers() {
   // Add new driver
   const addDriver = async (driver: Omit<Driver, 'id'>) => {
     try {
-      let newDriver: Driver;
-      
-      if (isConnected) {
-        // Add to database
-        newDriver = await DatabaseService.addDriver(driver);
-      } else {
-        // Add locally with temporary ID
-        newDriver = {
-          ...driver,
-          id: Date.now() // Temporary ID
-        };
-        
-        // Update localStorage
-        const localDrivers = localStorage.getItem('navedge_drivers');
-        const drivers = localDrivers ? JSON.parse(localDrivers) : [];
-        drivers.push(newDriver);
-        localStorage.setItem('navedge_drivers', JSON.stringify(drivers));
-        
-        // Add to offline sync queue
-        OfflineSync.addToSyncQueue({
-          type: 'CREATE',
-          table: 'drivers',
-          data: driver,
-          timestamp: Date.now()
-        });
-      }
-      
-      setDrivers(prev => [...prev, newDriver]);
-      return newDriver;
-    } catch (err) {
-      console.error('Error adding driver:', err);
-      
       // Add locally with temporary ID
-      const tempDriver: Driver = {
+      const newDriver: Driver = {
         ...driver,
         id: Date.now() // Temporary ID
       };
@@ -99,55 +63,21 @@ export function useDrivers() {
       // Update localStorage
       const localDrivers = localStorage.getItem('navedge_drivers');
       const drivers = localDrivers ? JSON.parse(localDrivers) : [];
-      drivers.push(tempDriver);
+      drivers.push(newDriver);
       localStorage.setItem('navedge_drivers', JSON.stringify(drivers));
       
-      // Add to offline sync queue
-      OfflineSync.addToSyncQueue({
-        type: 'CREATE',
-        table: 'drivers',
-        data: driver,
-        timestamp: Date.now()
-      });
-      
-      setDrivers(prev => [...prev, tempDriver]);
-      return tempDriver;
+      console.log(`Added driver ${newDriver.name} to localStorage`);
+      setDrivers(prev => [...prev, newDriver]);
+      return newDriver;
+    } catch (err) {
+      console.error('Error adding driver:', err);
+      throw err;
     }
   };
 
   // Update existing driver
   const updateDriver = async (driver: Driver) => {
     try {
-      if (isConnected) {
-        // Update in database
-        const updatedDriver = await DatabaseService.updateDriver(driver);
-        setDrivers(prev => prev.map(d => d.id === driver.id ? updatedDriver : d));
-        return updatedDriver;
-      } else {
-        // Update locally
-        setDrivers(prev => prev.map(d => d.id === driver.id ? driver : d));
-        
-        // Update localStorage
-        const localDrivers = localStorage.getItem('navedge_drivers');
-        if (localDrivers) {
-          const drivers = JSON.parse(localDrivers);
-          const updatedDrivers = drivers.map((d: Driver) => d.id === driver.id ? driver : d);
-          localStorage.setItem('navedge_drivers', JSON.stringify(updatedDrivers));
-        }
-        
-        // Add to offline sync queue
-        OfflineSync.addToSyncQueue({
-          type: 'UPDATE',
-          table: 'drivers',
-          data: driver,
-          timestamp: Date.now()
-        });
-        
-        return driver;
-      }
-    } catch (err) {
-      console.error('Error updating driver:', err);
-      
       // Update locally
       setDrivers(prev => prev.map(d => d.id === driver.id ? driver : d));
       
@@ -159,34 +89,17 @@ export function useDrivers() {
         localStorage.setItem('navedge_drivers', JSON.stringify(updatedDrivers));
       }
       
-      // Add to offline sync queue
-      OfflineSync.addToSyncQueue({
-        type: 'UPDATE',
-        table: 'drivers',
-        data: driver,
-        timestamp: Date.now()
-      });
-      
+      console.log(`Updated driver ${driver.name} in localStorage`);
       return driver;
+    } catch (err) {
+      console.error('Error updating driver:', err);
+      throw err;
     }
   };
 
   // Delete driver
   const deleteDriver = async (driverId: number) => {
     try {
-      if (isConnected) {
-        // Delete from database
-        await DatabaseService.deleteDriver(driverId);
-      } else {
-        // Add to offline sync queue
-        OfflineSync.addToSyncQueue({
-          type: 'DELETE',
-          table: 'drivers',
-          data: { id: driverId },
-          timestamp: Date.now()
-        });
-      }
-      
       // Delete locally
       setDrivers(prev => prev.filter(d => d.id !== driverId));
       
@@ -197,61 +110,18 @@ export function useDrivers() {
         const filteredDrivers = drivers.filter((d: Driver) => d.id !== driverId);
         localStorage.setItem('navedge_drivers', JSON.stringify(filteredDrivers));
       }
+      
+      console.log(`Deleted driver with ID ${driverId} from localStorage`);
     } catch (err) {
       console.error('Error deleting driver:', err);
-      
-      // Delete locally
-      setDrivers(prev => prev.filter(d => d.id !== driverId));
-      
-      // Update localStorage
-      const localDrivers = localStorage.getItem('navedge_drivers');
-      if (localDrivers) {
-        const drivers = JSON.parse(localDrivers);
-        const filteredDrivers = drivers.filter((d: Driver) => d.id !== driverId);
-        localStorage.setItem('navedge_drivers', JSON.stringify(filteredDrivers));
-      }
-      
-      // Add to offline sync queue
-      OfflineSync.addToSyncQueue({
-        type: 'DELETE',
-        table: 'drivers',
-        data: { id: driverId },
-        timestamp: Date.now()
-      });
+      throw err;
     }
   };
 
   // Bulk import drivers
-  const bulkImportDrivers = async (driversToImport: Driver[]) => {
+  const bulkImportDrivers = async (driversToImport: Omit<Driver, 'id'>[]) => {
     try {
-      if (isConnected) {
-        // Import to database
-        await DatabaseService.bulkImportDrivers(driversToImport);
-        await loadDrivers(); // Reload all drivers
-      } else {
-        // Import locally
-        const newDrivers = driversToImport.map((driver, index) => ({
-          ...driver,
-          id: Date.now() + index // Temporary IDs
-        }));
-        
-        setDrivers(prev => [...prev, ...newDrivers]);
-        
-        // Update localStorage
-        const localDrivers = localStorage.getItem('navedge_drivers');
-        const existingDrivers = localDrivers ? JSON.parse(localDrivers) : [];
-        localStorage.setItem('navedge_drivers', JSON.stringify([...existingDrivers, ...newDrivers]));
-        
-        // Add to offline sync queue
-        OfflineSync.addToSyncQueue({
-          type: 'BULK_IMPORT',
-          table: 'drivers',
-          data: driversToImport,
-          timestamp: Date.now()
-        });
-      }
-    } catch (err) {
-      console.error('Error bulk importing drivers:', err);
+      console.log(`Bulk importing ${driversToImport.length} drivers to localStorage`);
       
       // Import locally
       const newDrivers = driversToImport.map((driver, index) => ({
@@ -259,66 +129,34 @@ export function useDrivers() {
         id: Date.now() + index // Temporary IDs
       }));
       
+      // Update state
       setDrivers(prev => [...prev, ...newDrivers]);
       
       // Update localStorage
       const localDrivers = localStorage.getItem('navedge_drivers');
       const existingDrivers = localDrivers ? JSON.parse(localDrivers) : [];
-      localStorage.setItem('navedge_drivers', JSON.stringify([...existingDrivers, ...newDrivers]));
+      const allDrivers = [...existingDrivers, ...newDrivers];
+      localStorage.setItem('navedge_drivers', JSON.stringify(allDrivers));
       
-      // Add to offline sync queue
-      OfflineSync.addToSyncQueue({
-        type: 'BULK_IMPORT',
-        table: 'drivers',
-        data: driversToImport,
-        timestamp: Date.now()
-      });
-      
+      console.log(`Successfully imported ${newDrivers.length} drivers to localStorage`);
+      return newDrivers;
+    } catch (err) {
+      console.error('Error bulk importing drivers:', err);
       throw err;
     }
   };
 
-  // Subscribe to real-time updates
+  // Load drivers on mount
   useEffect(() => {
     loadDrivers();
-
-    // Set up real-time subscription if connected
-    let subscription: any = null;
-    if (isConnected) {
-      subscription = DatabaseService.subscribeToDrivers((updatedDrivers) => {
-        setDrivers(updatedDrivers);
-      });
-    }
-
-    // Sync pending operations when online
-    const syncOfflineData = async () => {
-      if (navigator.onLine && isConnected) {
-        try {
-          await OfflineSync.syncPendingOperations();
-          await loadDrivers(); // Reload after sync
-        } catch (err) {
-          console.error('Sync failed:', err);
-        }
-      }
-    };
-
-    // Sync when coming online
-    window.addEventListener('online', syncOfflineData);
-
-    return () => {
-      if (subscription) {
-        subscription.unsubscribe();
-      }
-      window.removeEventListener('online', syncOfflineData);
-    };
-  }, [isConnected]);
+  }, []);
 
   // Save drivers to localStorage whenever they change
   useEffect(() => {
-    if (drivers.length > 0 && !isConnected) {
+    if (drivers.length > 0) {
       localStorage.setItem('navedge_drivers', JSON.stringify(drivers));
     }
-  }, [drivers, isConnected]);
+  }, [drivers]);
 
   return {
     drivers,
@@ -342,8 +180,9 @@ export function useFines() {
   const loadFines = async () => {
     try {
       setLoading(true);
-      const data = await DatabaseService.getFines();
-      setFines(data);
+      
+      // Use mock data for fines
+      setFines(mockFinesData);
       setError(null);
     } catch (err) {
       console.error('Error loading fines:', err);
@@ -355,8 +194,15 @@ export function useFines() {
 
   const addFine = async (fine: Omit<Fine, 'id'>) => {
     try {
-      const newFine = await DatabaseService.addFine(fine);
+      // Create new fine with generated ID
+      const newFine: Fine = {
+        ...fine,
+        id: `FN-${Date.now().toString().substring(7)}`
+      };
+      
+      // Update state
       setFines(prev => [...prev, newFine]);
+      
       return newFine;
     } catch (err) {
       console.error('Error adding fine:', err);
@@ -366,15 +212,6 @@ export function useFines() {
 
   useEffect(() => {
     loadFines();
-
-    // Set up real-time subscription
-    const subscription = DatabaseService.subscribeToFines((updatedFines) => {
-      setFines(updatedFines);
-    });
-
-    return () => {
-      subscription?.unsubscribe();
-    };
   }, []);
 
   return {
@@ -394,8 +231,27 @@ export function useFleetAnalytics() {
   const loadAnalytics = async () => {
     try {
       setLoading(true);
-      const data = await DatabaseService.getFleetAnalytics();
-      setAnalytics(data);
+      
+      // Get drivers from localStorage
+      const localDrivers = localStorage.getItem('navedge_drivers');
+      const drivers = localDrivers ? JSON.parse(localDrivers) : mockDriversData;
+      
+      // Calculate analytics
+      const activeDrivers = drivers.filter((d: Driver) => d.status === 'active').length;
+      const totalEarnings = drivers.reduce((sum: number, d: Driver) => sum + d.earnings, 0);
+      const avgPerformance = drivers.length > 0 
+        ? drivers.reduce((sum: number, d: Driver) => sum + d.performanceScore, 0) / drivers.length
+        : 0;
+      const pendingFines = mockFinesData.filter(f => f.status === 'pending').length;
+      
+      setAnalytics({
+        totalDrivers: drivers.length,
+        activeDrivers,
+        totalEarnings,
+        avgPerformance,
+        totalFines: mockFinesData.length,
+        pendingFines
+      });
     } catch (err) {
       console.error('Error loading analytics:', err);
     } finally {

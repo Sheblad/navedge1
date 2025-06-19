@@ -1,12 +1,15 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Driver, Fine, Contract } from '../data/mockData';
-import { mockDriversData } from '../data/mockData';
+import { mockDriversData, mockFinesData } from '../data/mockData';
 
 // Supabase configuration
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Create supabase client only if URL and key are available
+export const supabase = supabaseUrl && supabaseAnonKey 
+  ? createClient(supabaseUrl, supabaseAnonKey)
+  : null;
 
 // Database service for drivers
 export class DatabaseService {
@@ -15,8 +18,10 @@ export class DatabaseService {
   static async testConnection(): Promise<boolean> {
     try {
       console.log('Testing connection to Supabase...');
-      if (!supabaseUrl || !supabaseAnonKey) {
-        console.log('Supabase URL or anon key not configured');
+      
+      // If supabase client is null, return false immediately
+      if (!supabase) {
+        console.log('Supabase client not initialized - missing URL or anon key');
         return false;
       }
       
@@ -43,6 +48,12 @@ export class DatabaseService {
   // ==================== DRIVERS ====================
   
   static async getDrivers(): Promise<Driver[]> {
+    // If no supabase client, return mock data
+    if (!supabase) {
+      console.log('No Supabase client - using mock data');
+      return mockDriversData;
+    }
+    
     try {
       console.log('Fetching drivers from Supabase...');
       const { data, error } = await supabase
@@ -66,6 +77,12 @@ export class DatabaseService {
   }
 
   static async addDriver(driver: Omit<Driver, 'id'>): Promise<Driver> {
+    // If no supabase client, throw error
+    if (!supabase) {
+      console.log('No Supabase client - cannot add driver');
+      throw new Error('Database not connected');
+    }
+    
     try {
       console.log('Adding driver to Supabase:', driver.name);
       const { data, error } = await supabase
@@ -102,6 +119,12 @@ export class DatabaseService {
   }
 
   static async updateDriver(driver: Driver): Promise<Driver> {
+    // If no supabase client, throw error
+    if (!supabase) {
+      console.log('No Supabase client - cannot update driver');
+      throw new Error('Database not connected');
+    }
+    
     try {
       console.log('Updating driver in Supabase:', driver.id);
       const { data, error } = await supabase
@@ -139,6 +162,12 @@ export class DatabaseService {
   }
 
   static async deleteDriver(driverId: number): Promise<void> {
+    // If no supabase client, throw error
+    if (!supabase) {
+      console.log('No Supabase client - cannot delete driver');
+      throw new Error('Database not connected');
+    }
+    
     try {
       console.log('Deleting driver from Supabase:', driverId);
       const { error } = await supabase
@@ -161,6 +190,12 @@ export class DatabaseService {
   // ==================== FINES ====================
   
   static async getFines(): Promise<Fine[]> {
+    // If no supabase client, return mock data
+    if (!supabase) {
+      console.log('No Supabase client - using mock fines data');
+      return mockFinesData;
+    }
+    
     try {
       console.log('Fetching fines from Supabase...');
       const { data, error } = await supabase
@@ -177,11 +212,17 @@ export class DatabaseService {
       return data?.map(this.convertFineFromDB) || [];
     } catch (error) {
       console.error('Database error:', error);
-      return [];
+      return mockFinesData;
     }
   }
 
   static async addFine(fine: Omit<Fine, 'id'>): Promise<Fine> {
+    // If no supabase client, throw error
+    if (!supabase) {
+      console.log('No Supabase client - cannot add fine');
+      throw new Error('Database not connected');
+    }
+    
     try {
       console.log('Adding fine to Supabase');
       const { data, error } = await supabase
@@ -214,6 +255,12 @@ export class DatabaseService {
   // ==================== CONTRACTS ====================
   
   static async getContracts(): Promise<Contract[]> {
+    // If no supabase client, return empty array
+    if (!supabase) {
+      console.log('No Supabase client - returning empty contracts array');
+      return [];
+    }
+    
     try {
       console.log('Fetching contracts from Supabase...');
       const { data, error } = await supabase
@@ -237,6 +284,12 @@ export class DatabaseService {
   // ==================== REAL-TIME SUBSCRIPTIONS ====================
   
   static subscribeToDrivers(callback: (drivers: Driver[]) => void) {
+    // If no supabase client, return null
+    if (!supabase) {
+      console.log('No Supabase client - cannot subscribe to drivers');
+      return null;
+    }
+    
     console.log('Setting up real-time subscription to drivers table');
     return supabase
       .channel('drivers_changes')
@@ -252,6 +305,12 @@ export class DatabaseService {
   }
 
   static subscribeToFines(callback: (fines: Fine[]) => void) {
+    // If no supabase client, return null
+    if (!supabase) {
+      console.log('No Supabase client - cannot subscribe to fines');
+      return null;
+    }
+    
     console.log('Setting up real-time subscription to fines table');
     return supabase
       .channel('fines_changes')
@@ -269,6 +328,12 @@ export class DatabaseService {
   // ==================== BULK OPERATIONS ====================
   
   static async bulkImportDrivers(drivers: Driver[]): Promise<void> {
+    // If no supabase client, throw error
+    if (!supabase) {
+      console.log('No Supabase client - cannot bulk import drivers');
+      throw new Error('Database not connected');
+    }
+    
     try {
       console.log(`Starting bulk import of ${drivers.length} drivers`);
       
@@ -413,7 +478,9 @@ export class DatabaseService {
 
       const activeDrivers = drivers.filter(d => d.status === 'active').length;
       const totalEarnings = drivers.reduce((sum, d) => sum + d.earnings, 0);
-      const avgPerformance = drivers.reduce((sum, d) => sum + d.performanceScore, 0) / drivers.length;
+      const avgPerformance = drivers.length > 0 
+        ? drivers.reduce((sum, d) => sum + d.performanceScore, 0) / drivers.length
+        : 0;
       const pendingFines = fines.filter(f => f.status === 'pending').length;
 
       console.log('Analytics calculated successfully');
@@ -480,6 +547,12 @@ export class OfflineSync {
   }
 
   private static async executeOperation(operation: any): Promise<void> {
+    // If no supabase client, just log and return
+    if (!supabase) {
+      console.log('No Supabase client - skipping sync operation');
+      return;
+    }
+    
     switch (operation.table) {
       case 'drivers':
         if (operation.type === 'CREATE') {
