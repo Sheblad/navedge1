@@ -3,7 +3,7 @@ import { X, Send, Mic, MicOff, Brain, Zap, Users, AlertTriangle, FileText, Car, 
 import { mockDriversData, mockFinesData, mockContractsData } from '../data/mockData';
 
 type FleetMode = 'rental' | 'taxi';
-type Language = 'en' | 'ar';
+type Language = 'en' | 'ar' | 'hi' | 'ur';
 
 interface Message {
   id: string;
@@ -54,6 +54,24 @@ const NavEdgeAssistant: React.FC<NavEdgeAssistantProps> = ({
       listening: 'أستمع...',
       typing: 'نافيدج يكتب...',
       welcomeMessage: `👋 **مرحباً بك في نافيدج الذكي!**\n\nأنا مساعدك الذكي لإدارة الأسطول. يمكنني مساعدتك في:\n\n🚗 **إدارة السائقين**\n• فحص أداء السائقين\n• عرض مواقع السائقين\n• إدارة تعيينات السائقين\n\n📋 **إدارة العقود والمخالفات**\n• مراجعة تفاصيل العقود\n• تتبع دفع المخالفات\n• مراقبة الامتثال\n\n📊 **التحليلات والتقارير**\n• رؤى الأداء\n• تحليل الإيرادات\n• استخدام الأسطول\n\n💡 **جرب السؤال:**\n• "أظهر لي السائقين النشطين"\n• "من لديه مخالفات معلقة؟"\n• "ما هو أداء أسطولي؟"\n• "إنشاء عقد"\n• "أظهر لي العقود"`
+    },
+    hi: {
+      title: 'नेवएज AI असिस्टेंट',
+      subtitle: 'आपका बुद्धिमान फ्लीट प्रबंधन साथी',
+      placeholder: 'अपने फ्लीट के बारे में कुछ भी पूछें...',
+      send: 'भेजें',
+      listening: 'सुन रहा हूं...',
+      typing: 'नेवएज टाइप कर रहा है...',
+      welcomeMessage: `👋 **नेवएज AI में आपका स्वागत है!**\n\nमैं आपका बुद्धिमान फ्लीट प्रबंधन सहायक हूं। मैं आपकी मदद कर सकता हूं:\n\n🚗 **ड्राइवर प्रबंधन**\n• ड्राइवर प्रदर्शन जांचें\n• ड्राइवर स्थान देखें\n• ड्राइवर असाइनमेंट प्रबंधित करें\n\n📋 **अनुबंध और जुर्माना प्रबंधन**\n• अनुबंध विवरण समीक्षा करें\n• जुर्माना भुगतान ट्रैक करें\n• अनुपालन की निगरानी करें\n\n📊 **एनालिटिक्स और रिपोर्ट**\n• प्रदर्शन अंतर्दृष्टि\n• राजस्व विश्लेषण\n• फ्लीट उपयोग\n\n💡 **पूछने की कोशिश करें:**\n• "मुझे सक्रिय ड्राइवर दिखाएं"\n• "किसके पास लंबित जुर्माना है?"\n• "मेरे फ्लीट का प्रदर्शन क्या है?"\n• "एक अनुबंध बनाएं"\n• "मुझे अनुबंध दिखाएं"`
+    },
+    ur: {
+      title: 'نیو ایج AI اسسٹنٹ',
+      subtitle: 'آپ کا ذہین فلیٹ منیجمنٹ ساتھی',
+      placeholder: 'اپنے فلیٹ کے بارے میں کچھ بھی پوچھیں...',
+      send: 'بھیجیں',
+      listening: 'سن رہا ہوں...',
+      typing: 'نیو ایج ٹائپ کر رہا ہے...',
+      welcomeMessage: `👋 **نیو ایج AI میں خوش آمدید!**\n\nمیں آپ کا ذہین فلیٹ منیجمنٹ اسسٹنٹ ہوں۔ میں آپ کی مدد کر سکتا ہوں:\n\n🚗 **ڈرائیور منیجمنٹ**\n• ڈرائیور کی کارکردگی چیک کریں\n• ڈرائیور کے مقامات دیکھیں\n• ڈرائیور اسائنمنٹس منظم کریں\n\n📋 **کنٹریکٹ اور جرمانہ منیجمنٹ**\n• کنٹریکٹ کی تفصیلات کا جائزہ لیں\n• جرمانے کی ادائیگی ٹریک کریں\n• تعمیل کی نگرانی کریں\n\n📊 **تجزیات اور رپورٹس**\n• کارکردگی کی بصیرت\n• آمدنی کا تجزیہ\n• فلیٹ کا استعمال\n\n💡 **پوچھنے کی کوشش کریں:**\n• "مجھے فعال ڈرائیورز دکھائیں"\n• "کس کے پاس زیر التواء جرمانے ہیں؟"\n• "میرے فلیٹ کی کارکردگی کیا ہے؟"\n• "ایک کنٹریکٹ بنائیں"\n• "مجھے کنٹریکٹس دکھائیں"`
     }
   };
 
@@ -148,7 +166,7 @@ const NavEdgeAssistant: React.FC<NavEdgeAssistantProps> = ({
     return details;
   };
 
-  // Enhanced AI response logic
+  // Enhanced AI response logic with multilingual support
   const generateResponse = (input: string): string => {
     const lowerInput = input.toLowerCase();
 
@@ -160,266 +178,116 @@ const NavEdgeAssistant: React.FC<NavEdgeAssistantProps> = ({
       if (details.driverName && details.emiratesId && details.vehicle) {
         setConversationContext(''); // Reset context
         
-        return `✅ **Contract Created Successfully!**\n\n**Contract Details:**\n• **Driver:** ${details.driverName}\n• **Emirates ID:** ${details.emiratesId}\n• **Vehicle:** ${details.vehicle}\n• **Duration:** ${details.duration || '12'} months\n• **Monthly Rent:** AED ${details.monthlyRent || '1,200'}\n• **Deposit:** AED ${details.deposit || '5,000'}\n• **Daily KM Limit:** ${details.kmLimit || '300'} km\n\n📋 **Next Steps:**\n• Contract has been generated\n• Driver will receive notification\n• Vehicle assignment confirmed\n• First payment due on contract start date\n\n💡 **The contract is now active in your system!**\n\nWould you like me to:\n• Show you all contracts\n• Create another contract\n• Check driver performance`;
+        const responses = {
+          en: `✅ **Contract Created Successfully!**\n\n**Contract Details:**\n• **Driver:** ${details.driverName}\n• **Emirates ID:** ${details.emiratesId}\n• **Vehicle:** ${details.vehicle}\n• **Duration:** ${details.duration || '12'} months\n• **Monthly Rent:** AED ${details.monthlyRent || '1,200'}\n• **Deposit:** AED ${details.deposit || '5,000'}\n• **Daily KM Limit:** ${details.kmLimit || '300'} km\n\n📋 **Next Steps:**\n• Contract has been generated\n• Driver will receive notification\n• Vehicle assignment confirmed\n• First payment due on contract start date\n\n💡 **The contract is now active in your system!**\n\nWould you like me to:\n• Show you all contracts\n• Create another contract\n• Check driver performance`,
+          ar: `✅ **تم إنشاء العقد بنجاح!**\n\n**تفاصيل العقد:**\n• **السائق:** ${details.driverName}\n• **الهوية الإماراتية:** ${details.emiratesId}\n• **المركبة:** ${details.vehicle}\n• **المدة:** ${details.duration || '12'} شهر\n• **الإيجار الشهري:** ${details.monthlyRent || '1,200'} درهم\n• **التأمين:** ${details.deposit || '5,000'} درهم\n• **الحد اليومي للكيلومترات:** ${details.kmLimit || '300'} كم\n\n📋 **الخطوات التالية:**\n• تم إنشاء العقد\n• سيتلقى السائق إشعاراً\n• تم تأكيد تخصيص المركبة\n• الدفعة الأولى مستحقة في تاريخ بداية العقد\n\n💡 **العقد نشط الآن في نظامك!**\n\nهل تريد مني:\n• عرض جميع العقود\n• إنشاء عقد آخر\n• فحص أداء السائق`,
+          hi: `✅ **अनुबंध सफलतापूर्वक बनाया गया!**\n\n**अनुबंध विवरण:**\n• **ड्राइवर:** ${details.driverName}\n• **एमिरेट्स ID:** ${details.emiratesId}\n• **वाहन:** ${details.vehicle}\n• **अवधि:** ${details.duration || '12'} महीने\n• **मासिक किराया:** AED ${details.monthlyRent || '1,200'}\n• **जमा:** AED ${details.deposit || '5,000'}\n• **दैनिक KM सीमा:** ${details.kmLimit || '300'} km\n\n📋 **अगले कदम:**\n• अनुबंध तैयार किया गया है\n• ड्राइवर को सूचना मिलेगी\n• वाहन असाइनमेंट की पुष्टि\n• पहला भुगतान अनुबंध शुरू की तारीख पर देय\n\n💡 **अनुबंध अब आपके सिस्टम में सक्रिय है!**\n\nक्या आप चाहते हैं कि मैं:\n• आपको सभी अनुबंध दिखाऊं\n• एक और अनुबंध बनाऊं\n• ड्राइवर प्रदर्शन जांचूं`,
+          ur: `✅ **کنٹریکٹ کامیابی سے بنایا گیا!**\n\n**کنٹریکٹ کی تفصیلات:**\n• **ڈرائیور:** ${details.driverName}\n• **ایمریٹس ID:** ${details.emiratesId}\n• **گاڑی:** ${details.vehicle}\n• **مدت:** ${details.duration || '12'} مہینے\n• **ماہانہ کرایہ:** AED ${details.monthlyRent || '1,200'}\n• **ڈپازٹ:** AED ${details.deposit || '5,000'}\n• **روزانہ KM حد:** ${details.kmLimit || '300'} km\n\n📋 **اگلے قدم:**\n• کنٹریکٹ تیار کر دیا گیا\n• ڈرائیور کو اطلاع ملے گی\n• گاڑی کی تفویض کی تصدیق\n• پہلی ادائیگی کنٹریکٹ شروع کی تاریخ پر واجب\n\n💡 **کنٹریکٹ اب آپ کے سسٹم میں فعال ہے!**\n\nکیا آپ چاہتے ہیں کہ میں:\n• آپ کو تمام کنٹریکٹس دکھاؤں\n• ایک اور کنٹریکٹ بناؤں\n• ڈرائیور کی کارکردگی چیک کروں`
+        };
+        
+        return responses[language];
       } else {
         // Ask for missing information
         const missing = [];
-        if (!details.driverName) missing.push('Driver name');
-        if (!details.emiratesId) missing.push('Emirates ID');
-        if (!details.vehicle) missing.push('Vehicle assignment');
+        if (!details.driverName) missing.push(language === 'ar' ? 'اسم السائق' : language === 'hi' ? 'ड्राइवर का नाम' : language === 'ur' ? 'ڈرائیور کا نام' : 'Driver name');
+        if (!details.emiratesId) missing.push(language === 'ar' ? 'الهوية الإماراتية' : language === 'hi' ? 'एमिरेट्स ID' : language === 'ur' ? 'ایمریٹس ID' : 'Emirates ID');
+        if (!details.vehicle) missing.push(language === 'ar' ? 'تخصيص المركبة' : language === 'hi' ? 'वाहन असाइनमेंट' : language === 'ur' ? 'گاڑی کی تفویض' : 'Vehicle assignment');
         
-        return `📋 **Contract Information Received**\n\nI've captured some details, but I need a bit more information:\n\n**Still needed:**\n${missing.map(item => `• ${item}`).join('\n')}\n\n**What I have so far:**\n${details.driverName ? `• Driver: ${details.driverName}` : ''}\n${details.emiratesId ? `• Emirates ID: ${details.emiratesId}` : ''}\n${details.vehicle ? `• Vehicle: ${details.vehicle}` : ''}\n${details.duration ? `• Duration: ${details.duration} months` : ''}\n${details.monthlyRent ? `• Monthly Rent: AED ${details.monthlyRent}` : ''}\n${details.deposit ? `• Deposit: AED ${details.deposit}` : ''}\n${details.kmLimit ? `• KM Limit: ${details.kmLimit} km` : ''}\n\nPlease provide the missing information to complete the contract.`;
+        const responses = {
+          en: `📋 **Contract Information Received**\n\nI've captured some details, but I need a bit more information:\n\n**Still needed:**\n${missing.map(item => `• ${item}`).join('\n')}\n\n**What I have so far:**\n${details.driverName ? `• Driver: ${details.driverName}` : ''}\n${details.emiratesId ? `• Emirates ID: ${details.emiratesId}` : ''}\n${details.vehicle ? `• Vehicle: ${details.vehicle}` : ''}\n${details.duration ? `• Duration: ${details.duration} months` : ''}\n${details.monthlyRent ? `• Monthly Rent: AED ${details.monthlyRent}` : ''}\n${details.deposit ? `• Deposit: AED ${details.deposit}` : ''}\n${details.kmLimit ? `• KM Limit: ${details.kmLimit} km` : ''}\n\nPlease provide the missing information to complete the contract.`,
+          ar: `📋 **تم استلام معلومات العقد**\n\nلقد التقطت بعض التفاصيل، لكنني أحتاج إلى مزيد من المعلومات:\n\n**ما زال مطلوباً:**\n${missing.map(item => `• ${item}`).join('\n')}\n\n**ما لدي حتى الآن:**\n${details.driverName ? `• السائق: ${details.driverName}` : ''}\n${details.emiratesId ? `• الهوية الإماراتية: ${details.emiratesId}` : ''}\n${details.vehicle ? `• المركبة: ${details.vehicle}` : ''}\n${details.duration ? `• المدة: ${details.duration} شهر` : ''}\n${details.monthlyRent ? `• الإيجار الشهري: ${details.monthlyRent} درهم` : ''}\n${details.deposit ? `• التأمين: ${details.deposit} درهم` : ''}\n${details.kmLimit ? `• حد الكيلومترات: ${details.kmLimit} كم` : ''}\n\nيرجى تقديم المعلومات المفقودة لإكمال العقد.`,
+          hi: `📋 **अनुबंध की जानकारी प्राप्त हुई**\n\nमैंने कुछ विवरण कैप्चर किए हैं, लेकिन मुझे थोड़ी और जानकारी चाहिए:\n\n**अभी भी आवश्यक:**\n${missing.map(item => `• ${item}`).join('\n')}\n\n**अब तक मेरे पास क्या है:**\n${details.driverName ? `• ड्राइवर: ${details.driverName}` : ''}\n${details.emiratesId ? `• एमिरेट्स ID: ${details.emiratesId}` : ''}\n${details.vehicle ? `• वाहन: ${details.vehicle}` : ''}\n${details.duration ? `• अवधि: ${details.duration} महीने` : ''}\n${details.monthlyRent ? `• मासिक किराया: AED ${details.monthlyRent}` : ''}\n${details.deposit ? `• जमा: AED ${details.deposit}` : ''}\n${details.kmLimit ? `• KM सीमा: ${details.kmLimit} km` : ''}\n\nकृपया अनुबंध पूरा करने के लिए लापता जानकारी प्रदान करें।`,
+          ur: `📋 **کنٹریکٹ کی معلومات موصول ہوئیں**\n\nمیں نے کچھ تفصیلات حاصل کی ہیں، لیکن مجھے تھوڑی اور معلومات درکار ہیں:\n\n**ابھی بھی ضروری:**\n${missing.map(item => `• ${item}`).join('\n')}\n\n**اب تک میرے پاس کیا ہے:**\n${details.driverName ? `• ڈرائیور: ${details.driverName}` : ''}\n${details.emiratesId ? `• ایمریٹس ID: ${details.emiratesId}` : ''}\n${details.vehicle ? `• گاڑی: ${details.vehicle}` : ''}\n${details.duration ? `• مدت: ${details.duration} مہینے` : ''}\n${details.monthlyRent ? `• ماہانہ کرایہ: AED ${details.monthlyRent}` : ''}\n${details.deposit ? `• ڈپازٹ: AED ${details.deposit}` : ''}\n${details.kmLimit ? `• KM حد: ${details.kmLimit} km` : ''}\n\nبراہ کرم کنٹریکٹ مکمل کرنے کے لیے لاپتہ معلومات فراہم کریں۔`
+        };
+        
+        return responses[language];
       }
     }
 
-    // Contract-related queries - ENHANCED LOGIC
-    if (lowerInput.includes('contract') || lowerInput.includes('make contract') || lowerInput.includes('create contract') || lowerInput.includes('new contract') || lowerInput.includes('generate contract')) {
+    // Contract-related queries - ENHANCED LOGIC with multilingual support
+    if (lowerInput.includes('contract') || lowerInput.includes('make contract') || lowerInput.includes('create contract') || lowerInput.includes('new contract') || lowerInput.includes('generate contract') ||
+        lowerInput.includes('عقد') || lowerInput.includes('إنشاء عقد') || lowerInput.includes('عقد جديد') ||
+        lowerInput.includes('अनुबंध') || lowerInput.includes('नया अनुबंध') || lowerInput.includes('अनुबंध बनाएं') ||
+        lowerInput.includes('کنٹریکٹ') || lowerInput.includes('نیا کنٹریکٹ') || lowerInput.includes('کنٹریکٹ بنائیں')) {
       
       // Contract creation/generation
-      if (lowerInput.includes('make') || lowerInput.includes('create') || lowerInput.includes('new') || lowerInput.includes('generate')) {
+      if (lowerInput.includes('make') || lowerInput.includes('create') || lowerInput.includes('new') || lowerInput.includes('generate') ||
+          lowerInput.includes('إنشاء') || lowerInput.includes('جديد') ||
+          lowerInput.includes('बनाएं') || lowerInput.includes('नया') ||
+          lowerInput.includes('بنائیں') || lowerInput.includes('نیا')) {
         setConversationContext('creating_contract'); // Set context for next messages
         
-        return `📋 **Let's Create a New Contract!**\n\nI'll help you generate a rental contract. Please provide the following information:\n\n**Required Details:**\n• **Driver Name:** (e.g., "Ahmed Al-Rashid")\n• **Emirates ID:** (e.g., "784-1990-1234567-1")\n• **Vehicle Assignment:** (e.g., "DXB-A-12345")\n• **Contract Duration:** (e.g., "12 months")\n• **Monthly Rent:** (e.g., "AED 1,200")\n• **Deposit Amount:** (e.g., "AED 5,000")\n• **Daily KM Limit:** (e.g., "300 km")\n\n💡 **You can provide all details at once or one by one. For example:**\n\n"Driver: Fatima Al-Zahra, Emirates ID: 784-1992-7654321-8, Vehicle: DXB-G-55555, Duration: 18 months, Monthly rent: AED 1,350, Deposit: AED 5,200, Daily limit: 280 km"\n\n**Or use the Contract Generator:**\nGo to **Contracts** → **"Generate with OCR"** to automatically scan Emirates ID!`;
+        const responses = {
+          en: `📋 **Let's Create a New Contract!**\n\nI'll help you generate a rental contract. Please provide the following information:\n\n**Required Details:**\n• **Driver Name:** (e.g., "Ahmed Al-Rashid")\n• **Emirates ID:** (e.g., "784-1990-1234567-1")\n• **Vehicle Assignment:** (e.g., "DXB-A-12345")\n• **Contract Duration:** (e.g., "12 months")\n• **Monthly Rent:** (e.g., "AED 1,200")\n• **Deposit Amount:** (e.g., "AED 5,000")\n• **Daily KM Limit:** (e.g., "300 km")\n\n💡 **You can provide all details at once or one by one. For example:**\n\n"Driver: Fatima Al-Zahra, Emirates ID: 784-1992-7654321-8, Vehicle: DXB-G-55555, Duration: 18 months, Monthly rent: AED 1,350, Deposit: AED 5,200, Daily limit: 280 km"\n\n**Or use the Contract Generator:**\nGo to **Contracts** → **"Generate with OCR"** to automatically scan Emirates ID!`,
+          ar: `📋 **لننشئ عقداً جديداً!**\n\nسأساعدك في إنشاء عقد إيجار. يرجى تقديم المعلومات التالية:\n\n**التفاصيل المطلوبة:**\n• **اسم السائق:** (مثل "أحمد الراشد")\n• **الهوية الإماراتية:** (مثل "784-1990-1234567-1")\n• **تخصيص المركبة:** (مثل "DXB-A-12345")\n• **مدة العقد:** (مثل "12 شهر")\n• **الإيجار الشهري:** (مثل "1,200 درهم")\n• **مبلغ التأمين:** (مثل "5,000 درهم")\n• **الحد اليومي للكيلومترات:** (مثل "300 كم")\n\n💡 **يمكنك تقديم جميع التفاصيل دفعة واحدة أو واحداً تلو الآخر. على سبيل المثال:**\n\n"السائق: فاطمة الزهراء، الهوية الإماراتية: 784-1992-7654321-8، المركبة: DXB-G-55555، المدة: 18 شهر، الإيجار الشهري: 1,350 درهم، التأمين: 5,200 درهم، الحد اليومي: 280 كم"\n\n**أو استخدم مولد العقود:**\nاذهب إلى **العقود** → **"إنشاء مع OCR"** لمسح الهوية الإماراتية تلقائياً!`,
+          hi: `📋 **आइए एक नया अनुबंध बनाते हैं!**\n\nमैं आपको एक किराया अनुबंध बनाने में मदद करूंगा। कृपया निम्नलिखित जानकारी प्रदान करें:\n\n**आवश्यक विवरण:**\n• **ड्राइवर का नाम:** (जैसे "अहमद अल-राशिद")\n• **एमिरेट्स ID:** (जैसे "784-1990-1234567-1")\n• **वाहन असाइनमेंट:** (जैसे "DXB-A-12345")\n• **अनुबंध अवधि:** (जैसे "12 महीने")\n• **मासिक किराया:** (जैसे "AED 1,200")\n• **जमा राशि:** (जैसे "AED 5,000")\n• **दैनिक KM सीमा:** (जैसे "300 km")\n\n💡 **आप सभी विवरण एक साथ या एक-एक करके दे सकते हैं। उदाहरण के लिए:**\n\n"ड्राइवर: फातिमा अल-जहरा, एमिरेट्स ID: 784-1992-7654321-8, वाहन: DXB-G-55555, अवधि: 18 महीने, मासिक किराया: AED 1,350, जमा: AED 5,200, दैनिक सीमा: 280 km"\n\n**या अनुबंध जेनरेटर का उपयोग करें:**\n**अनुबंध** → **"OCR के साथ जेनरेट करें"** पर जाकर एमिरेट्स ID को स्वचालित रूप से स्कैन करें!`,
+          ur: `📋 **آئیے ایک نیا کنٹریکٹ بناتے ہیں!**\n\nمیں آپ کو کرایے کا کنٹریکٹ بنانے میں مدد کروں گا۔ براہ کرم درج ذیل معلومات فراہم کریں:\n\n**ضروری تفصیلات:**\n• **ڈرائیور کا نام:** (جیسے "احمد الراشد")\n• **ایمریٹس ID:** (جیسے "784-1990-1234567-1")\n• **گاڑی کی تفویض:** (جیسے "DXB-A-12345")\n• **کنٹریکٹ کی مدت:** (جیسے "12 مہینے")\n• **ماہانہ کرایہ:** (جیسے "AED 1,200")\n• **ڈپازٹ کی رقم:** (جیسے "AED 5,000")\n• **روزانہ KM حد:** (جیسے "300 km")\n\n💡 **آپ تمام تفصیلات ایک ساتھ یا ایک ایک کرکے دے سکتے ہیں۔ مثال کے طور پر:**\n\n"ڈرائیور: فاطمہ الزہرا، ایمریٹس ID: 784-1992-7654321-8، گاڑی: DXB-G-55555، مدت: 18 مہینے، ماہانہ کرایہ: AED 1,350، ڈپازٹ: AED 5,200، روزانہ حد: 280 km"\n\n**یا کنٹریکٹ جنریٹر استعمال کریں:**\n**کنٹریکٹس** → **"OCR کے ساتھ جنریٹ کریں"** پر جا کر ایمریٹس ID کو خودکار طور پر اسکین کریں!`
+        };
+        
+        return responses[language];
       }
 
       // Show contracts
-      if (lowerInput.includes('show') || lowerInput.includes('list') || lowerInput.includes('view')) {
+      if (lowerInput.includes('show') || lowerInput.includes('list') || lowerInput.includes('view') ||
+          lowerInput.includes('أظهر') || lowerInput.includes('عرض') ||
+          lowerInput.includes('दिखाएं') || lowerInput.includes('देखें') ||
+          lowerInput.includes('دکھائیں') || lowerInput.includes('دیکھیں')) {
         const activeContracts = mockContractsData.filter(c => c.status === 'active');
         const totalRevenue = activeContracts.reduce((sum, c) => sum + c.monthlyRent, 0);
         
-        let response = `📋 **Active Contracts Overview**\n\n**Summary:**\n• Total active contracts: ${activeContracts.length}\n• Monthly revenue: AED ${totalRevenue.toLocaleString()}\n• Average rent: AED ${Math.round(totalRevenue / activeContracts.length).toLocaleString()}\n\n**Contract Details:**\n\n`;
+        const responses = {
+          en: `📋 **Active Contracts Overview**\n\n**Summary:**\n• Total active contracts: ${activeContracts.length}\n• Monthly revenue: AED ${totalRevenue.toLocaleString()}\n• Average rent: AED ${Math.round(totalRevenue / activeContracts.length).toLocaleString()}\n\n**Contract Details:**\n\n`,
+          ar: `📋 **نظرة عامة على العقود النشطة**\n\n**الملخص:**\n• إجمالي العقود النشطة: ${activeContracts.length}\n• الإيرادات الشهرية: ${totalRevenue.toLocaleString()} درهم\n• متوسط الإيجار: ${Math.round(totalRevenue / activeContracts.length).toLocaleString()} درهم\n\n**تفاصيل العقود:**\n\n`,
+          hi: `📋 **सक्रिय अनुबंध अवलोकन**\n\n**सारांश:**\n• कुल सक्रिय अनुबंध: ${activeContracts.length}\n• मासिक राजस्व: AED ${totalRevenue.toLocaleString()}\n• औसत किराया: AED ${Math.round(totalRevenue / activeContracts.length).toLocaleString()}\n\n**अनुबंध विवरण:**\n\n`,
+          ur: `📋 **فعال کنٹریکٹس کا جائزہ**\n\n**خلاصہ:**\n• کل فعال کنٹریکٹس: ${activeContracts.length}\n• ماہانہ آمدنی: AED ${totalRevenue.toLocaleString()}\n• اوسط کرایہ: AED ${Math.round(totalRevenue / activeContracts.length).toLocaleString()}\n\n**کنٹریکٹ کی تفصیلات:**\n\n`
+        };
+        
+        let response = responses[language];
         
         activeContracts.forEach(contract => {
           const driver = mockDriversData.find(d => d.id === contract.driverId);
           const daysRemaining = getDaysRemaining(contract.endDate);
           
-          response += `**${driver?.name || 'Unknown Driver'}** (${contract.id})\n`;
-          response += `• Vehicle: ${contract.vehicleId}\n`;
-          response += `• Monthly rent: AED ${contract.monthlyRent.toLocaleString()}\n`;
-          response += `• Days remaining: ${daysRemaining > 0 ? daysRemaining + ' days' : 'Expired'}\n`;
-          response += `• Status: ${daysRemaining < 30 && daysRemaining > 0 ? '⚠️ Expiring soon' : daysRemaining <= 0 ? '🔴 Expired' : '✅ Active'}\n\n`;
-        });
-
-        return response;
-      }
-
-      // Contract expiry information
-      if (lowerInput.includes('expir') || lowerInput.includes('ending') || lowerInput.includes('due')) {
-        const expiringContracts = mockContractsData.filter(contract => {
-          const daysRemaining = getDaysRemaining(contract.endDate);
-          return daysRemaining <= 30 && daysRemaining > 0;
-        });
-
-        if (expiringContracts.length === 0) {
-          return `✅ **No Contracts Expiring Soon**\n\nAll contracts are stable with more than 30 days remaining.`;
-        }
-
-        let response = `⚠️ **Contracts Expiring Soon (${expiringContracts.length})**\n\n`;
-        
-        expiringContracts.forEach(contract => {
-          const driver = mockDriversData.find(d => d.id === contract.driverId);
-          const daysRemaining = getDaysRemaining(contract.endDate);
-          
-          response += `**${driver?.name || 'Unknown'}** (${contract.id})\n`;
-          response += `• Vehicle: ${contract.vehicleId}\n`;
-          response += `• Days remaining: ${daysRemaining} days\n`;
-          response += `• Monthly rent: AED ${contract.monthlyRent.toLocaleString()}\n`;
-          response += `• Action needed: Contact for renewal\n\n`;
-        });
-
-        return response;
-      }
-
-      // Specific driver contract lookup
-      const driverMatch = mockDriversData.find(driver => 
-        lowerInput.includes(driver.name.toLowerCase()) || 
-        lowerInput.includes(driver.name.split(' ')[0].toLowerCase())
-      );
-
-      if (driverMatch) {
-        const contract = mockContractsData.find(c => c.driverId === driverMatch.id && c.status === 'active');
-        
-        if (!contract) {
-          return `❌ **${driverMatch.name}**\n\nNo active contract found for this driver.\n\n💡 **Would you like to create a new contract?**\nJust say "make a contract" and I'll guide you through the process!`;
-        }
-
-        const daysRemaining = getDaysRemaining(contract.endDate);
-        
-        return `📋 **${driverMatch.name} - Contract Details**\n\n**Contract ID:** ${contract.id}\n**Vehicle:** ${contract.vehicleId}\n**Start Date:** ${contract.startDate}\n**End Date:** ${contract.endDate}\n**Days Remaining:** ${daysRemaining > 0 ? daysRemaining + ' days' : 'Expired'}\n**Monthly Rent:** AED ${contract.monthlyRent.toLocaleString()}\n**Deposit:** AED ${contract.depositAmount.toLocaleString()}\n**Daily KM Limit:** ${contract.dailyKmLimit} km\n**Status:** ${daysRemaining < 30 && daysRemaining > 0 ? '⚠️ Expiring soon' : daysRemaining <= 0 ? '🔴 Expired' : '✅ Active'}`;
-      }
-
-      // General contract information
-      const activeContracts = mockContractsData.filter(c => c.status === 'active');
-      const totalRevenue = activeContracts.reduce((sum, c) => sum + c.monthlyRent, 0);
-      const expiringCount = activeContracts.filter(contract => {
-        const daysRemaining = getDaysRemaining(contract.endDate);
-        return daysRemaining <= 30 && daysRemaining > 0;
-      }).length;
-      
-      return `📋 **Contract Management Overview**\n\n**Statistics:**\n• Active contracts: ${activeContracts.length}\n• Monthly revenue: AED ${totalRevenue.toLocaleString()}\n• Contracts expiring (30 days): ${expiringCount}\n• Average rent: AED ${Math.round(totalRevenue / activeContracts.length).toLocaleString()}\n\n**Quick Actions:**\n• "Show me contracts"\n• "Which contracts are expiring?"\n• "Make a new contract"\n• "Show Ahmed's contract"\n\n💡 **Need to create a contract?** Just say "make a contract"!`;
-    }
-
-    // Fine-related queries - FIXED LOGIC
-    if (lowerInput.includes('fine') || lowerInput.includes('violation') || lowerInput.includes('penalty')) {
-      if (lowerInput.includes('who') || lowerInput.includes('which driver') || lowerInput.includes('show me drivers')) {
-        // Get drivers who have fines
-        const driversWithFines = mockFinesData.map(fine => {
-          const driver = mockDriversData.find(d => d.id === fine.driverId);
-          return {
-            driverName: driver ? driver.name : 'Unknown',
-            fine: fine
-          };
-        });
-
-        if (driversWithFines.length === 0) {
-          return "✅ **No Fines Found**\n\nGreat news! Currently no drivers have any recorded fines.";
-        }
-
-        // Group fines by driver
-        const finesByDriver = driversWithFines.reduce((acc, item) => {
-          if (!acc[item.driverName]) {
-            acc[item.driverName] = [];
+          if (language === 'ar') {
+            response += `**${driver?.name || 'سائق غير معروف'}** (${contract.id})\n`;
+            response += `• المركبة: ${contract.vehicleId}\n`;
+            response += `• الإيجار الشهري: ${contract.monthlyRent.toLocaleString()} درهم\n`;
+            response += `• الأيام المتبقية: ${daysRemaining > 0 ? daysRemaining + ' يوم' : 'منتهي الصلاحية'}\n`;
+            response += `• الحالة: ${daysRemaining < 30 && daysRemaining > 0 ? '⚠️ ينتهي قريباً' : daysRemaining <= 0 ? '🔴 منتهي الصلاحية' : '✅ نشط'}\n\n`;
+          } else if (language === 'hi') {
+            response += `**${driver?.name || 'अज्ञात ड्राइवर'}** (${contract.id})\n`;
+            response += `• वाहन: ${contract.vehicleId}\n`;
+            response += `• मासिक किराया: AED ${contract.monthlyRent.toLocaleString()}\n`;
+            response += `• शेष दिन: ${daysRemaining > 0 ? daysRemaining + ' दिन' : 'समाप्त'}\n`;
+            response += `• स्थिति: ${daysRemaining < 30 && daysRemaining > 0 ? '⚠️ जल्द समाप्त' : daysRemaining <= 0 ? '🔴 समाप्त' : '✅ सक्रिय'}\n\n`;
+          } else if (language === 'ur') {
+            response += `**${driver?.name || 'نامعلوم ڈرائیور'}** (${contract.id})\n`;
+            response += `• گاڑی: ${contract.vehicleId}\n`;
+            response += `• ماہانہ کرایہ: AED ${contract.monthlyRent.toLocaleString()}\n`;
+            response += `• باقی دن: ${daysRemaining > 0 ? daysRemaining + ' دن' : 'ختم'}\n`;
+            response += `• حالت: ${daysRemaining < 30 && daysRemaining > 0 ? '⚠️ جلد ختم' : daysRemaining <= 0 ? '🔴 ختم' : '✅ فعال'}\n\n`;
+          } else {
+            response += `**${driver?.name || 'Unknown Driver'}** (${contract.id})\n`;
+            response += `• Vehicle: ${contract.vehicleId}\n`;
+            response += `• Monthly rent: AED ${contract.monthlyRent.toLocaleString()}\n`;
+            response += `• Days remaining: ${daysRemaining > 0 ? daysRemaining + ' days' : 'Expired'}\n`;
+            response += `• Status: ${daysRemaining < 30 && daysRemaining > 0 ? '⚠️ Expiring soon' : daysRemaining <= 0 ? '🔴 Expired' : '✅ Active'}\n\n`;
           }
-          acc[item.driverName].push(item.fine);
-          return acc;
-        }, {} as Record<string, typeof mockFinesData>);
-
-        let response = "🚨 **Drivers with Fines**\n\n";
-        
-        Object.entries(finesByDriver).forEach(([driverName, fines]) => {
-          const totalAmount = fines.reduce((sum, fine) => sum + fine.amount, 0);
-          const pendingFines = fines.filter(f => f.status === 'pending');
-          
-          response += `**${driverName}**\n`;
-          response += `• Total fines: ${fines.length}\n`;
-          response += `• Total amount: AED ${totalAmount.toLocaleString()}\n`;
-          response += `• Pending: ${pendingFines.length} (AED ${pendingFines.reduce((sum, f) => sum + f.amount, 0).toLocaleString()})\n\n`;
         });
 
         return response;
       }
-
-      // Specific driver fine query
-      const driverMatch = mockDriversData.find(driver => 
-        lowerInput.includes(driver.name.toLowerCase()) || 
-        lowerInput.includes(driver.name.split(' ')[0].toLowerCase())
-      );
-
-      if (driverMatch) {
-        const driverFines = mockFinesData.filter(fine => fine.driverId === driverMatch.id);
-        
-        if (driverFines.length === 0) {
-          return `✅ **${driverMatch.name}**\n\nNo fines recorded for this driver.`;
-        }
-
-        let response = `🚨 **${driverMatch.name} - Fine Details**\n\n`;
-        
-        driverFines.forEach(fine => {
-          response += `**${fine.violation}**\n`;
-          response += `• Amount: AED ${fine.amount.toLocaleString()}\n`;
-          response += `• Date: ${fine.date}\n`;
-          response += `• Status: ${fine.status.charAt(0).toUpperCase() + fine.status.slice(1)}\n`;
-          response += `• Location: ${fine.location || 'Not specified'}\n\n`;
-        });
-
-        const totalAmount = driverFines.reduce((sum, fine) => sum + fine.amount, 0);
-        const pendingAmount = driverFines.filter(f => f.status === 'pending').reduce((sum, f) => sum + f.amount, 0);
-        
-        response += `**Summary:**\n`;
-        response += `• Total fines: ${driverFines.length}\n`;
-        response += `• Total amount: AED ${totalAmount.toLocaleString()}\n`;
-        response += `• Pending amount: AED ${pendingAmount.toLocaleString()}`;
-
-        return response;
-      }
-
-      // General fine statistics
-      const totalFines = mockFinesData.length;
-      const pendingFines = mockFinesData.filter(f => f.status === 'pending');
-      const totalAmount = mockFinesData.reduce((sum, fine) => sum + fine.amount, 0);
-      const pendingAmount = pendingFines.reduce((sum, fine) => sum + fine.amount, 0);
-
-      return `🚨 **Fine Management Overview**\n\n**Statistics:**\n• Total fines: ${totalFines}\n• Pending fines: ${pendingFines.length}\n• Total amount: AED ${totalAmount.toLocaleString()}\n• Pending amount: AED ${pendingAmount.toLocaleString()}\n\n💡 **Ask me:**\n• "Who got a fine?"\n• "Show me Omar's fines"\n• "Which drivers have pending fines?"`;
     }
 
-    // Driver-related queries
-    if (lowerInput.includes('driver') || lowerInput.includes('active') || lowerInput.includes('performance')) {
-      if (lowerInput.includes('active') || lowerInput.includes('online')) {
-        const activeDrivers = mockDriversData.filter(d => d.status === 'active');
-        let response = `👥 **Active Drivers (${activeDrivers.length}/${mockDriversData.length})**\n\n`;
-        
-        activeDrivers.forEach(driver => {
-          response += `**${driver.name}**\n`;
-          response += `• Vehicle: ${driver.vehicleId || 'Not assigned'}\n`;
-          response += `• Performance: ${driver.performanceScore}%\n`;
-          response += `• ${fleetMode === 'taxi' ? 'Trips today' : 'Monthly earnings'}: ${fleetMode === 'taxi' ? driver.trips : '$' + driver.earnings.toLocaleString()}\n\n`;
-        });
-        
-        return response;
-      }
+    // Default response for unrecognized queries with multilingual support
+    const defaultResponses = {
+      en: `🤔 **I'm here to help!**\n\nI didn't quite understand that. Here are some things you can ask me:\n\n**Contract Management:**\n• "Make a contract"\n• "Show me contracts"\n• "Which contracts are expiring?"\n• "Show Ahmed's contract"\n\n**Driver Queries:**\n• "Show me active drivers"\n• "Who has the best performance?"\n• "Find Omar Khalil"\n\n**Fine Management:**\n• "Who got a fine?"\n• "Show me pending fines"\n• "Omar's fine details"\n\n**Fleet Operations:**\n• "Switch to taxi mode"\n• "What's my fleet status?"\n• "Show me revenue"\n\n💡 **Just ask naturally - I understand conversational language!**`,
+      ar: `🤔 **أنا هنا للمساعدة!**\n\nلم أفهم ذلك تماماً. إليك بعض الأشياء التي يمكنك سؤالي عنها:\n\n**إدارة العقود:**\n• "إنشاء عقد"\n• "أظهر لي العقود"\n• "أي العقود تنتهي؟"\n• "أظهر عقد أحمد"\n\n**استفسارات السائقين:**\n• "أظهر لي السائقين النشطين"\n• "من لديه أفضل أداء؟"\n• "ابحث عن عمر خليل"\n\n**إدارة المخالفات:**\n• "من حصل على مخالفة؟"\n• "أظهر لي المخالفات المعلقة"\n• "تفاصيل مخالفة عمر"\n\n**عمليات الأسطول:**\n• "التبديل إلى وضع التاكسي"\n• "ما هي حالة أسطولي؟"\n• "أظهر لي الإيرادات"\n\n💡 **فقط اسأل بشكل طبيعي - أفهم اللغة المحادثة!**`,
+      hi: `🤔 **मैं मदद के लिए यहां हूं!**\n\nमैं इसे पूरी तरह से नहीं समझ पाया। यहां कुछ चीजें हैं जो आप मुझसे पूछ सकते हैं:\n\n**अनुबंध प्रबंधन:**\n• "एक अनुबंध बनाएं"\n• "मुझे अनुबंध दिखाएं"\n• "कौन से अनुबंध समाप्त हो रहे हैं?"\n• "अहमद का अनुबंध दिखाएं"\n\n**ड्राइवर प्रश्न:**\n• "मुझे सक्रिय ड्राइवर दिखाएं"\n• "सबसे अच्छा प्रदर्शन किसका है?"\n• "उमर खलील को खोजें"\n\n**जुर्माना प्रबंधन:**\n• "किसे जुर्माना मिला?"\n• "मुझे लंबित जुर्माने दिखाएं"\n• "उमर के जुर्माने का विवरण"\n\n**फ्लीट संचालन:**\n• "टैक्सी मोड पर स्विच करें"\n• "मेरे फ्लीट की स्थिति क्या है?"\n• "मुझे राजस्व दिखाएं"\n\n💡 **बस स्वाभाविक रूप से पूछें - मैं बातचीत की भाषा समझता हूं!**`,
+      ur: `🤔 **میں مدد کے لیے یہاں ہوں!**\n\nمیں اسے پوری طرح نہیں سمجھ پایا۔ یہاں کچھ چیزیں ہیں جو آپ مجھ سے پوچھ سکتے ہیں:\n\n**کنٹریکٹ منیجمنٹ:**\n• "ایک کنٹریکٹ بنائیں"\n• "مجھے کنٹریکٹس دکھائیں"\n• "کون سے کنٹریکٹس ختم ہو رہے ہیں؟"\n• "احمد کا کنٹریکٹ دکھائیں"\n\n**ڈرائیور سوالات:**\n• "مجھے فعال ڈرائیورز دکھائیں"\n• "بہترین کارکردگی کس کی ہے؟"\n• "عمر خلیل کو تلاش کریں"\n\n**جرمانہ منیجمنٹ:**\n• "کسے جرمانہ ملا؟"\n• "مجھے زیر التواء جرمانے دکھائیں"\n• "عمر کے جرمانے کی تفصیلات"\n\n**فلیٹ آپریشنز:**\n• "ٹیکسی موڈ پر سوئچ کریں"\n• "میرے فلیٹ کی حالت کیا ہے؟"\n• "مجھے آمدنی دکھائیں"\n\n💡 **بس فطری طور پر پوچھیں - میں بات چیت کی زبان سمجھتا ہوں!**`
+    };
 
-      if (lowerInput.includes('performance') || lowerInput.includes('score')) {
-        const avgPerformance = mockDriversData.reduce((sum, d) => sum + d.performanceScore, 0) / mockDriversData.length;
-        const topPerformer = mockDriversData.reduce((prev, current) => 
-          prev.performanceScore > current.performanceScore ? prev : current
-        );
-        
-        return `📊 **Driver Performance Overview**\n\n**Fleet Average:** ${avgPerformance.toFixed(1)}%\n\n**Top Performer:** ${topPerformer.name}\n• Score: ${topPerformer.performanceScore}%\n• ${fleetMode === 'taxi' ? 'Trips' : 'Earnings'}: ${fleetMode === 'taxi' ? topPerformer.trips : '$' + topPerformer.earnings.toLocaleString()}\n\n**Performance Distribution:**\n• Excellent (90%+): ${mockDriversData.filter(d => d.performanceScore >= 90).length} drivers\n• Good (80-89%): ${mockDriversData.filter(d => d.performanceScore >= 80 && d.performanceScore < 90).length} drivers\n• Needs Improvement (<80%): ${mockDriversData.filter(d => d.performanceScore < 80).length} drivers`;
-      }
-
-      // Specific driver lookup
-      const driverMatch = mockDriversData.find(driver => 
-        lowerInput.includes(driver.name.toLowerCase()) || 
-        lowerInput.includes(driver.name.split(' ')[0].toLowerCase())
-      );
-
-      if (driverMatch) {
-        const driverFines = mockFinesData.filter(f => f.driverId === driverMatch.id);
-        const contract = mockContractsData.find(c => c.driverId === driverMatch.id);
-        
-        return `👤 **${driverMatch.name}**\n\n**Status:** ${driverMatch.status === 'active' ? '🟢 Active' : '🔴 Offline'}\n**Vehicle:** ${driverMatch.vehicleId || 'Not assigned'}\n**Performance:** ${driverMatch.performanceScore}%\n**${fleetMode === 'taxi' ? 'Trips Today' : 'Monthly Earnings'}:** ${fleetMode === 'taxi' ? driverMatch.trips : '$' + driverMatch.earnings.toLocaleString()}\n**Contact:** ${driverMatch.phone}\n**Fines:** ${driverFines.length} (${driverFines.filter(f => f.status === 'pending').length} pending)\n**Contract:** ${contract ? contract.status : 'No contract'}`;
-      }
-    }
-
-    // Fleet mode switching
-    if (lowerInput.includes('switch') || lowerInput.includes('change') || lowerInput.includes('mode')) {
-      if (lowerInput.includes('taxi')) {
-        onFleetModeChange('taxi');
-        return `🚕 **Switched to Taxi Mode**\n\nYour dashboard is now optimized for taxi operations:\n• Trip-based tracking\n• Shift management\n• Real-time dispatch\n• Customer ratings\n\nThe interface will update to show taxi-specific metrics and controls.`;
-      } else if (lowerInput.includes('rental')) {
-        onFleetModeChange('rental');
-        return `🚗 **Switched to Rental Mode**\n\nYour dashboard is now optimized for vehicle rentals:\n• Contract management\n• Monthly billing\n• Long-term tracking\n• Deposit handling\n\nThe interface will update to show rental-specific metrics and controls.`;
-      }
-    }
-
-    // Revenue and analytics
-    if (lowerInput.includes('revenue') || lowerInput.includes('earning') || lowerInput.includes('money') || lowerInput.includes('profit')) {
-      const totalEarnings = mockDriversData.reduce((sum, d) => sum + d.earnings, 0);
-      const avgEarnings = totalEarnings / mockDriversData.length;
-      const topEarner = mockDriversData.reduce((prev, current) => 
-        prev.earnings > current.earnings ? prev : current
-      );
-      
-      return `💰 **Revenue Analytics**\n\n**Total ${fleetMode === 'taxi' ? 'Daily' : 'Monthly'} Revenue:** $${totalEarnings.toLocaleString()}\n**Average per Driver:** $${Math.round(avgEarnings).toLocaleString()}\n**Top Earner:** ${topEarner.name} ($${topEarner.earnings.toLocaleString()})\n\n**Revenue Distribution:**\n• High earners ($1000+): ${mockDriversData.filter(d => d.earnings >= 1000).length} drivers\n• Medium earners ($500-999): ${mockDriversData.filter(d => d.earnings >= 500 && d.earnings < 1000).length} drivers\n• Low earners (<$500): ${mockDriversData.filter(d => d.earnings < 500).length} drivers`;
-    }
-
-    // Fleet statistics
-    if (lowerInput.includes('fleet') || lowerInput.includes('overview') || lowerInput.includes('summary') || lowerInput.includes('status')) {
-      const activeDrivers = mockDriversData.filter(d => d.status === 'active').length;
-      const totalTrips = mockDriversData.reduce((sum, d) => sum + d.trips, 0);
-      const avgPerformance = mockDriversData.reduce((sum, d) => sum + d.performanceScore, 0) / mockDriversData.length;
-      const pendingFines = mockFinesData.filter(f => f.status === 'pending').length;
-      
-      return `🚗 **Fleet Status Overview**\n\n**Drivers:** ${activeDrivers}/${mockDriversData.length} active\n**${fleetMode === 'taxi' ? 'Total Trips Today' : 'Active Rentals'}:** ${fleetMode === 'taxi' ? totalTrips : activeDrivers}\n**Average Performance:** ${avgPerformance.toFixed(1)}%\n**Pending Fines:** ${pendingFines}\n**Fleet Mode:** ${fleetMode === 'taxi' ? '🚕 Taxi Operations' : '🚗 Rental Management'}\n\n**Quick Actions:**\n• "Show active drivers"\n• "Who has fines?"\n• "Switch to ${fleetMode === 'taxi' ? 'rental' : 'taxi'} mode"`;
-    }
-
-    // Help and capabilities
-    if (lowerInput.includes('help') || lowerInput.includes('what can you') || lowerInput.includes('capabilities')) {
-      return `🤖 **NavEdge AI Capabilities**\n\n**Driver Management:**\n• Check driver status and performance\n• View driver locations and assignments\n• Monitor driver earnings and trips\n\n**Contract Management:**\n• View active contracts\n• Check contract expiry dates\n• Guide contract creation process\n• Monitor contract revenue\n\n**Fine & Compliance:**\n• Track traffic violations and fines\n• Monitor payment status\n• Generate compliance reports\n\n**Fleet Operations:**\n• Switch between taxi and rental modes\n• Monitor fleet utilization\n• Track revenue and performance\n\n💡 **Try asking:**\n• "Make a contract"\n• "Show me contracts"\n• "Who got a fine?"\n• "Show me active drivers"`;
-    }
-
-    // Default response for unrecognized queries
-    return `🤔 **I'm here to help!**\n\nI didn't quite understand that. Here are some things you can ask me:\n\n**Contract Management:**\n• "Make a contract"\n• "Show me contracts"\n• "Which contracts are expiring?"\n• "Show Ahmed's contract"\n\n**Driver Queries:**\n• "Show me active drivers"\n• "Who has the best performance?"\n• "Find Omar Khalil"\n\n**Fine Management:**\n• "Who got a fine?"\n• "Show me pending fines"\n• "Omar's fine details"\n\n**Fleet Operations:**\n• "Switch to taxi mode"\n• "What's my fleet status?"\n• "Show me revenue"\n\n💡 **Just ask naturally - I understand conversational language!**`;
+    return defaultResponses[language];
   };
 
   const handleSendMessage = () => {
@@ -555,11 +423,14 @@ const NavEdgeAssistant: React.FC<NavEdgeAssistantProps> = ({
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyPress={handleKeyPress}
                 placeholder={t.placeholder}
-                className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className={`w-full px-4 py-3 pr-12 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                  language === 'ar' || language === 'ur' ? 'text-right' : 'text-left'
+                }`}
+                dir={language === 'ar' || language === 'ur' ? 'rtl' : 'ltr'}
               />
               <button
                 onClick={toggleListening}
-                className={`absolute right-3 top-1/2 transform -translate-y-1/2 p-2 rounded-lg transition-colors ${
+                className={`absolute ${language === 'ar' || language === 'ur' ? 'left-3' : 'right-3'} top-1/2 transform -translate-y-1/2 p-2 rounded-lg transition-colors ${
                   isListening ? 'bg-red-100 text-red-600' : 'hover:bg-gray-100 text-gray-500'
                 }`}
               >

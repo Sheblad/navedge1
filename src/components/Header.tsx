@@ -2,7 +2,7 @@ import React from 'react';
 import { Menu, Bell, User, Car, CarTaxiFront as Taxi, Brain, LogOut, Globe } from 'lucide-react';
 
 type FleetMode = 'rental' | 'taxi';
-type Language = 'en' | 'ar';
+type Language = 'en' | 'ar' | 'hi' | 'ur';
 
 interface HeaderProps {
   fleetMode: FleetMode;
@@ -41,10 +41,35 @@ const Header: React.FC<HeaderProps> = ({
       admin: 'المدير',
       navEdgeAssistant: 'مساعد نافيدج',
       logout: 'تسجيل الخروج'
+    },
+    hi: {
+      title: 'फ्लीट डैशबोर्ड',
+      subtitle: 'वापस स्वागत है, अपने फ्लीट को कुशलता से प्रबंधित करें',
+      rental: 'किराया',
+      taxi: 'टैक्सी',
+      admin: 'एडमिन',
+      navEdgeAssistant: 'नेवएज असिस्टेंट',
+      logout: 'लॉग आउट'
+    },
+    ur: {
+      title: 'فلیٹ ڈیش بورڈ',
+      subtitle: 'واپس خوش آمدید، اپنے فلیٹ کو مؤثر طریقے سے منظم کریں',
+      rental: 'کرایہ',
+      taxi: 'ٹیکسی',
+      admin: 'ایڈمن',
+      navEdgeAssistant: 'نیو ایج اسسٹنٹ',
+      logout: 'لاگ آؤٹ'
     }
   };
 
   const t = texts[language];
+
+  const languages = [
+    { code: 'en', name: 'English', flag: '🇺🇸' },
+    { code: 'ar', name: 'العربية', flag: '🇦🇪' },
+    { code: 'hi', name: 'हिंदी', flag: '🇮🇳' },
+    { code: 'ur', name: 'اردو', flag: '🇵🇰' }
+  ];
 
   return (
     <header className="bg-white shadow-sm border-b border-gray-200 px-4 lg:px-6 py-4">
@@ -96,14 +121,32 @@ const Header: React.FC<HeaderProps> = ({
             </button>
           </div>
 
-          {/* Language Toggle */}
-          <button
-            onClick={() => setLanguage(language === 'en' ? 'ar' : 'en')}
-            className="p-2 rounded-lg hover:bg-gray-100"
-            title={language === 'en' ? 'العربية' : 'English'}
-          >
-            <Globe className="w-5 h-5 text-gray-600" />
-          </button>
+          {/* Language Selector */}
+          <div className="relative group">
+            <button className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100">
+              <Globe className="w-5 h-5 text-gray-600" />
+              <span className="text-sm font-medium text-gray-700">
+                {languages.find(l => l.code === language)?.flag}
+              </span>
+            </button>
+            
+            {/* Language Dropdown */}
+            <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+              {languages.map((lang) => (
+                <button
+                  key={lang.code}
+                  onClick={() => setLanguage(lang.code as Language)}
+                  className={`w-full flex items-center space-x-3 px-4 py-3 text-left hover:bg-gray-50 first:rounded-t-lg last:rounded-b-lg ${
+                    language === lang.code ? 'bg-blue-50 text-blue-700' : 'text-gray-700'
+                  }`}
+                >
+                  <span className="text-lg">{lang.flag}</span>
+                  <span className="font-medium">{lang.name}</span>
+                  {language === lang.code && <span className="ml-auto text-blue-600">✓</span>}
+                </button>
+              ))}
+            </div>
+          </div>
 
           {/* NavEdge Assistant */}
           <button 

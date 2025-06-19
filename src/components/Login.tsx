@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Navigation, Eye, EyeOff, Globe } from 'lucide-react';
 
-type Language = 'en' | 'ar';
+type Language = 'en' | 'ar' | 'hi' | 'ur';
 
 interface LoginProps {
   onLogin: (token: string) => void;
@@ -34,10 +34,35 @@ const Login: React.FC<LoginProps> = ({ onLogin, language, setLanguage }) => {
       signIn: 'تسجيل الدخول',
       invalidCredentials: 'اسم المستخدم أو كلمة المرور غير صحيحة',
       demoCredentials: 'تجريبي: admin / password123'
+    },
+    hi: {
+      title: 'नेवएज फ्लीट मैनेजमेंट',
+      subtitle: 'अपने डैशबोर्ड में साइन इन करें',
+      username: 'उपयोगकर्ता नाम',
+      password: 'पासवर्ड',
+      signIn: 'साइन इन',
+      invalidCredentials: 'अमान्य उपयोगकर्ता नाम या पासवर्ड',
+      demoCredentials: 'डेमो: admin / password123'
+    },
+    ur: {
+      title: 'نیو ایج فلیٹ منیجمنٹ',
+      subtitle: 'اپنے ڈیش بورڈ میں سائن ان کریں',
+      username: 'صارف نام',
+      password: 'پاس ورڈ',
+      signIn: 'سائن ان',
+      invalidCredentials: 'غلط صارف نام یا پاس ورڈ',
+      demoCredentials: 'ڈیمو: admin / password123'
     }
   };
 
   const t = texts[language];
+
+  const languages = [
+    { code: 'en', name: 'English', flag: '🇺🇸' },
+    { code: 'ar', name: 'العربية', flag: '🇦🇪' },
+    { code: 'hi', name: 'हिंदी', flag: '🇮🇳' },
+    { code: 'ur', name: 'اردو', flag: '🇵🇰' }
+  ];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,16 +82,33 @@ const Login: React.FC<LoginProps> = ({ onLogin, language, setLanguage }) => {
   };
 
   return (
-    <div className={`min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-900 flex items-center justify-center p-4 ${language === 'ar' ? 'rtl' : 'ltr'}`}>
+    <div className={`min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-900 flex items-center justify-center p-4 ${language === 'ar' || language === 'ur' ? 'rtl' : 'ltr'}`}>
       {/* Language Toggle */}
       <div className="absolute top-4 right-4">
-        <button
-          onClick={() => setLanguage(language === 'en' ? 'ar' : 'en')}
-          className="flex items-center space-x-2 px-3 py-2 bg-white/10 backdrop-blur-sm rounded-lg text-white hover:bg-white/20 transition-colors"
-        >
-          <Globe className="w-4 h-4" />
-          <span>{language === 'en' ? 'العربية' : 'English'}</span>
-        </button>
+        <div className="relative group">
+          <button className="flex items-center space-x-2 px-3 py-2 bg-white/10 backdrop-blur-sm rounded-lg text-white hover:bg-white/20 transition-colors">
+            <Globe className="w-4 h-4" />
+            <span>{languages.find(l => l.code === language)?.flag}</span>
+            <span className="hidden sm:block">{languages.find(l => l.code === language)?.name}</span>
+          </button>
+          
+          {/* Language Dropdown */}
+          <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+            {languages.map((lang) => (
+              <button
+                key={lang.code}
+                onClick={() => setLanguage(lang.code as Language)}
+                className={`w-full flex items-center space-x-3 px-4 py-3 text-left hover:bg-gray-50 first:rounded-t-lg last:rounded-b-lg ${
+                  language === lang.code ? 'bg-blue-50 text-blue-700' : 'text-gray-700'
+                }`}
+              >
+                <span className="text-lg">{lang.flag}</span>
+                <span className="font-medium">{lang.name}</span>
+                {language === lang.code && <span className="ml-auto text-blue-600">✓</span>}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
 
       <div className="w-full max-w-md">
@@ -91,8 +133,11 @@ const Login: React.FC<LoginProps> = ({ onLogin, language, setLanguage }) => {
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/60 focus:ring-2 focus:ring-blue-400 focus:border-transparent"
+                className={`w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/60 focus:ring-2 focus:ring-blue-400 focus:border-transparent ${
+                  language === 'ar' || language === 'ur' ? 'text-right' : 'text-left'
+                }`}
                 placeholder={t.username}
+                dir={language === 'ar' || language === 'ur' ? 'rtl' : 'ltr'}
                 required
               />
             </div>
@@ -107,14 +152,17 @@ const Login: React.FC<LoginProps> = ({ onLogin, language, setLanguage }) => {
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-4 py-3 pr-12 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/60 focus:ring-2 focus:ring-blue-400 focus:border-transparent"
+                  className={`w-full px-4 py-3 pr-12 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/60 focus:ring-2 focus:ring-blue-400 focus:border-transparent ${
+                    language === 'ar' || language === 'ur' ? 'text-right' : 'text-left'
+                  }`}
                   placeholder={t.password}
+                  dir={language === 'ar' || language === 'ur' ? 'rtl' : 'ltr'}
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                  className={`absolute inset-y-0 ${language === 'ar' || language === 'ur' ? 'left-0 pl-3' : 'right-0 pr-3'} flex items-center`}
                 >
                   {showPassword ? (
                     <EyeOff className="w-5 h-5 text-white/60" />

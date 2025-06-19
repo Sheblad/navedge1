@@ -15,7 +15,7 @@ import type { Driver } from './data/mockData';
 
 type ActivePage = 'dashboard' | 'drivers' | 'contracts' | 'fines' | 'incidents' | 'reports' | 'settings';
 type FleetMode = 'rental' | 'taxi';
-type Language = 'en' | 'ar';
+type Language = 'en' | 'ar' | 'hi' | 'ur';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -89,7 +89,7 @@ function App() {
   }
 
   return (
-    <div className={`min-h-screen bg-gray-50 flex ${language === 'ar' ? 'rtl' : 'ltr'}`}>
+    <div className={`min-h-screen bg-gray-50 flex ${language === 'ar' || language === 'ur' ? 'rtl' : 'ltr'}`}>
       {/* Sidebar */}
       <Sidebar 
         activePage={activePage} 

@@ -13,7 +13,7 @@ import {
 
 type ActivePage = 'dashboard' | 'drivers' | 'contracts' | 'fines' | 'incidents' | 'reports' | 'settings';
 type FleetMode = 'rental' | 'taxi';
-type Language = 'en' | 'ar';
+type Language = 'en' | 'ar' | 'hi' | 'ur';
 
 interface SidebarProps {
   activePage: ActivePage;
@@ -52,6 +52,26 @@ const Sidebar: React.FC<SidebarProps> = ({
       reports: 'التقارير',
       settings: 'الإعدادات',
       version: 'الإصدار 2.1.0'
+    },
+    hi: {
+      dashboard: 'डैशबोर्ड',
+      drivers: 'ड्राइवर',
+      contracts: fleetMode === 'rental' ? 'अनुबंध' : 'शिफ्ट',
+      fines: 'जुर्माना',
+      incidents: 'घटनाएं',
+      reports: 'रिपोर्ट',
+      settings: 'सेटिंग्स',
+      version: 'संस्करण 2.1.0'
+    },
+    ur: {
+      dashboard: 'ڈیش بورڈ',
+      drivers: 'ڈرائیورز',
+      contracts: fleetMode === 'rental' ? 'کنٹریکٹس' : 'شفٹس',
+      fines: 'جرمانے',
+      incidents: 'واقعات',
+      reports: 'رپورٹس',
+      settings: 'سیٹنگز',
+      version: 'ورژن 2.1.0'
     }
   };
 
@@ -79,9 +99,9 @@ const Sidebar: React.FC<SidebarProps> = ({
       
       {/* Sidebar */}
       <div className={`
-        fixed top-0 left-0 z-50 h-full w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out flex flex-col
+        fixed top-0 ${language === 'ar' || language === 'ur' ? 'right-0' : 'left-0'} z-50 h-full w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out flex flex-col
         lg:translate-x-0 lg:static lg:z-auto
-        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+        ${sidebarOpen ? 'translate-x-0' : (language === 'ar' || language === 'ur' ? 'translate-x-full' : '-translate-x-full')}
       `}>
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200 flex-shrink-0">
@@ -115,10 +135,11 @@ const Sidebar: React.FC<SidebarProps> = ({
                 className={`
                   w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left transition-colors
                   ${isActive 
-                    ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700' 
+                    ? `bg-blue-50 text-blue-700 ${language === 'ar' || language === 'ur' ? 'border-l-2' : 'border-r-2'} border-blue-700` 
                     : 'text-gray-700 hover:bg-gray-100'
                   }
                 `}
+                dir={language === 'ar' || language === 'ur' ? 'rtl' : 'ltr'}
               >
                 <Icon className={`w-5 h-5 ${isActive ? 'text-blue-700' : 'text-gray-500'}`} />
                 <span className="font-medium">{item.label}</span>
