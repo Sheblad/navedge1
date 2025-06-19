@@ -969,7 +969,12 @@ const AddDriverForm: React.FC<AddDriverFormProps> = ({ onAddDriver, onClose, lan
         </div>
 
         {/* Form Content */}
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={(e) => {
+          e.preventDefault();
+          if (step === 'contract') {
+            handleSubmit(e);
+          }
+        }}>
           <div className="p-6">
             {renderStepContent()}
           </div>
