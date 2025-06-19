@@ -48,7 +48,15 @@ function App() {
   };
 
   if (!isAuthenticated) {
-    return <Login onLogin={handleLogin} />;
+    return (
+      <ErrorBoundary>
+        <Login 
+          onLogin={handleLogin} 
+          language={language}
+          setLanguage={setLanguage}
+        />
+      </ErrorBoundary>
+    );
   }
 
   const renderContent = () => {
