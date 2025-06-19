@@ -11,8 +11,11 @@ import Settings from './components/Settings';
 import Reports from './components/Reports';
 import Login from './components/Login';
 import ErrorBoundary from './components/ErrorBoundary';
+import DataMigration from './components/DataMigration';
 import { mockDriversData } from './data/mockData';
 import type { Driver } from './data/mockData';
+import { useDrivers } from './hooks/useDatabase';
+import { supabase } from './services/database';
 
 type ActivePage = 'dashboard' | 'drivers' | 'contracts' | 'fines' | 'incidents' | 'reports' | 'settings';
 type FleetMode = 'rental' | 'taxi';
@@ -22,7 +25,8 @@ type Language = 'en' | 'ar' | 'hi' | 'ur';
 const STORAGE_KEYS = {
   DRIVERS: 'navedge_drivers',
   FLEET_MODE: 'navedge_fleet_mode',
-  LANGUAGE: 'navedge_language'
+  LANGUAGE: 'navedge_language',
+  MIGRATION_COMPLETED: 'navedge_migration_completed'
 };
 
 function App() {
@@ -32,9 +36,30 @@ function App() {
   const [language, setLanguage] = useState<Language>('en');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showNavEdgeAssistant, setShowNavEdgeAssistant] = useState(false);
+  const [showMigration, setShowMigration] = useState(false);
+  const [isSupabaseConfigured, setIsSupabaseConfigured] = useState(false);
   
-  // Shared drivers state with persistent storage
-  const [drivers, setDrivers] = useState<Driver[]>([]);
+  // Use the database hook for drivers
+  const { 
+    drivers, 
+    loading: driversLoading, 
+    addDriver, 
+    updateDriver, 
+    deleteDriver 
+  } = useDrivers();
+
+  // Check if Supabase is configured
+  useEffect(() => {
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+    
+    if (supabaseUrl && supabaseKey) {
+      setIsSupabaseConfigured(true);
+    } else {
+      console.warn('Supabase not configured. Using localStorage fallback.');
+      setIsSupabaseConfigured(false);
+    }
+  }, []);
 
   // Load persisted data on mount
   useEffect(() => {
@@ -42,25 +67,6 @@ function App() {
     const token = localStorage.getItem('navedge_token');
     if (token) {
       setIsAuthenticated(true);
-    }
-
-    // Load drivers from localStorage, fallback to mock data if none exist
-    const savedDrivers = localStorage.getItem(STORAGE_KEYS.DRIVERS);
-    if (savedDrivers) {
-      try {
-        const parsedDrivers = JSON.parse(savedDrivers);
-        setDrivers(parsedDrivers);
-        console.log('Loaded drivers from storage:', parsedDrivers.length, 'drivers');
-      } catch (error) {
-        console.error('Error parsing saved drivers:', error);
-        setDrivers(mockDriversData);
-        localStorage.setItem(STORAGE_KEYS.DRIVERS, JSON.stringify(mockDriversData));
-      }
-    } else {
-      // First time - save mock data to localStorage
-      setDrivers(mockDriversData);
-      localStorage.setItem(STORAGE_KEYS.DRIVERS, JSON.stringify(mockDriversData));
-      console.log('Initialized drivers storage with mock data');
     }
 
     // Load fleet mode
@@ -74,15 +80,13 @@ function App() {
     if (savedLanguage && ['en', 'ar', 'hi', 'ur'].includes(savedLanguage)) {
       setLanguage(savedLanguage as Language);
     }
-  }, []);
 
-  // Save drivers to localStorage whenever drivers state changes
-  useEffect(() => {
-    if (drivers.length > 0) {
-      localStorage.setItem(STORAGE_KEYS.DRIVERS, JSON.stringify(drivers));
-      console.log('Saved drivers to storage:', drivers.length, 'drivers');
+    // Check if migration is needed
+    const migrationCompleted = localStorage.getItem(STORAGE_KEYS.MIGRATION_COMPLETED);
+    if (isSupabaseConfigured && !migrationCompleted && isAuthenticated) {
+      setShowMigration(true);
     }
-  }, [drivers]);
+  }, [isAuthenticated, isSupabaseConfigured]);
 
   // Save fleet mode to localStorage whenever it changes
   useEffect(() => {
@@ -98,10 +102,21 @@ function App() {
   const handleLogin = (token: string) => {
     localStorage.setItem('navedge_token', token);
     setIsAuthenticated(true);
+    
+    // Check if migration is needed after login
+    const migrationCompleted = localStorage.getItem(STORAGE_KEYS.MIGRATION_COMPLETED);
+    if (isSupabaseConfigured && !migrationCompleted) {
+      setShowMigration(true);
+    }
   };
 
   // Handle logout
   const handleLogout = () => {
+    // Sign out from Supabase if configured
+    if (isSupabaseConfigured) {
+      supabase.auth.signOut();
+    }
+    
     localStorage.removeItem('navedge_token');
     setIsAuthenticated(false);
   };
@@ -111,33 +126,10 @@ function App() {
     setFleetMode(mode);
   };
 
-  // Handle adding new driver with persistent storage
-  const handleAddDriver = (newDriver: Driver) => {
-    setDrivers(prevDrivers => {
-      const updatedDrivers = [...prevDrivers, newDriver];
-      console.log('Added new driver:', newDriver.name, '- Total drivers:', updatedDrivers.length);
-      return updatedDrivers;
-    });
-  };
-
-  // Handle updating existing driver
-  const handleUpdateDriver = (updatedDriver: Driver) => {
-    setDrivers(prevDrivers => {
-      const updatedDrivers = prevDrivers.map(driver => 
-        driver.id === updatedDriver.id ? updatedDriver : driver
-      );
-      console.log('Updated driver:', updatedDriver.name);
-      return updatedDrivers;
-    });
-  };
-
-  // Handle removing driver
-  const handleRemoveDriver = (driverId: number) => {
-    setDrivers(prevDrivers => {
-      const updatedDrivers = prevDrivers.filter(driver => driver.id !== driverId);
-      console.log('Removed driver ID:', driverId, '- Remaining drivers:', updatedDrivers.length);
-      return updatedDrivers;
-    });
+  // Handle migration completion
+  const handleMigrationComplete = () => {
+    localStorage.setItem(STORAGE_KEYS.MIGRATION_COMPLETED, 'true');
+    setShowMigration(false);
   };
 
   const renderActivePage = () => {
@@ -155,9 +147,9 @@ function App() {
               fleetMode={fleetMode} 
               language={language} 
               drivers={drivers} 
-              onAddDriver={handleAddDriver}
-              onUpdateDriver={handleUpdateDriver}
-              onRemoveDriver={handleRemoveDriver}
+              onAddDriver={addDriver}
+              onUpdateDriver={updateDriver}
+              onRemoveDriver={deleteDriver}
             />
           </ErrorBoundary>
         );
@@ -217,6 +209,14 @@ function App() {
     );
   }
 
+  if (showMigration) {
+    return (
+      <ErrorBoundary>
+        <DataMigration onMigrationComplete={handleMigrationComplete} />
+      </ErrorBoundary>
+    );
+  }
+
   return (
     <div className={`min-h-screen bg-gray-50 flex ${language === 'ar' || language === 'ur' ? 'rtl' : 'ltr'}`}>
       {/* Sidebar */}
@@ -242,7 +242,16 @@ function App() {
         />
         
         <main className="flex-1 p-4 lg:p-6">
-          {renderActivePage()}
+          {driversLoading ? (
+            <div className="flex items-center justify-center h-full">
+              <div className="flex flex-col items-center">
+                <div className="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
+                <p className="mt-4 text-gray-600">Loading fleet data...</p>
+              </div>
+            </div>
+          ) : (
+            renderActivePage()
+          )}
         </main>
       </div>
 

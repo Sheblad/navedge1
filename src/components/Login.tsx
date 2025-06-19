@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Navigation, Eye, EyeOff, Globe } from 'lucide-react';
+import { supabase } from '../services/database';
 
 type Language = 'en' | 'ar' | 'hi' | 'ur';
 
@@ -55,7 +56,7 @@ const Login: React.FC<LoginProps> = ({ onLogin, language, setLanguage }) => {
     }
   };
 
-  const t = texts[language];
+  const t = texts[language] || texts.en;
 
   const languages = [
     { code: 'en', name: 'English', flag: '🇺🇸' },
@@ -69,16 +70,46 @@ const Login: React.FC<LoginProps> = ({ onLogin, language, setLanguage }) => {
     setIsLoading(true);
     setError('');
 
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      // Check if Supabase is configured
+      if (supabase && supabaseUrl) {
+        // Try to sign in with Supabase
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email: username,
+          password: password
+        });
+
+        if (error) {
+          console.error('Supabase auth error:', error);
+          throw error;
+        }
+
+        if (data?.session) {
+          onLogin(data.session.access_token);
+          return;
+        }
+      }
+
+      // Fallback to demo login if Supabase fails or isn't configured
       if (username === 'admin' && password === 'password123') {
         const token = 'demo_token_' + Date.now();
         onLogin(token);
       } else {
         setError(t.invalidCredentials);
       }
+    } catch (err) {
+      console.error('Login error:', err);
+      
+      // Fallback to demo login for development
+      if (username === 'admin' && password === 'password123') {
+        const token = 'demo_token_' + Date.now();
+        onLogin(token);
+      } else {
+        setError(t.invalidCredentials);
+      }
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
   return (
