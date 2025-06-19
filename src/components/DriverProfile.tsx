@@ -1045,4 +1045,3 @@ const DriverProfile: React.FC<DriverProfileProps> = ({ driverId, fleetMode, lang
 };
 
 export default DriverProfile;
-```
