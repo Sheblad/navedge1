@@ -20,6 +20,7 @@ import { useNotifications } from './hooks/useNotifications';
 import { useEarningsTracking } from './hooks/useEarningsTracking';
 import { usePerformanceTracking } from './hooks/usePerformanceTracking';
 import { DatabaseService } from './services/database';
+import { ThemeProvider } from './contexts/ThemeContext';
 import type { Driver } from './data/mockData';
 
 type ActivePage = 'dashboard' | 'drivers' | 'contracts' | 'fines' | 'incidents' | 'reports' | 'settings';
@@ -358,64 +359,66 @@ function App() {
   }
 
   return (
-    <div className={`min-h-screen bg-gray-50 flex ${language === 'ar' || language === 'ur' ? 'rtl' : 'ltr'}`}>
-      {/* Sidebar */}
-      <Sidebar 
-        activePage={activePage} 
-        setActivePage={setActivePage}
-        sidebarOpen={sidebarOpen}
-        setSidebarOpen={setSidebarOpen}
-        language={language}
-        fleetMode={fleetMode}
-      />
-      
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col lg:ml-64">
-        <Header 
-          fleetMode={fleetMode}
-          setFleetMode={setFleetMode}
-          language={language}
-          setLanguage={setLanguage}
+    <ThemeProvider>
+      <div className={`min-h-screen bg-gray-50 dark:bg-gray-900 flex ${language === 'ar' || language === 'ur' ? 'rtl' : 'ltr'}`}>
+        {/* Sidebar */}
+        <Sidebar 
+          activePage={activePage} 
+          setActivePage={setActivePage}
+          sidebarOpen={sidebarOpen}
           setSidebarOpen={setSidebarOpen}
-          onLogout={handleLogout}
-          setShowNavEdgeAssistant={setShowNavEdgeAssistant}
+          language={language}
+          fleetMode={fleetMode}
         />
         
-        <main className="flex-1 p-4 lg:p-6">
-          {/* System Alerts */}
-          {alerts.length > 0 && (
-            <div className="mb-6">
-              <SystemAlerts 
-                alerts={alerts} 
-                onDismiss={dismissAlert} 
-                language={language} 
-              />
-            </div>
-          )}
+        {/* Main Content */}
+        <div className="flex-1 flex flex-col lg:ml-64">
+          <Header 
+            fleetMode={fleetMode}
+            setFleetMode={setFleetMode}
+            language={language}
+            setLanguage={setLanguage}
+            setSidebarOpen={setSidebarOpen}
+            onLogout={handleLogout}
+            setShowNavEdgeAssistant={setShowNavEdgeAssistant}
+          />
           
-          {renderActivePage()}
-        </main>
+          <main className="flex-1 p-4 lg:p-6">
+            {/* System Alerts */}
+            {alerts.length > 0 && (
+              <div className="mb-6">
+                <SystemAlerts 
+                  alerts={alerts} 
+                  onDismiss={dismissAlert} 
+                  language={language} 
+                />
+              </div>
+            )}
+            
+            {renderActivePage()}
+          </main>
+        </div>
+
+        {/* NavEdge Assistant */}
+        {showNavEdgeAssistant && (
+          <NavEdgeAssistant 
+            onClose={() => setShowNavEdgeAssistant(false)}
+            fleetMode={fleetMode}
+            language={language}
+            onFleetModeChange={handleFleetModeChange}
+          />
+        )}
+
+        {/* Backup Manager */}
+        {showBackupManager && (
+          <BackupManager 
+            drivers={drivers}
+            onRestoreData={handleRestoreData}
+            onClose={() => setShowBackupManager(false)}
+          />
+        )}
       </div>
-
-      {/* NavEdge Assistant */}
-      {showNavEdgeAssistant && (
-        <NavEdgeAssistant 
-          onClose={() => setShowNavEdgeAssistant(false)}
-          fleetMode={fleetMode}
-          language={language}
-          onFleetModeChange={handleFleetModeChange}
-        />
-      )}
-
-      {/* Backup Manager */}
-      {showBackupManager && (
-        <BackupManager 
-          drivers={drivers}
-          onRestoreData={handleRestoreData}
-          onClose={() => setShowBackupManager(false)}
-        />
-      )}
-    </div>
+    </ThemeProvider>
   );
 }
 

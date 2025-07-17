@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Navigation, Eye, EyeOff, Globe } from 'lucide-react';
+import { useTheme } from '../contexts/ThemeContext';
 
 type Language = 'en' | 'ar' | 'hi' | 'ur';
 
@@ -15,6 +16,7 @@ const Login: React.FC<LoginProps> = ({ onLogin, language, setLanguage }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const { theme } = useTheme();
 
   const texts = {
     en: {
@@ -88,29 +90,29 @@ const Login: React.FC<LoginProps> = ({ onLogin, language, setLanguage }) => {
   };
 
   return (
-    <div className={`min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-900 flex items-center justify-center p-4 ${language === 'ar' || language === 'ur' ? 'rtl' : 'ltr'}`}>
+    <div className={`min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-900 dark:from-gray-900 dark:via-gray-800 dark:to-black flex items-center justify-center p-4 ${language === 'ar' || language === 'ur' ? 'rtl' : 'ltr'}`}>
       {/* Language Toggle */}
       <div className="absolute top-4 right-4">
         <div className="relative group">
-          <button className="flex items-center space-x-2 px-3 py-2 bg-white/10 backdrop-blur-sm rounded-lg text-white hover:bg-white/20 transition-colors">
+          <button className="flex items-center space-x-2 px-3 py-2 bg-white/10 dark:bg-black/20 backdrop-blur-sm rounded-lg text-white hover:bg-white/20 dark:hover:bg-black/30 transition-colors">
             <Globe className="w-4 h-4" />
             <span>{languages.find(l => l.code === language)?.flag}</span>
             <span className="hidden sm:block">{languages.find(l => l.code === language)?.name}</span>
           </button>
           
           {/* Language Dropdown */}
-          <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+          <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
             {languages.map((lang) => (
               <button
                 key={lang.code}
                 onClick={() => setLanguage(lang.code as Language)}
-                className={`w-full flex items-center space-x-3 px-4 py-3 text-left hover:bg-gray-50 first:rounded-t-lg last:rounded-b-lg ${
-                  language === lang.code ? 'bg-blue-50 text-blue-700' : 'text-gray-700'
+                className={`w-full flex items-center space-x-3 px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700 first:rounded-t-lg last:rounded-b-lg ${
+                  language === lang.code ? 'bg-blue-50 dark:bg-blue-900 text-blue-700 dark:text-blue-300' : 'text-gray-700 dark:text-gray-300'
                 }`}
               >
                 <span className="text-lg">{lang.flag}</span>
                 <span className="font-medium">{lang.name}</span>
-                {language === lang.code && <span className="ml-auto text-blue-600">✓</span>}
+                {language === lang.code && <span className="ml-auto text-blue-600 dark:text-blue-400">✓</span>}
               </button>
             ))}
           </div>
@@ -128,7 +130,7 @@ const Login: React.FC<LoginProps> = ({ onLogin, language, setLanguage }) => {
         </div>
 
         {/* Login Form */}
-        <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 border border-white/20">
+        <div className="bg-white/10 dark:bg-black/20 backdrop-blur-sm rounded-2xl p-8 border border-white/20 dark:border-white/10">
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Username */}
             <div>
@@ -139,7 +141,7 @@ const Login: React.FC<LoginProps> = ({ onLogin, language, setLanguage }) => {
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className={`w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/60 focus:ring-2 focus:ring-blue-400 focus:border-transparent ${
+                className={`w-full px-4 py-3 bg-white/10 dark:bg-black/20 border border-white/20 dark:border-white/10 rounded-lg text-white placeholder-white/60 focus:ring-2 focus:ring-blue-400 focus:border-transparent ${
                   language === 'ar' || language === 'ur' ? 'text-right' : 'text-left'
                 }`}
                 placeholder={t.username}
@@ -158,7 +160,7 @@ const Login: React.FC<LoginProps> = ({ onLogin, language, setLanguage }) => {
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className={`w-full px-4 py-3 pr-12 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/60 focus:ring-2 focus:ring-blue-400 focus:border-transparent ${
+                  className={`w-full px-4 py-3 pr-12 bg-white/10 dark:bg-black/20 border border-white/20 dark:border-white/10 rounded-lg text-white placeholder-white/60 focus:ring-2 focus:ring-blue-400 focus:border-transparent ${
                     language === 'ar' || language === 'ur' ? 'text-right' : 'text-left'
                   }`}
                   placeholder={t.password}
@@ -181,8 +183,8 @@ const Login: React.FC<LoginProps> = ({ onLogin, language, setLanguage }) => {
 
             {/* Error Message */}
             {error && (
-              <div className="bg-red-500/20 border border-red-500/30 rounded-lg p-3">
-                <p className="text-red-200 text-sm">{error}</p>
+              <div className="bg-red-500/20 dark:bg-red-500/30 border border-red-500/30 dark:border-red-500/40 rounded-lg p-3">
+                <p className="text-red-200 dark:text-red-300 text-sm">{error}</p>
               </div>
             )}
 
@@ -190,7 +192,7 @@ const Login: React.FC<LoginProps> = ({ onLogin, language, setLanguage }) => {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-3 px-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-3 px-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 dark:from-blue-700 dark:to-indigo-700 dark:hover:from-blue-800 dark:hover:to-indigo-800 text-white font-semibold rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? (
                 <div className="flex items-center justify-center">
@@ -204,7 +206,7 @@ const Login: React.FC<LoginProps> = ({ onLogin, language, setLanguage }) => {
           </form>
 
           {/* Demo Credentials */}
-          <div className="mt-6 pt-6 border-t border-white/20">
+          <div className="mt-6 pt-6 border-t border-white/20 dark:border-white/10">
             <p className="text-center text-sm text-blue-200">
               {t.demoCredentials}
             </p>
