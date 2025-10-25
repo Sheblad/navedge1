@@ -2,39 +2,77 @@ name: Deploy Frontend to VPS
 
 on:
   push:
-    branches:
-      - main  # or the branch Bolt pushes to
+    branches: [ main ]   # change if you deploy from a different branch
 
 jobs:
-  deploy:
+  build-and-deploy:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout code
+      - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Build project
-        run: |
-          npm install
-          npm run build
+      - name: Show repo contents (debug)
+        run: ls -la
 
-      - name: Deploy to VPS
+      - name: Setup Node 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci
+          else
+            npm install
+          fi
+
+      - name: Build
+        run: |
+          # Ensure a build script exists
+          if npm run | grep -q " build"; then
+            npm run build
+          else
+            echo "No build script in package.json"; exit 1
+          fi
+
+          # Detect the output folder
+          if [ -d dist ]; then
+            echo "OUTDIR=dist" >> $GITHUB_ENV
+          elif [ -d build ]; then
+            echo "OUTDIR=build" >> $GITHUB_ENV
+          else
+            echo "No dist/ or build/ directory found after build"; exit 1
+          fi
+
+      - name: Upload build to VPS
         uses: appleboy/scp-action@v0.1.7
         with:
           host: 185.241.151.219
           username: root
           password: Upwork123
-          source: dist/*  # change to build/* if CRA
+          source: ${{ env.OUTDIR }}/*
           target: /opt/frontend-new/
+          overwrite: true
 
-      - name: Replace live files
+      - name: Publish into nginx container
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: 185.241.151.219
           username: root
           password: Upwork123
           script: |
-            mkdir -p /opt/frontend-backups/$(date +%F-%H%M)
-            docker cp navedge-frontend:/usr/share/nginx/html/. /opt/frontend-backups/$(date +%F-%H%M)/ || true
-            docker exec -it navedge-frontend sh -c "rm -rf /usr/share/nginx/html/*"
-            docker cp /opt/frontend-new/. navedge-frontend:/usr/share/nginx/html/
-            docker exec -it navedge-frontend sh -c "nginx -t && nginx -s reload || true"
+            set -e
+            CONTAINER=navedge-frontend
+            DEST=/usr/share/nginx/html
+            TS=$(date +%F-%H%M)
+
+            mkdir -p /opt/frontend-backups/$TS
+            docker cp $CONTAINER:$DEST/. /opt/frontend-backups/$TS/ || true
+
+            docker exec -it $CONTAINER sh -c "rm -rf $DEST/*"
+            docker cp /opt/frontend-new/. $CONTAINER:$DEST/
+            docker exec -it $CONTAINER sh -c "nginx -t && nginx -s reload || true"
+
