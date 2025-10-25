@@ -1,0 +1,40 @@
+name: Deploy Frontend to VPS
+
+on:
+  push:
+    branches:
+      - main  # or the branch Bolt pushes to
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build project
+        run: |
+          npm install
+          npm run build
+
+      - name: Deploy to VPS
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: 185.241.151.219
+          username: root
+          password: Upwork123
+          source: dist/*  # change to build/* if CRA
+          target: /opt/frontend-new/
+
+      - name: Replace live files
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: 185.241.151.219
+          username: root
+          password: Upwork123
+          script: |
+            mkdir -p /opt/frontend-backups/$(date +%F-%H%M)
+            docker cp navedge-frontend:/usr/share/nginx/html/. /opt/frontend-backups/$(date +%F-%H%M)/ || true
+            docker exec -it navedge-frontend sh -c "rm -rf /usr/share/nginx/html/*"
+            docker cp /opt/frontend-new/. navedge-frontend:/usr/share/nginx/html/
+            docker exec -it navedge-frontend sh -c "nginx -t && nginx -s reload || true"
