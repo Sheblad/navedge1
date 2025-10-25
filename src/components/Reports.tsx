@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
-import { Download, Calendar, BarChart3, FileText, TrendingUp } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Download, Calendar, BarChart3, FileText, TrendingUp, Loader } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
 import { mockDriversData, mockFinesData } from '../data/mockData';
+import { FastAPIService } from '../services/fastapi';
 
 type FleetMode = 'rental' | 'taxi';
 type Language = 'en' | 'ar' | 'hi' | 'ur';
@@ -13,6 +14,44 @@ interface ReportsProps {
 
 const Reports: React.FC<ReportsProps> = ({ fleetMode, language }) => {
   const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'month' | 'year'>('month');
+  const [dashboardData, setDashboardData] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+  const [useBackendAPI] = useState(true);
+
+  useEffect(() => {
+    if (useBackendAPI) {
+      loadDashboardData();
+    }
+  }, [useBackendAPI]);
+
+  const loadDashboardData = async () => {
+    setLoading(true);
+    try {
+      const data = await FastAPIService.getDashboardReport();
+      setDashboardData(data);
+    } catch (error) {
+      console.error('Error loading dashboard data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleExportPDF = async () => {
+    try {
+      const blob = await FastAPIService.exportPDFReport();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `navedge-report-${new Date().toISOString().split('T')[0]}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error exporting PDF:', error);
+      alert('Failed to export PDF report');
+    }
+  };
 
   const texts = {
     en: {
@@ -337,11 +376,11 @@ const Reports: React.FC<ReportsProps> = ({ fleetMode, language }) => {
             <span>Earnings Report Excel</span>
           </button>
           <button
-            onClick={exportData}
-            className="flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            onClick={handleExportPDF}
+            className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
             <Download className="w-4 h-4" />
-            <span>Fines Summary PDF</span>
+            <span>{t.generatePDF}</span>
           </button>
         </div>
       </div>

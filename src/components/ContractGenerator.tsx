@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { Upload, FileText, Download, Eye, Camera, Loader2 } from 'lucide-react';
 import Tesseract from 'tesseract.js';
 import jsPDF from 'jspdf';
+import { FastAPIService } from '../services/fastapi';
 
 type Language = 'en' | 'ar' | 'hi' | 'ur';
 
@@ -28,7 +29,13 @@ interface ContractData {
   vehicleId: string;
 }
 
-const ContractGenerator: React.FC<ContractGeneratorProps> = ({ language, onClose }) => {
+interface ContractGeneratorProps {
+  language: Language;
+  onClose: () => void;
+  useBackendAPI?: boolean;
+}
+
+const ContractGenerator: React.FC<ContractGeneratorProps> = ({ language, onClose, useBackendAPI = true }) => {
   const [step, setStep] = useState<'upload' | 'extract' | 'contract' | 'preview'>('upload');
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [extractedData, setExtractedData] = useState<ExtractedData | null>(null);
@@ -178,6 +185,29 @@ const ContractGenerator: React.FC<ContractGeneratorProps> = ({ language, onClose
     setStep('extract');
 
     try {
+      if (useBackendAPI && fileInputRef.current?.files?.[0]) {
+        const file = fileInputRef.current.files[0];
+        const response = await FastAPIService.uploadIDDocument(file);
+
+        const extracted: ExtractedData = {
+          fullName: response.extracted_data.name || 'Not detected',
+          idNumber: response.extracted_data.id_number || 'Not detected',
+          expiryDate: response.extracted_data.expiry_date || 'Not detected',
+          nationality: response.extracted_data.nationality || 'UAE'
+        };
+
+        setExtractedData(extracted);
+        setContractData(prev => ({
+          ...prev,
+          driverName: extracted.fullName,
+          idNumber: extracted.idNumber
+        }));
+
+        setStep('contract');
+        setIsProcessing(false);
+        return;
+      }
+
       const result = await Tesseract.recognize(selectedImage, 'eng+ara', {
         logger: m => console.log(m)
       });
@@ -225,7 +255,32 @@ const ContractGenerator: React.FC<ContractGeneratorProps> = ({ language, onClose
     }
   };
 
-  const generatePDF = () => {
+  const generatePDF = async () => {
+    if (useBackendAPI) {
+      try {
+        const endDate = new Date(contractData.startDate);
+        endDate.setMonth(endDate.getMonth() + parseInt(contractData.duration));
+
+        const response = await FastAPIService.createContract({
+          driver_id: contractData.idNumber,
+          vehicle_id: contractData.vehicleId,
+          start_date: contractData.startDate,
+          end_date: endDate.toISOString().split('T')[0],
+          rental_amount: parseFloat(contractData.monthlyRent),
+          deposit_amount: parseFloat(contractData.depositAmount)
+        });
+
+        const pdfBlob = await FastAPIService.getContractPDF(response.contract_id);
+        const pdfUrl = URL.createObjectURL(pdfBlob);
+        setGeneratedPDF(pdfUrl);
+        setStep('preview');
+        return;
+      } catch (error) {
+        console.error('Error generating contract:', error);
+      }
+    }
+
+    // Fallback to local PDF generation
     const doc = new jsPDF();
     
     // Header

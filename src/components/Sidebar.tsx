@@ -1,17 +1,19 @@
 import React from 'react';
-import { 
-  LayoutDashboard, 
-  Users, 
-  FileText, 
+import {
+  LayoutDashboard,
+  Users,
+  FileText,
   AlertTriangle,
   BarChart3,
-  Settings, 
+  Settings,
   Navigation,
   X,
-  ShieldAlert
+  ShieldAlert,
+  ScanText,
+  Camera
 } from 'lucide-react';
 
-type ActivePage = 'dashboard' | 'drivers' | 'contracts' | 'fines' | 'incidents' | 'reports' | 'settings';
+type ActivePage = 'dashboard' | 'drivers' | 'contracts' | 'fines' | 'incidents' | 'reports' | 'settings' | 'documents' | 'damage';
 type FleetMode = 'rental' | 'taxi';
 type Language = 'en' | 'ar' | 'hi' | 'ur';
 
@@ -40,6 +42,8 @@ const Sidebar: React.FC<SidebarProps> = ({
       fines: 'Fines',
       incidents: 'Incidents',
       reports: 'Reports',
+      documents: 'Documents',
+      damage: 'Damage',
       settings: 'Settings',
       version: 'Version 2.1.0'
     },
@@ -49,6 +53,8 @@ const Sidebar: React.FC<SidebarProps> = ({
       contracts: fleetMode === 'rental' ? 'العقود' : 'المناوبات',
       fines: 'المخالفات',
       incidents: 'الحوادث',
+      documents: 'المستندات',
+      damage: 'الأضرار',
       reports: 'التقارير',
       settings: 'الإعدادات',
       version: 'الإصدار 2.1.0'
@@ -59,6 +65,8 @@ const Sidebar: React.FC<SidebarProps> = ({
       contracts: fleetMode === 'rental' ? 'अनुबंध' : 'शिफ्ट',
       fines: 'जुर्माना',
       incidents: 'घटनाएं',
+      documents: 'दस्तावेज़',
+      damage: 'क्षति',
       reports: 'रिपोर्ट',
       settings: 'सेटिंग्स',
       version: 'संस्करण 2.1.0'
@@ -69,6 +77,8 @@ const Sidebar: React.FC<SidebarProps> = ({
       contracts: fleetMode === 'rental' ? 'کنٹریکٹس' : 'شفٹس',
       fines: 'جرمانے',
       incidents: 'واقعات',
+      documents: 'دستاویزات',
+      damage: 'نقصان',
       reports: 'رپورٹس',
       settings: 'سیٹنگز',
       version: 'ورژن 2.1.0'
@@ -83,6 +93,8 @@ const Sidebar: React.FC<SidebarProps> = ({
     { id: 'contracts' as ActivePage, label: t.contracts, icon: FileText },
     { id: 'fines' as ActivePage, label: t.fines, icon: AlertTriangle },
     { id: 'incidents' as ActivePage, label: t.incidents, icon: ShieldAlert },
+    { id: 'documents' as ActivePage, label: t.documents, icon: ScanText },
+    { id: 'damage' as ActivePage, label: t.damage, icon: Camera },
     { id: 'reports' as ActivePage, label: t.reports, icon: BarChart3 },
     { id: 'settings' as ActivePage, label: t.settings, icon: Settings },
   ];
