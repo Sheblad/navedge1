@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Upload, FileText, CheckCircle, XCircle, Loader, Camera, CreditCard, UserCircle } from 'lucide-react';
 import { FastAPIService } from '../services/fastapi';
+import Tesseract from 'tesseract.js';
 
 type Language = 'en' | 'ar' | 'hi' | 'ur';
 type DocumentType = 'emirates_id' | 'driver_license';
@@ -126,6 +127,46 @@ const DocumentOCR: React.FC<DocumentOCRProps> = ({ language, onDataExtracted }) 
 
   const t = texts[language];
 
+  const processLocalOCR = async (imageDataUrl: string): Promise<OCRResult> => {
+    try {
+      const result = await Tesseract.recognize(imageDataUrl, 'eng+ara', {
+        logger: m => console.log(m)
+      });
+
+      const text = result.data.text;
+      console.log('OCR Text:', text);
+
+      const nameMatch = text.match(/Name[:\s]+([A-Za-z\s]+)/i) || text.match(/الاسم[:\s]+([\u0600-\u06FF\s]+)/i);
+      const idMatch = text.match(/(\d{3}-\d{4}-\d{7}-\d{1})/);
+      const licenseMatch = text.match(/License[:\s]*(\d+)/i) || text.match(/رخصة[:\s]*(\d+)/i);
+      const expiryMatch = text.match(/(\d{2}[\/\-]\d{2}[\/\-]\d{4})/);
+      const nationalityMatch = text.match(/Nationality[:\s]+([A-Za-z]+)/i) || text.match(/الجنسية[:\s]+([\u0600-\u06FF\s]+)/i);
+
+      const extractedData: any = {};
+
+      if (activeTab === 'emirates_id') {
+        extractedData.name = nameMatch ? nameMatch[1].trim() : 'Not detected';
+        extractedData.id_number = idMatch ? idMatch[1] : 'Not detected';
+        extractedData.nationality = nationalityMatch ? nationalityMatch[1].trim() : 'UAE';
+        extractedData.expiry_date = expiryMatch ? expiryMatch[1] : 'Not detected';
+      } else {
+        extractedData.name = nameMatch ? nameMatch[1].trim() : 'Not detected';
+        extractedData.license_number = licenseMatch ? licenseMatch[1] : 'Not detected';
+        extractedData.expiry_date = expiryMatch ? expiryMatch[1] : 'Not detected';
+      }
+
+      return {
+        success: true,
+        documentType: activeTab,
+        extractedData,
+        confidence: result.data.confidence / 100,
+      };
+    } catch (error) {
+      console.error('Local OCR error:', error);
+      throw error;
+    }
+  };
+
   const handleFileUpload = async (file: File) => {
     if (!file) return;
 
@@ -139,24 +180,45 @@ const DocumentOCR: React.FC<DocumentOCRProps> = ({ language, onDataExtracted }) 
     reader.readAsDataURL(file);
 
     try {
-      let response;
-      if (activeTab === 'emirates_id') {
-        response = await FastAPIService.uploadIDDocument(file);
-      } else {
-        response = await FastAPIService.uploadLicenseDocument(file);
+      // Try FastAPI backend first
+      try {
+        let response;
+        if (activeTab === 'emirates_id') {
+          response = await FastAPIService.uploadIDDocument(file);
+        } else {
+          response = await FastAPIService.uploadLicenseDocument(file);
+        }
+
+        const ocrResult: OCRResult = {
+          success: true,
+          documentType: activeTab,
+          extractedData: response.extracted_data,
+          confidence: response.confidence,
+        };
+
+        setResult(ocrResult);
+
+        if (onDataExtracted) {
+          onDataExtracted(response.extracted_data, activeTab);
+        }
+        setUploading(false);
+        return;
+      } catch (apiError) {
+        console.log('FastAPI unavailable, using local OCR:', apiError);
       }
 
-      const ocrResult: OCRResult = {
-        success: true,
-        documentType: activeTab,
-        extractedData: response.extracted_data,
-        confidence: response.confidence,
-      };
+      // Fallback to local OCR processing
+      const imageDataUrl = await new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.readAsDataURL(file);
+      });
 
+      const ocrResult = await processLocalOCR(imageDataUrl);
       setResult(ocrResult);
 
       if (onDataExtracted) {
-        onDataExtracted(response.extracted_data, activeTab);
+        onDataExtracted(ocrResult.extractedData, activeTab);
       }
     } catch (error) {
       console.error('OCR error:', error);

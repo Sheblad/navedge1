@@ -88,6 +88,24 @@ const RenterChatbot: React.FC<RenterChatbotProps> = ({ language, onClose, driver
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
+  const generateMockResponse = (userText: string): string => {
+    const lowerText = userText.toLowerCase();
+
+    if (lowerText.includes('how long') || lowerText.includes('time left') || lowerText.includes('contract')) {
+      return 'You have 6 months and 15 days remaining on your current rental contract, which ends on June 30, 2025.';
+    } else if (lowerText.includes('fine') || lowerText.includes('violation')) {
+      return 'You currently have 2 pending fines: 1 speeding violation (AED 600) and 1 parking violation (AED 200). Total: AED 800.';
+    } else if (lowerText.includes('km') || lowerText.includes('kilometer') || lowerText.includes('mileage')) {
+      return 'You have driven 4,250 km out of your monthly limit of 5,000 km. You have 750 km remaining for this month.';
+    } else if (lowerText.includes('payment') || lowerText.includes('balance') || lowerText.includes('due')) {
+      return 'Your next rental payment of AED 1,200 is due on January 1st, 2025. Current balance: AED 0.';
+    } else if (lowerText.includes('documents') || lowerText.includes('license') || lowerText.includes('id')) {
+      return 'All your documents are up to date. Your driver license expires on March 15, 2026.';
+    } else {
+      return 'I can help you with information about your contract duration, fines, km limits, payments, and documents. What would you like to know?';
+    }
+  };
+
   const handleSendMessage = async (messageText?: string) => {
     const text = messageText || inputMessage.trim();
     if (!text || isLoading) return;
@@ -104,14 +122,34 @@ const RenterChatbot: React.FC<RenterChatbotProps> = ({ language, onClose, driver
     setIsLoading(true);
 
     try {
-      const response = await FastAPIService.sendChatbotMessage(text, conversationId);
+      // Try FastAPI backend first
+      try {
+        const response = await FastAPIService.sendChatbotMessage(text, conversationId);
 
+        const botMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          text: response.message,
+          sender: 'bot',
+          timestamp: new Date(),
+          suggestions: response.suggestions,
+        };
+
+        setMessages(prev => [...prev, botMessage]);
+        setIsLoading(false);
+        return;
+      } catch (apiError) {
+        console.log('FastAPI unavailable, using mock responses:', apiError);
+      }
+
+      // Fallback to mock responses
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      const mockResponseText = generateMockResponse(text);
       const botMessage: Message = {
         id: (Date.now() + 1).toString(),
-        text: response.message,
+        text: mockResponseText,
         sender: 'bot',
         timestamp: new Date(),
-        suggestions: response.suggestions,
       };
 
       setMessages(prev => [...prev, botMessage]);

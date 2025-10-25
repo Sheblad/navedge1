@@ -117,15 +117,34 @@ const WhatsAppSender: React.FC<WhatsAppSenderProps> = ({ language, onClose }) =>
     setResult(null);
 
     try {
-      await FastAPIService.sendWhatsAppNotification(
-        phoneNumber,
-        message,
-        templateName || undefined
-      );
+      // Try FastAPI backend first
+      try {
+        await FastAPIService.sendWhatsAppNotification(
+          phoneNumber,
+          message,
+          templateName || undefined
+        );
+
+        setResult({
+          success: true,
+          message: t.success,
+        });
+
+        setTimeout(() => {
+          onClose();
+        }, 2000);
+        setSending(false);
+        return;
+      } catch (apiError) {
+        console.log('FastAPI unavailable, using mock notification:', apiError);
+      }
+
+      // Fallback to mock notification (demo mode)
+      await new Promise(resolve => setTimeout(resolve, 1500));
 
       setResult({
         success: true,
-        message: t.success,
+        message: `${t.success} (Demo Mode - Message not actually sent)`,
       });
 
       setTimeout(() => {
