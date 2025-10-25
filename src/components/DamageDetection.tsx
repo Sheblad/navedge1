@@ -144,10 +144,11 @@ const DamageDetection: React.FC<DamageDetectionProps> = ({ language, fleetMode, 
     setError(null);
 
     try {
+      // Try to upload to backend (optional)
       await FastAPIService.uploadBeforeDamagePhoto(file);
     } catch (err) {
-      console.error('Error uploading before photo:', err);
-      setError(err instanceof Error ? err.message : 'Upload failed');
+      // Silently fail - we'll use local images for comparison
+      console.log('Backend unavailable, using local image:', err);
     } finally {
       setUploading(false);
     }
@@ -167,10 +168,11 @@ const DamageDetection: React.FC<DamageDetectionProps> = ({ language, fleetMode, 
     setError(null);
 
     try {
+      // Try to upload to backend (optional)
       await FastAPIService.uploadAfterDamagePhoto(file);
     } catch (err) {
-      console.error('Error uploading after photo:', err);
-      setError(err instanceof Error ? err.message : 'Upload failed');
+      // Silently fail - we'll use local images for comparison
+      console.log('Backend unavailable, using local image:', err);
     } finally {
       setUploading(false);
     }
