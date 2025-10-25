@@ -24,6 +24,18 @@ interface ContractResponse {
   created_at: string;
 }
 
+interface Contract {
+  contract_id: string;
+  driver_id: string;
+  vehicle_id: string;
+  start_date: string;
+  end_date: string;
+  rental_amount: number;
+  deposit_amount: number;
+  status: string;
+  created_at: string;
+}
+
 interface DamageDetectionResponse {
   damages_detected: boolean;
   damage_locations: Array<{
@@ -197,6 +209,10 @@ export class FastAPIService {
       method: 'POST',
       body: JSON.stringify(contractData),
     });
+  }
+
+  static async getMyContracts(): Promise<Contract[]> {
+    return this.request<Contract[]>('/api/contracts/my-contracts');
   }
 
   static async getContractPDF(contractId: string): Promise<Blob> {

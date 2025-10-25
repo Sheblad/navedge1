@@ -58,6 +58,8 @@ const Header: React.FC<HeaderProps> = ({
       taxi: 'تاكسي',
       admin: 'المدير',
       navEdgeAssistant: 'مساعد نافيدج',
+      chatbot: 'دردشة المستأجر',
+      whatsapp: 'واتساب',
       backup: 'النسخ الاحتياطي والاستعادة',
       logout: 'تسجيل الخروج'
     },
@@ -68,6 +70,8 @@ const Header: React.FC<HeaderProps> = ({
       taxi: 'टैक्सी',
       admin: 'एडमिन',
       navEdgeAssistant: 'नेवएज असिस्टेंट',
+      chatbot: 'किराएदार चैट',
+      whatsapp: 'व्हाट्सऐप',
       backup: 'बैकअप और रिस्टोर',
       logout: 'लॉग आउट'
     },
@@ -78,6 +82,8 @@ const Header: React.FC<HeaderProps> = ({
       taxi: 'ٹیکسی',
       admin: 'ایڈمن',
       navEdgeAssistant: 'نیو ایج اسسٹنٹ',
+      chatbot: 'کرایہ دار چیٹ',
+      whatsapp: 'واٹس ایپ',
       backup: 'بیک اپ اور بحالی',
       logout: 'لاگ آؤٹ'
     }
