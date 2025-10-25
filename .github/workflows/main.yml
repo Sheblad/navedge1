@@ -72,7 +72,7 @@ jobs:
             mkdir -p /opt/frontend-backups/$TS
             docker cp $CONTAINER:$DEST/. /opt/frontend-backups/$TS/ || true
 
-            docker exec -it $CONTAINER sh -c "rm -rf $DEST/*"
+            docker exec $CONTAINER sh -c "rm -rf $DEST/*"
             docker cp /opt/frontend-new/. $CONTAINER:$DEST/
-            docker exec -it $CONTAINER sh -c "nginx -t && nginx -s reload || true"
+            docker exec $CONTAINER sh -c "nginx -t && nginx -s reload || true"
 
