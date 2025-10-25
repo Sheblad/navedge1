@@ -1,5 +1,5 @@
-import React from 'react';
-import { Menu, User, Car, CarTaxiFront as Taxi, Brain, LogOut, Globe, Database, Sun, Moon } from 'lucide-react';
+import React, { useState } from 'react';
+import { Menu, User, Car, CarTaxiFront as Taxi, Brain, LogOut, Globe, Database, Sun, Moon, MessageCircle, Send } from 'lucide-react';
 import NotificationCenter from './NotificationCenter';
 import { useNotifications } from '../hooks/useNotifications';
 import { useTheme } from '../contexts/ThemeContext';
@@ -15,16 +15,20 @@ interface HeaderProps {
   setSidebarOpen: (open: boolean) => void;
   onLogout: () => void;
   setShowNavEdgeAssistant: (show: boolean) => void;
+  setShowChatbot?: (show: boolean) => void;
+  setShowWhatsApp?: (show: boolean) => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ 
-  fleetMode, 
-  setFleetMode, 
-  language, 
-  setLanguage, 
-  setSidebarOpen, 
+const Header: React.FC<HeaderProps> = ({
+  fleetMode,
+  setFleetMode,
+  language,
+  setLanguage,
+  setSidebarOpen,
   onLogout,
-  setShowNavEdgeAssistant 
+  setShowNavEdgeAssistant,
+  setShowChatbot,
+  setShowWhatsApp
 }) => {
   const { theme, toggleTheme } = useTheme();
   const {
@@ -42,6 +46,8 @@ const Header: React.FC<HeaderProps> = ({
       taxi: 'Taxi',
       admin: 'Admin',
       navEdgeAssistant: 'NavEdge Assistant',
+      chatbot: 'Renter Chat',
+      whatsapp: 'WhatsApp',
       backup: 'Backup & Restore',
       logout: 'Logout'
     },

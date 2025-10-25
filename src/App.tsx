@@ -7,6 +7,8 @@ import Contracts from './components/Contracts';
 import Fines from './components/Fines';
 import Incidents from './components/Incidents';
 import NavEdgeAssistant from './components/AIAssistant';
+import RenterChatbot from './components/RenterChatbot';
+import WhatsAppSender from './components/WhatsAppSender';
 import Settings from './components/Settings';
 import Reports from './components/Reports';
 import Login from './components/Login';
@@ -45,6 +47,8 @@ function App() {
   const [language, setLanguage] = useState<Language>('en');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showNavEdgeAssistant, setShowNavEdgeAssistant] = useState(false);
+  const [showChatbot, setShowChatbot] = useState(false);
+  const [showWhatsApp, setShowWhatsApp] = useState(false);
   const [showBackupManager, setShowBackupManager] = useState(false);
   const [showDataMigration, setShowDataMigration] = useState(false);
   const [isInitializing, setIsInitializing] = useState(true);
@@ -373,7 +377,7 @@ function App() {
         
         {/* Main Content */}
         <div className="flex-1 flex flex-col lg:ml-64">
-          <Header 
+          <Header
             fleetMode={fleetMode}
             setFleetMode={setFleetMode}
             language={language}
@@ -381,6 +385,8 @@ function App() {
             setSidebarOpen={setSidebarOpen}
             onLogout={handleLogout}
             setShowNavEdgeAssistant={setShowNavEdgeAssistant}
+            setShowChatbot={setShowChatbot}
+            setShowWhatsApp={setShowWhatsApp}
           />
           
           <main className="flex-1 p-4 lg:p-6">
@@ -401,7 +407,7 @@ function App() {
 
         {/* NavEdge Assistant */}
         {showNavEdgeAssistant && (
-          <NavEdgeAssistant 
+          <NavEdgeAssistant
             onClose={() => setShowNavEdgeAssistant(false)}
             fleetMode={fleetMode}
             language={language}
@@ -409,9 +415,25 @@ function App() {
           />
         )}
 
+        {/* Renter Chatbot */}
+        {showChatbot && (
+          <RenterChatbot
+            language={language}
+            onClose={() => setShowChatbot(false)}
+          />
+        )}
+
+        {/* WhatsApp Sender */}
+        {showWhatsApp && (
+          <WhatsAppSender
+            language={language}
+            onClose={() => setShowWhatsApp(false)}
+          />
+        )}
+
         {/* Backup Manager */}
         {showBackupManager && (
-          <BackupManager 
+          <BackupManager
             drivers={drivers}
             onRestoreData={handleRestoreData}
             onClose={() => setShowBackupManager(false)}
