@@ -14,7 +14,7 @@ from datetime import datetime
 from typing import Optional, List
 
 # Import routers
-from api.routes import auth, documents, contracts, damage, damage_ai, frontend_hooks, fines, chatbot, notifications, reports
+from api.routes import auth, documents, contracts, damage, damage_ai, frontend_hooks, test_damage, fines, chatbot, notifications, reports
 from core.database import engine, Base
 from core.config import settings
 from core.middleware import AuthMiddleware
@@ -47,6 +47,7 @@ app.include_router(contracts.router, prefix="/api/contracts", tags=["Contracts"]
 app.include_router(damage.router, prefix="/api/damage", tags=["Damage Detection"])
 app.include_router(damage_ai.router, prefix="/ai/damage", tags=["Damage AI v1.1"])
 app.include_router(frontend_hooks.router, prefix="/frontend", tags=["Frontend Hooks"])
+app.include_router(test_damage.router, prefix="/test", tags=["Test Endpoints"])
 app.include_router(fines.router, prefix="/api/fines", tags=["Fines Management"])
 app.include_router(chatbot.router, prefix="/api/chatbot", tags=["Renter Chatbot"])
 app.include_router(notifications.router, prefix="/api/notifications", tags=["Notifications"])

@@ -12,6 +12,7 @@ from datetime import datetime
 from core.middleware import SupabaseAuthMiddleware
 from core.database import supabase
 from services.s3_storage import s3_service
+from services.feedback_system import feedback_system
 
 router = APIRouter()
 
@@ -388,6 +389,57 @@ async def get_training_status(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to get training status: {str(e)}"
+        )
+
+@router.post("/submit-feedback")
+async def submit_detection_feedback(
+    detection_id: str = Form(...),
+    is_correct: bool = Form(...),
+    actual_damage: bool = Form(...),
+    user_confidence: float = Form(1.0),
+    user_id: str = Depends(SupabaseAuthMiddleware)
+):
+    """
+    Submit feedback about a damage detection result
+    """
+    try:
+        result = feedback_system.submit_feedback(
+            detection_id=detection_id,
+            is_correct=is_correct,
+            actual_damage=actual_damage,
+            user_confidence=user_confidence
+        )
+        
+        return result
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to submit feedback: {str(e)}"
+        )
+
+@router.get("/performance-metrics")
+async def get_performance_metrics(
+    days: int = Query(30, ge=1, le=365),
+    user_id: str = Depends(SupabaseAuthMiddleware)
+):
+    """
+    Get AI performance metrics and improvement suggestions
+    """
+    try:
+        metrics = feedback_system.get_performance_metrics(days=days)
+        suggestions = feedback_system.get_improvement_suggestions()
+        
+        return {
+            'metrics': metrics,
+            'suggestions': suggestions,
+            'period_days': days
+        }
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get performance metrics: {str(e)}"
         )
 
 @router.post("/trigger-training")
