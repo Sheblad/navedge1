@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Navigation, Eye, EyeOff, Globe } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
+import { FastAPIService } from '../services/fastapi';
 
 type Language = 'en' | 'ar' | 'hi' | 'ur';
 
@@ -72,7 +73,17 @@ const Login: React.FC<LoginProps> = ({ onLogin, language, setLanguage }) => {
     setError('');
 
     try {
-      // Simple demo login
+      // Try FastAPI login first
+      try {
+        const response = await FastAPIService.login(username, password);
+        onLogin(response.access_token);
+        setIsLoading(false);
+        return;
+      } catch (apiError) {
+        console.log('FastAPI login failed, trying demo mode:', apiError);
+      }
+
+      // Fallback to demo login
       setTimeout(() => {
         if (username === 'admin' && password === 'password123') {
           const token = 'demo_token_' + Date.now();

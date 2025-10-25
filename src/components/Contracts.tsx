@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
-import { Search, Filter, Plus, FileText, Calendar, DollarSign, Upload, Eye, Edit, Trash2, Clock, Car, Users, TrendingUp } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Search, Filter, Plus, FileText, Calendar, DollarSign, Upload, Eye, Edit, Trash2, Clock, Car, Users, TrendingUp, Loader } from 'lucide-react';
 import { mockContractsData, mockDriversData } from '../data/mockData';
 import ContractGenerator from './ContractGenerator';
+import { FastAPIService } from '../services/fastapi';
 
 type FleetMode = 'rental' | 'taxi';
 type Language = 'en' | 'ar' | 'hi' | 'ur';
@@ -15,6 +16,29 @@ const Contracts: React.FC<ContractsProps> = ({ fleetMode, language }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'expired' | 'terminated'>('all');
   const [showContractGenerator, setShowContractGenerator] = useState(false);
+  const [contracts, setContracts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [useBackendAPI] = useState(true);
+
+  useEffect(() => {
+    if (useBackendAPI) {
+      loadContracts();
+    }
+  }, [useBackendAPI]);
+
+  const loadContracts = async () => {
+    setLoading(true);
+    try {
+      const backendContracts = await FastAPIService.getMyContracts();
+      setContracts(backendContracts);
+    } catch (error) {
+      console.error('Error loading contracts:', error);
+      // Fallback to mock data
+      setContracts(mockContractsData);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const texts = {
     en: {
@@ -206,7 +230,9 @@ const Contracts: React.FC<ContractsProps> = ({ fleetMode, language }) => {
     return driver ? driver.name : 'Unknown Driver';
   };
 
-  const filteredContracts = mockContractsData.filter(contract => {
+  const contractsData = contracts.length > 0 ? contracts : mockContractsData;
+
+  const filteredContracts = contractsData.filter(contract => {
     const matchesSearch = 
       contract.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
       getDriverName(contract.driverId).toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -217,11 +243,11 @@ const Contracts: React.FC<ContractsProps> = ({ fleetMode, language }) => {
     return matchesSearch && matchesStatus;
   });
 
-  const activeContracts = mockContractsData.filter(c => c.status === 'active').length;
+  const activeContracts = contractsData.filter(c => c.status === 'active').length;
   const expiringContracts = 2; // Mock data
-  const monthlyRevenue = mockContractsData
+  const monthlyRevenue = contractsData
     .filter(c => c.status === 'active')
-    .reduce((sum, c) => sum + c.monthlyRent, 0);
+    .reduce((sum, c) => sum + (c.monthlyRent || c.rental_amount || 0), 0);
 
   // Mode-specific stats
   const modeStats = fleetMode === 'rental' ? {
