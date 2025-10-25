@@ -15,9 +15,11 @@ interface Message {
 interface RenterChatbotProps {
   language: Language;
   onClose: () => void;
+  driverId?: string;
+  contractId?: string;
 }
 
-const RenterChatbot: React.FC<RenterChatbotProps> = ({ language, onClose }) => {
+const RenterChatbot: React.FC<RenterChatbotProps> = ({ language, onClose, driverId, contractId }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -63,7 +65,13 @@ const RenterChatbot: React.FC<RenterChatbotProps> = ({ language, onClose }) => {
       text: t.welcomeMessage,
       sender: 'bot',
       timestamp: new Date(),
-      suggestions: [
+      suggestions: driverId ? [
+        'How long do I have left on my contract?',
+        'Do I have any fines?',
+        'How many km do I have left?',
+        'What is my current rental balance?',
+        'When is my next payment due?'
+      ] : [
         'How do I rent a vehicle?',
         'What documents do I need?',
         'What are the rental rates?',

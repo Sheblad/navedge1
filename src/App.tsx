@@ -9,6 +9,8 @@ import Incidents from './components/Incidents';
 import NavEdgeAssistant from './components/AIAssistant';
 import RenterChatbot from './components/RenterChatbot';
 import WhatsAppSender from './components/WhatsAppSender';
+import DocumentOCR from './components/DocumentOCR';
+import DamageDetection from './components/DamageDetection';
 import Settings from './components/Settings';
 import Reports from './components/Reports';
 import Login from './components/Login';
@@ -25,7 +27,7 @@ import { DatabaseService } from './services/database';
 import { ThemeProvider } from './contexts/ThemeContext';
 import type { Driver } from './data/mockData';
 
-type ActivePage = 'dashboard' | 'drivers' | 'contracts' | 'fines' | 'incidents' | 'reports' | 'settings';
+type ActivePage = 'dashboard' | 'drivers' | 'contracts' | 'fines' | 'incidents' | 'reports' | 'settings' | 'documents' | 'damage';
 type FleetMode = 'rental' | 'taxi';
 type Language = 'en' | 'ar' | 'hi' | 'ur';
 
@@ -316,12 +318,24 @@ function App() {
       case 'settings':
         return (
           <ErrorBoundary>
-            <Settings 
-              fleetMode={fleetMode} 
+            <Settings
+              fleetMode={fleetMode}
               setFleetMode={setFleetMode}
               language={language}
               setLanguage={setLanguage}
             />
+          </ErrorBoundary>
+        );
+      case 'documents':
+        return (
+          <ErrorBoundary>
+            <DocumentOCR language={language} />
+          </ErrorBoundary>
+        );
+      case 'damage':
+        return (
+          <ErrorBoundary>
+            <DamageDetection language={language} fleetMode={fleetMode} />
           </ErrorBoundary>
         );
       default:

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Search, Filter, AlertTriangle, Calendar, DollarSign, FileText } from 'lucide-react';
+import { Search, Filter, AlertTriangle, Calendar, DollarSign, FileText, RefreshCw, Loader } from 'lucide-react';
 import { mockFinesData, mockDriversData } from '../data/mockData';
+import { FastAPIService } from '../services/fastapi';
 
 type FleetMode = 'rental' | 'taxi';
 type Language = 'en' | 'ar' | 'hi' | 'ur';
@@ -13,6 +14,30 @@ interface FinesProps {
 const Fines: React.FC<FinesProps> = ({ fleetMode, language }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'paid' | 'deducted'>('all');
+  const [vehiclePlate, setVehiclePlate] = useState('');
+  const [checking, setChecking] = useState(false);
+  const [dubaiFines, setDubaiFines] = useState<any[]>([]);
+
+  const checkDubaiPoliceFines = async () => {
+    if (!vehiclePlate.trim()) {
+      alert('Please enter a vehicle plate number');
+      return;
+    }
+
+    setChecking(true);
+    try {
+      const response = await FastAPIService.checkDubaiPoliceFines(vehiclePlate);
+      setDubaiFines(response.fines);
+      if (response.fines.length === 0) {
+        alert('No fines found for this vehicle');
+      }
+    } catch (error) {
+      console.error('Error checking fines:', error);
+      alert('Failed to check fines. Please try again.');
+    } finally {
+      setChecking(false);
+    }
+  };
 
   const texts = {
     en: {
@@ -37,7 +62,12 @@ const Fines: React.FC<FinesProps> = ({ fleetMode, language }) => {
       all: 'All',
       noFines: 'No fines found',
       markPaid: 'Mark as Paid',
-      viewDetails: 'View Details'
+      viewDetails: 'View Details',
+      checkDubaiPolice: 'Check Dubai Police Fines',
+      vehiclePlate: 'Vehicle Plate Number',
+      checkFines: 'Check Fines',
+      checking: 'Checking...',
+      location: 'Location'
     },
     ar: {
       title: 'إدارة المخالفات',
@@ -154,6 +184,50 @@ const Fines: React.FC<FinesProps> = ({ fleetMode, language }) => {
       <div>
         <h1 className="text-2xl font-bold text-gray-900">{t.title}</h1>
         <p className="text-gray-600">{t.subtitle}</p>
+      </div>
+
+      {/* Dubai Police Fine Checker */}
+      <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg shadow-lg p-6">
+        <h2 className="text-xl font-bold text-white mb-4">{t.checkDubaiPolice}</h2>
+        <div className="flex flex-col sm:flex-row gap-3">
+          <input
+            type="text"
+            value={vehiclePlate}
+            onChange={(e) => setVehiclePlate(e.target.value)}
+            placeholder={t.vehiclePlate}
+            className="flex-1 px-4 py-3 rounded-lg bg-white text-gray-800 focus:ring-2 focus:ring-blue-300"
+          />
+          <button
+            onClick={checkDubaiPoliceFines}
+            disabled={checking}
+            className="px-6 py-3 bg-white text-blue-600 font-semibold rounded-lg hover:bg-blue-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+          >
+            {checking ? (
+              <>
+                <Loader className="w-5 h-5 animate-spin" />
+                <span>{t.checking}</span>
+              </>
+            ) : (
+              <>
+                <RefreshCw className="w-5 h-5" />
+                <span>{t.checkFines}</span>
+              </>
+            )}
+          </button>
+        </div>
+        {dubaiFines.length > 0 && (
+          <div className="mt-4 bg-white rounded-lg p-4">
+            <p className="text-sm font-semibold text-gray-900 mb-2">Found {dubaiFines.length} fine(s)</p>
+            <div className="space-y-2">
+              {dubaiFines.map((fine, index) => (
+                <div key={index} className="flex justify-between items-center text-sm">
+                  <span className="text-gray-700">{fine.violation}</span>
+                  <span className="font-semibold text-red-600">AED {fine.amount}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Stats Cards */}
