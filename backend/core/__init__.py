@@ -1,0 +1,1 @@
+# NavEdge Core Package
