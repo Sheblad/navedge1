@@ -111,7 +111,7 @@ const DriverProfile: React.FC<DriverProfileProps> = ({ driverId, fleetMode, lang
       route: 'Route',
       distance: 'Distance',
       duration: 'Duration',
-      earnings: 'Earnings',
+      tripEarnings: 'Earnings',
       tripStatus: 'Status',
       completed: 'Completed',
       cancelled: 'Cancelled',
@@ -200,7 +200,7 @@ const DriverProfile: React.FC<DriverProfileProps> = ({ driverId, fleetMode, lang
       route: 'المسار',
       distance: 'المسافة',
       duration: 'المدة',
-      earnings: 'الأرباح',
+      tripEarnings: 'الأرباح',
       tripStatus: 'الحالة',
       completed: 'مكتملة',
       cancelled: 'ملغية',
@@ -289,7 +289,7 @@ const DriverProfile: React.FC<DriverProfileProps> = ({ driverId, fleetMode, lang
       route: 'मार्ग',
       distance: 'दूरी',
       duration: 'अवधि',
-      earnings: 'कमाई',
+      tripEarnings: 'कमाई',
       tripStatus: 'स्थिति',
       completed: 'पूर्ण',
       cancelled: 'रद्द',
@@ -378,7 +378,7 @@ const DriverProfile: React.FC<DriverProfileProps> = ({ driverId, fleetMode, lang
       route: 'راستہ',
       distance: 'فاصلہ',
       duration: 'دورانیہ',
-      earnings: 'کمائی',
+      tripEarnings: 'کمائی',
       tripStatus: 'حالت',
       completed: 'مکمل',
       cancelled: 'منسوخ',
@@ -837,7 +837,7 @@ const DriverProfile: React.FC<DriverProfileProps> = ({ driverId, fleetMode, lang
                   <th className="text-left py-3 px-4 font-medium text-gray-900">{t.route}</th>
                   <th className="text-left py-3 px-4 font-medium text-gray-900">{t.distance}</th>
                   <th className="text-left py-3 px-4 font-medium text-gray-900">{t.duration}</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-900">{t.earnings}</th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-900">{t.tripEarnings}</th>
                   <th className="text-left py-3 px-4 font-medium text-gray-900">{t.tripStatus}</th>
                 </tr>
               </thead>
